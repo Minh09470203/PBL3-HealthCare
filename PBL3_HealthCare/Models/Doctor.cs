@@ -17,14 +17,13 @@ namespace PBL3_HealthCare.Models
         public int SpecialtyId { get; set; }
         [ForeignKey("SpecialtyId")]
         public Specialty? Specialty { get; set; }
-
-        public string? Position { get; set; } // Học vị: Thạc sĩ, CKII...
         public string? Bio { get; set; } // Giới thiệu
+        public string? Degree { get; set; } // Học vị (Thạc sĩ, Bác sĩ CKI...)
         public decimal Price { get; set; } // Giá khám
-        public string? ClinicAddress { get; set; } // Phòng khám ở đâu
+        public string? Image { get; set; } // Link ảnh
 
         // Mối quan hệ: Bác sĩ có nhiều lịch hẹn
-        public ICollection<Appointment>? Appointments { get; set; }
+        public virtual ICollection<Appointment>? Appointments { get; set; }
         // Mối quan hệ: Bác sĩ có nhiều lịch trực
         public ICollection<Schedule>? Schedules { get; set; }
     }
