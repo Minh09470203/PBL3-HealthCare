@@ -1,24 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using PBL3_HealthCare.Data;
 using PBL3_HealthCare.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace PBL3_HealthCare.Controllers
 {
     public class DoctorsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public DoctorsController(ApplicationDbContext context)
+        public DoctorsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
-
         // GET: Doctors
         public async Task<IActionResult> Index()
         {
@@ -49,8 +51,7 @@ namespace PBL3_HealthCare.Controllers
         // GET: Doctors/Create
         public IActionResult Create()
         {
-            ViewData["SpecialtyId"] = new SelectList(_context.Specialties, "Id", "Name");
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id");
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "FullName");
             return View();
         }
 
@@ -108,6 +109,13 @@ namespace PBL3_HealthCare.Controllers
                 {
                     _context.Update(doctor);
                     await _context.SaveChangesAsync();
+                    var user = await _userManager.FindByIdAsync(doctor.UserId);
+
+                    if (user != null)
+                    {
+                        await _userManager.RemoveFromRoleAsync(user, "Patient");
+                        await _userManager.AddToRoleAsync(user, "Doctor");
+                    }
                 }
                 catch (DbUpdateConcurrencyException)
                 {
