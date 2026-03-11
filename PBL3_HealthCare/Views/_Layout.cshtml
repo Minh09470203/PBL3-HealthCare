@@ -1,13 +1,111 @@
 ﻿<!DOCTYPE html>
+<html lang="en">
 
-<html>
 <head>
-    <meta name="viewport" content="width=device-width" />
-    <title>@ViewBag.Title</title>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>@ViewData["Title"] - Healthcare Admin</title>
+
+    <link href="~/css/sb-admin-2.css" rel="stylesheet">
+    <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+
 </head>
+
 <body>
-    <div>
-        @RenderBody()
+
+    <div class="d-flex">
+
+        <!-- SIDEBAR -->
+
+        <div class="bg-primary text-white p-3" style="width:250px; min-height:100vh;">
+
+            <h4 class="text-center mb-4">HEALTHCARE</h4>
+
+            <ul class="nav flex-column">
+
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white"
+                       asp-controller="Home"
+                       asp-action="Index">
+                        Dashboard
+                    </a>
+                </li>
+
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white"
+                       asp-controller="Doctors"
+                       asp-action="Index">
+                        Quản lý Bác sĩ
+                    </a>
+                </li>
+
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white"
+                       asp-controller="Specialties"
+                       asp-action="Index">
+                        Quản lý Chuyên khoa
+                    </a>
+                </li>
+
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white"
+                       asp-controller="Medicines"
+                       asp-action="Index">
+                        Kho Thuốc
+                    </a>
+                </li>
+
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white"
+                       asp-controller="Patients"
+                       asp-action="Index">
+                        Quản lý Bệnh nhân
+                    </a>
+                </li>
+
+            </ul>
+
+        </div>
+
+        <!-- CONTENT -->
+
+        <div class="flex-grow-1">
+
+            <nav class="navbar navbar-light bg-light shadow-sm">
+
+                <div class="container-fluid">
+
+                    <span class="navbar-brand mb-0 h5">
+                        Healthcare Admin
+                    </span>
+
+                    <partial name="_LoginPartial" />
+
+                </div>
+
+            </nav>
+
+            <div class="container mt-4">
+
+                @RenderBody()
+
+            </div>
+
+        </div>
+
     </div>
+
+    <footer class="text-center mt-4 mb-2">
+
+        <p>Copyright © PBL3 Healthcare</p>
+
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
+
 </html>
