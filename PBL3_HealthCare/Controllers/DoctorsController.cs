@@ -69,7 +69,7 @@ namespace PBL3_HealthCare.Controllers
                 return RedirectToAction(nameof(Index));
             }
             ViewData["SpecialtyId"] = new SelectList(_context.Specialties, "Id", "Name", doctor.SpecialtyId);
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", doctor.UserId);
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "FullName", doctor.UserId);
             return View(doctor);
         }
 
@@ -87,7 +87,7 @@ namespace PBL3_HealthCare.Controllers
                 return NotFound();
             }
             ViewData["SpecialtyId"] = new SelectList(_context.Specialties, "Id", "Name", doctor.SpecialtyId);
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", doctor.UserId);
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "FullName", doctor.UserId);
             return View(doctor);
         }
 
@@ -109,6 +109,10 @@ namespace PBL3_HealthCare.Controllers
                 {
                     _context.Update(doctor);
                     await _context.SaveChangesAsync();
+
+                    _context.Add(doctor);
+                    await _context.SaveChangesAsync();
+
                     var user = await _userManager.FindByIdAsync(doctor.UserId);
 
                     if (user != null)
@@ -116,6 +120,8 @@ namespace PBL3_HealthCare.Controllers
                         await _userManager.RemoveFromRoleAsync(user, "Patient");
                         await _userManager.AddToRoleAsync(user, "Doctor");
                     }
+
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -131,7 +137,7 @@ namespace PBL3_HealthCare.Controllers
                 return RedirectToAction(nameof(Index));
             }
             ViewData["SpecialtyId"] = new SelectList(_context.Specialties, "Id", "Name", doctor.SpecialtyId);
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", doctor.UserId);
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "FullName", doctor.UserId);
             return View(doctor);
         }
 
