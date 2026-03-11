@@ -1,24 +1,27 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using PBL3_HealthCare.Data;
 using PBL3_HealthCare.Models;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace PBL3_HealthCare.Controllers
 {
+    // 1. GẮN Ổ KHÓA ADMIN TẠI ĐÂY
     [Authorize(Roles = "Admin")]
     public class DoctorsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public DoctorsController(ApplicationDbContext context)
+        public DoctorsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: Doctors
@@ -52,25 +55,36 @@ namespace PBL3_HealthCare.Controllers
         public IActionResult Create()
         {
             ViewData["SpecialtyId"] = new SelectList(_context.Specialties, "Id", "Name");
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id");
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "FullName");
             return View();
         }
 
         // POST: Doctors/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,UserId,SpecialtyId,Bio,Degree,Price,Image")] Doctor doctor)
         {
             if (ModelState.IsValid)
             {
+                // Lưu Bác sĩ vào Database
                 _context.Add(doctor);
                 await _context.SaveChangesAsync();
+
+                // 2. LOGIC CẤP QUYỀN ĐẶT ĐÚNG CHỖ NÀY
+                var user = await _userManager.FindByIdAsync(doctor.UserId);
+                if (user != null)
+                {
+                    if (await _userManager.IsInRoleAsync(user, "Patient"))
+                    {
+                        await _userManager.RemoveFromRoleAsync(user, "Patient");
+                    }
+                    await _userManager.AddToRoleAsync(user, "Doctor");
+                }
+
                 return RedirectToAction(nameof(Index));
             }
             ViewData["SpecialtyId"] = new SelectList(_context.Specialties, "Id", "Name", doctor.SpecialtyId);
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", doctor.UserId);
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "FullName", doctor.UserId);
             return View(doctor);
         }
 
@@ -88,13 +102,11 @@ namespace PBL3_HealthCare.Controllers
                 return NotFound();
             }
             ViewData["SpecialtyId"] = new SelectList(_context.Specialties, "Id", "Name", doctor.SpecialtyId);
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", doctor.UserId);
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "FullName", doctor.UserId);
             return View(doctor);
         }
 
         // POST: Doctors/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,UserId,SpecialtyId,Bio,Degree,Price,Image")] Doctor doctor)
@@ -108,6 +120,7 @@ namespace PBL3_HealthCare.Controllers
             {
                 try
                 {
+                    // 3. ĐÃ DỌN SẠCH RÁC Ở ĐÂY, CHỈ GIỮ LẠI LỆNH UPDATE
                     _context.Update(doctor);
                     await _context.SaveChangesAsync();
                 }
@@ -125,7 +138,7 @@ namespace PBL3_HealthCare.Controllers
                 return RedirectToAction(nameof(Index));
             }
             ViewData["SpecialtyId"] = new SelectList(_context.Specialties, "Id", "Name", doctor.SpecialtyId);
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", doctor.UserId);
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "FullName", doctor.UserId);
             return View(doctor);
         }
 
