@@ -7,19 +7,23 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using PBL3_HealthCare.Data;
 using PBL3_HealthCare.Models;
+using Microsoft.AspNetCore.Identity; // Cần thiết để đổi Role
 
 namespace PBL3_HealthCare.Controllers
 {
     public class DoctorsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public DoctorsController(ApplicationDbContext context)
+        // Constructor đầy đủ để nhận context và userManager
+        public DoctorsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
-        // GET: Doctors
+        // GET: Doctors - Lấy tên User và Chuyên khoa
         public async Task<IActionResult> Index()
         {
             var applicationDbContext = _context.Doctors.Include(d => d.Specialty).Include(d => d.User);
@@ -29,19 +33,14 @@ namespace PBL3_HealthCare.Controllers
         // GET: Doctors/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var doctor = await _context.Doctors
                 .Include(d => d.Specialty)
                 .Include(d => d.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (doctor == null)
-            {
-                return NotFound();
-            }
+
+            if (doctor == null) return NotFound();
 
             return View(doctor);
         }
@@ -50,13 +49,12 @@ namespace PBL3_HealthCare.Controllers
         public IActionResult Create()
         {
             ViewData["SpecialtyId"] = new SelectList(_context.Specialties, "Id", "Name");
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id");
+            // Đổi FullName thành Email để test xem có hiện ra không
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Email");
             return View();
         }
 
-        // POST: Doctors/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // POST: Doctors/Create - Xử lý lưu và Nâng cấp Role
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,UserId,SpecialtyId,Bio,Degree,Price,Image")] Doctor doctor)
@@ -65,42 +63,49 @@ namespace PBL3_HealthCare.Controllers
             {
                 _context.Add(doctor);
                 await _context.SaveChangesAsync();
+
+                // Logic Nâng cấp Role từ Patient sang Doctor
+                var user = await _userManager.FindByIdAsync(doctor.UserId);
+                if (user != null)
+                {
+                    // Xóa quyền Patient nếu đang có
+                    if (await _userManager.IsInRoleAsync(user, "Patient"))
+                    {
+                        await _userManager.RemoveFromRoleAsync(user, "Patient");
+                    }
+                    // Cấp quyền Doctor
+                    if (!await _userManager.IsInRoleAsync(user, "Doctor"))
+                    {
+                        await _userManager.AddToRoleAsync(user, "Doctor");
+                    }
+                }
+
                 return RedirectToAction(nameof(Index));
             }
             ViewData["SpecialtyId"] = new SelectList(_context.Specialties, "Id", "Name", doctor.SpecialtyId);
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", doctor.UserId);
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "FullName", doctor.UserId);
             return View(doctor);
         }
 
         // GET: Doctors/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var doctor = await _context.Doctors.FindAsync(id);
-            if (doctor == null)
-            {
-                return NotFound();
-            }
+            if (doctor == null) return NotFound();
+
             ViewData["SpecialtyId"] = new SelectList(_context.Specialties, "Id", "Name", doctor.SpecialtyId);
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", doctor.UserId);
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "FullName", doctor.UserId);
             return View(doctor);
         }
 
         // POST: Doctors/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,UserId,SpecialtyId,Bio,Degree,Price,Image")] Doctor doctor)
         {
-            if (id != doctor.Id)
-            {
-                return NotFound();
-            }
+            if (id != doctor.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
@@ -111,38 +116,27 @@ namespace PBL3_HealthCare.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!DoctorExists(doctor.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    if (!DoctorExists(doctor.Id)) return NotFound();
+                    else throw;
                 }
                 return RedirectToAction(nameof(Index));
             }
             ViewData["SpecialtyId"] = new SelectList(_context.Specialties, "Id", "Name", doctor.SpecialtyId);
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", doctor.UserId);
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "FullName", doctor.UserId);
             return View(doctor);
         }
 
         // GET: Doctors/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var doctor = await _context.Doctors
                 .Include(d => d.Specialty)
                 .Include(d => d.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (doctor == null)
-            {
-                return NotFound();
-            }
+
+            if (doctor == null) return NotFound();
 
             return View(doctor);
         }
