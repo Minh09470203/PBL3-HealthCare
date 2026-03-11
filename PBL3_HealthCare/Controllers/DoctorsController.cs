@@ -166,5 +166,13 @@ namespace PBL3_HealthCare.Controllers
         {
             return _context.Doctors.Any(e => e.Id == id);
         }
+        public async Task<IActionResult> List()
+        {
+            var doctors = _context.Doctors
+                .Include(d => d.Specialty)
+                .Include(d => d.User);
+
+            return View(await doctors.ToListAsync());
+        }
     }
 }

@@ -1,0 +1,61 @@
+﻿@model IEnumerable<PBL3_HealthCare.Models.Doctor>
+
+@{
+    ViewData["Title"] = "Danh sách bác sĩ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container mt-5">
+
+    <h2 class="text-center mb-4">Danh sách bác sĩ</h2>
+
+    <div class="row mb-4">
+
+        <div class="col-md-6">
+            <input type="text" class="form-control" placeholder="Nhập tên bác sĩ..." />
+        </div>
+
+        <div class="col-md-4">
+            <select class="form-control">
+                <option value="">Tất cả chuyên khoa</option>
+                <option>Tim mạch</option>
+                <option>Nhi khoa</option>
+                <option>Da liễu</option>
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <button class="btn btn-primary w-100">Tìm</button>
+        </div>
+
+    </div>
+    <div class="row">
+
+        @foreach (var item in Model)
+        {
+            <div class="col-md-4 mb-4">
+
+                <div class="card shadow-sm text-center">
+
+                    <img src="~/images/doctors/default.jpg"
+                         class="card-img-top"
+                         style="height:250px; object-fit:cover;" />
+
+                    <div class="card-body">
+
+                        <h5 class="card-title">
+                            @item.User.FullName
+                        </h5>
+
+                        <p class="text-muted">
+                            @item.Specialty.Name
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+        }
+
+    </div>
+</div>
