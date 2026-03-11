@@ -30,5 +30,11 @@ namespace PBL3_HealthCare.Models
         public virtual MedicalRecord? MedicalRecord { get; set; } // 1 cuộc hẹn có 1 kết quả khám
         public virtual Invoice? Invoice { get; set; }             // 1 cuộc hẹn có 1 hóa đơn
     }
-
+ /* public enum AppointmentStatus
+    {
+        Pending,    // 0: Chờ duyệt
+        Confirmed,  // 1: Đã duyệt
+        Completed,  // 2: Hoàn thành
+        Cancelled   // 3: Đã hủy
+    } */
 }
