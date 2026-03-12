@@ -71,18 +71,6 @@ namespace PBL3_HealthCare.Areas.Identity.Pages.Account
         /// </summary>
         public class InputModel
         {
-            [Required]
-            [Display(Name = "Full Name")]
-            public string FullName { get; set; }
-
-            [Display(Name = "Address")]
-            public string Address { get; set; }
-
-            [Display(Name = "Date Of Birth")]
-            public DateTime? DateOfBirth { get; set; }
-
-            [Display(Name = "Gender")]
-            public string Gender { get; set; }
 
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
