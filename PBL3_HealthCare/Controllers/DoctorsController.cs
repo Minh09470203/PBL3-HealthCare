@@ -1,35 +1,26 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
+
 ﻿using Microsoft.AspNetCore.Identity;
-=======
+
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
->>>>>>> 4d46df048740c09244d19a84f1ba3e64e0307fcd
-=======
+
+
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
->>>>>>> 13e6ffc080444f4d6ec4606f5dee875f972f65ef
-=======
+
+
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
->>>>>>> 99ed8c8b14765d685e48fa4f71d640da432a2545
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using PBL3_HealthCare.Data;
 using PBL3_HealthCare.Models;
 using System;
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
+
 using System.Collections.Generic;
-=======
->>>>>>> 4d46df048740c09244d19a84f1ba3e64e0307fcd
-=======
->>>>>>> 13e6ffc080444f4d6ec4606f5dee875f972f65ef
-=======
->>>>>>> 99ed8c8b14765d685e48fa4f71d640da432a2545
+
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -78,17 +69,10 @@ namespace PBL3_HealthCare.Controllers
         // GET: Doctors/Create
         public IActionResult Create()
         {
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
+
             ViewData["SpecialtyId"] = new SelectList(_context.Specialties, "Id", "Name");
-<<<<<<< HEAD
->>>>>>> 4d46df048740c09244d19a84f1ba3e64e0307fcd
-=======
             ViewData["SpecialtyId"] = new SelectList(_context.Specialties, "Id", "Name");
->>>>>>> 13e6ffc080444f4d6ec4606f5dee875f972f65ef
-=======
->>>>>>> 99ed8c8b14765d685e48fa4f71d640da432a2545
+
             ViewData["UserId"] = new SelectList(_context.Users, "Id", "FullName");
             return View();
         }
