@@ -1,75 +1,67 @@
 ﻿@page
 @model RegisterModel
 @{
-    ViewData["Title"] = "Đăng ký";
+    ViewBag.Title = "Đăng ký tài khoản";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<<div class="hero-wrap d-flex justify-content-center align-items-start py-5">
-
-    <div class="overlay"></div>
-
-    <div class="container-fluid login-container">
-
-        <div class="row justify-content-center">
-
-            <div class="col-md-5">
-
-                <div class="login-box">
-
-                    <h3 class="text-center mb-4">Đăng ký tài khoản</h3>
-
-                    <form method="post">
-
-                        <div class="form-group">
-                            <label>Họ và tên</label>
-                            <input asp-for="Input.FullName" class="form-control" placeholder="Nhập họ và tên" />
-                        </div>
-
-                        <div class="form-group mt-3">
-                            <label>Địa chỉ</label>
-                            <input asp-for="Input.Address" class="form-control" placeholder="Nhập địa chỉ" />
-                        </div>
-
-                        <div class="form-group mt-3">
-                            <label>Ngày sinh</label>
-                            <input asp-for="Input.DateOfBirth" type="date" class="form-control" />
-                        </div>
-
-                        <div class="form-group mt-3">
-                            <label>Email</label>
-                            <input asp-for="Input.Email" class="form-control" />
-                        </div>
-
-                        <div class="form-group mt-3">
-                            <label>Mật khẩu</label>
-                            <input asp-for="Input.Password" class="form-control" />
-                        </div>
-
-                        <div class="form-group mt-3">
-                            <label>Nhập lại mật khẩu</label>
-                            <input asp-for="Input.ConfirmPassword" class="form-control" />
-                        </div>
-
-                        <button type="submit" class="btn btn-primary w-100 mt-4">
-                            Đăng ký
-                        </button>
-
-                        <div class="text-center mt-3">
-                            Đã có tài khoản?
-                            <a asp-page="/Account/Login">Đăng nhập</a>
-                        </div>
-
-                    </form>
-
-                </div>
-
-            </div>
-
+<div class="container-fluid py-5" style="min-height: 80vh; display: flex; align-items: center; justify-content: center; background: #f4f7f6;">
+    <div class="auth-card-v2 shadow-lg p-4 bg-white" style="width: 100%; max-width: 450px; border-radius: 15px;">
+        <div class="auth-header text-center">
+            <h2>ĐĂNG KÍ</h2>
+            <p class="text-muted">SuperStar Medical Center</p>
         </div>
 
-    </div>
+        <form method="post">
+            <div class="form-group mb-3">
+                <label class="form-label fw-bold">Email</label>
+                <input asp-for="Input.Email" class="form-control" placeholder="Email của bạn" />
+            </div>
 
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Mật khẩu</label>
+                    <input asp-for="Input.Password" type="password" class="form-control" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Xác nhận</label>
+                    <input asp-for="Input.ConfirmPassword" type="password" class="form-control" />
+                </div>
+            </div>
+
+            <div class="form-group mb-3">
+                <label class="form-label fw-bold">Địa chỉ</label>
+                <input asp-for="Input.Address" class="form-control" />
+            </div>
+
+            <div style="display: flex; gap: 15px; margin-bottom: 1rem;">
+                <div style="flex: 1;">
+                    <label class="small text-muted mb-1" style="display: block;">Giới tính</label>
+                    <select asp-for="Input.Gender" class="form-select"
+                            style="width: 100%; height: 45px; border-radius: 8px; border: 1px solid #ced4da; padding: 0 10px;">
+                        <option value="">Chọn...</option>
+                        <option>Nam</option>
+                        <option>Nữ</option>
+                        <option>Khác</option>
+                    </select>
+                </div>
+
+                <div style="flex: 1;">
+                    <label class="small text-muted mb-1" style="display: block;">Ngày sinh</label>
+                    <input asp-for="Input.DateOfBirth" type="date" class="form-control"
+                           style="width: 100%; height: 45px; border-radius: 8px; border: 1px solid #ced4da; padding: 0 10px;" />
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-submit-auth w-100 mt-3">ĐĂNG KÝ NGAY</button>
+
+            <p class="text-center mt-3 small">
+                Đã có tài khoản? <a asp-page="./Login" class="text-primary fw-bold">Đăng nhập</a>
+            </p>
+        </form>
+    </div>
 </div>
+
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
