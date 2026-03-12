@@ -1,9 +1,14 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 ﻿using Microsoft.AspNetCore.Identity;
 =======
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 >>>>>>> 4d46df048740c09244d19a84f1ba3e64e0307fcd
+=======
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+>>>>>>> 13e6ffc080444f4d6ec4606f5dee875f972f65ef
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -11,9 +16,12 @@ using PBL3_HealthCare.Data;
 using PBL3_HealthCare.Models;
 using System;
 <<<<<<< HEAD
+<<<<<<< HEAD
 using System.Collections.Generic;
 =======
 >>>>>>> 4d46df048740c09244d19a84f1ba3e64e0307fcd
+=======
+>>>>>>> 13e6ffc080444f4d6ec4606f5dee875f972f65ef
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -31,6 +39,7 @@ namespace PBL3_HealthCare.Controllers
             _context = context;
             _userManager = userManager;
         }
+
         // GET: Doctors
         public async Task<IActionResult> Index()
         {
@@ -62,9 +71,13 @@ namespace PBL3_HealthCare.Controllers
         public IActionResult Create()
         {
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
             ViewData["SpecialtyId"] = new SelectList(_context.Specialties, "Id", "Name");
 >>>>>>> 4d46df048740c09244d19a84f1ba3e64e0307fcd
+=======
+            ViewData["SpecialtyId"] = new SelectList(_context.Specialties, "Id", "Name");
+>>>>>>> 13e6ffc080444f4d6ec4606f5dee875f972f65ef
             ViewData["UserId"] = new SelectList(_context.Users, "Id", "FullName");
             return View();
         }
@@ -133,19 +146,6 @@ namespace PBL3_HealthCare.Controllers
                     // 3. ĐÃ DỌN SẠCH RÁC Ở ĐÂY, CHỈ GIỮ LẠI LỆNH UPDATE
                     _context.Update(doctor);
                     await _context.SaveChangesAsync();
-
-                    _context.Add(doctor);
-                    await _context.SaveChangesAsync();
-
-                    var user = await _userManager.FindByIdAsync(doctor.UserId);
-
-                    if (user != null)
-                    {
-                        await _userManager.RemoveFromRoleAsync(user, "Patient");
-                        await _userManager.AddToRoleAsync(user, "Doctor");
-                    }
-
-                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
