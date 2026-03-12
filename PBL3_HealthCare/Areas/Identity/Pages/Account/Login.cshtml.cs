@@ -22,11 +22,12 @@ namespace PBL3_HealthCare.Areas.Identity.Pages.Account
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ILogger<LoginModel> _logger;
-
-        public LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger)
+        private readonly UserManager<ApplicationUser> _userManager;
+        public LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger, UserManager<ApplicationUser> userManager)
         {
             _signInManager = signInManager;
             _logger = logger;
+            _userManager = userManager;
         }
 
         /// <summary>
@@ -116,7 +117,23 @@ namespace PBL3_HealthCare.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
-                    return LocalRedirect(returnUrl);
+                    // Lấy tài khoản vừa đăng nhập thành công
+                    var user = await _userManager.FindByEmailAsync(Input.Email);
+
+                    // Lấy danh sách Quyền (Role) của tài khoản đó
+                    var roles = await _userManager.GetRolesAsync(user);
+
+                    // PHÂN LUỒNG TẠI ĐÂY
+                    if (roles.Contains("Admin") || roles.Contains("Doctor"))
+                    {
+                        // Nếu là Admin/Bác sĩ -> Đá văng thẳng vào trang Quản lý
+                        return LocalRedirect("~/Doctors/Index");
+                    }
+                    else
+                    {
+                        // Nếu là Patient (Bệnh nhân) -> Trả về trang chủ mặt tiền
+                        return LocalRedirect("~/");
+                    }
                 }
                 if (result.RequiresTwoFactor)
                 {

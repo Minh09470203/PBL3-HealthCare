@@ -11,7 +11,12 @@
             <h2>ĐĂNG NHẬP</h2>
             <p class="text-muted">SuperStar Medical Center</p>
         </div>
-
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success text-center fw-bold">
+                @TempData["SuccessMessage"]
+            </div>
+        }
         <form method="post">
             <div class="mb-3">
                 <label class="form-label">Email</label>

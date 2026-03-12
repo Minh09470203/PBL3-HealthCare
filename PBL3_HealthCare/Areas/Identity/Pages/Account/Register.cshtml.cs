@@ -173,8 +173,8 @@ namespace PBL3_HealthCare.Areas.Identity.Pages.Account
                     }
                     else
                     {
-                        await _signInManager.SignInAsync(user, isPersistent: false);
-                        return LocalRedirect(returnUrl);
+                        TempData["SuccessMessage"] = "Đăng ký thành công! Vui lòng đăng nhập.";
+                        return RedirectToPage("./Login");
                     }
                 }
                 foreach (var error in result.Errors)

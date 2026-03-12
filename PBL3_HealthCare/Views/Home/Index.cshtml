@@ -1,7 +1,11 @@
-﻿@{
-    ViewData["Title"] = "SS Medical Center";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+﻿﻿@{
+ViewData["Title"] = "SS Medical Center";
+Layout = "~/Views/Shared/_Layout.cshtml";
 }
+@using Microsoft.AspNetCore.Identity
+@using PBL3_HealthCare.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
 
 <!DOCTYPE html>
 <html lang="en">
@@ -42,7 +46,21 @@
                             <span class="text">youremail@email.com</span>
                         </div>
                         <div class="col-md-5 pr-4 d-flex topper align-items-center text-lg-right justify-content-end">
-                            <p class="mb-0 register-link"><a href="/Identity/Account/Register" class="mr-3">Đăng ký</a><a href="/Identity/Account/Login">Đăng nhập</a></p>
+                            <div class="mb-0 register-link d-flex align-items-center">
+                                @if (SignInManager.IsSignedIn(User))
+                                {
+                                    var user = await UserManager.GetUserAsync(User);
+                                    <span class="text-white mr-3 fw-bold" style="font-size: 14px;">Xin chào, @(user?.FullName ?? User.Identity?.Name)!</span>
+                                    <form class="form-inline m-0" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="~/">
+                                        <button type="submit" class="btn btn-sm btn-danger text-white" style="border-radius: 5px;">Đăng xuất</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <a href="/Identity/Account/Register" class="mr-3 text-white">Đăng ký</a>
+                                    <a href="/Identity/Account/Login" class="text-white">Đăng nhập</a>
+                                }
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -106,7 +124,7 @@
             </div>
         </div>
     </section>
-    
+
     <section class="ftco-section ftco-no-pt ftco-no-pb ftco-services-2 bg-light">
         <div class="container">
             <div class="row d-flex align-items-center">
