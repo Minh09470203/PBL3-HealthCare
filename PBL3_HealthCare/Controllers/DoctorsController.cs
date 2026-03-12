@@ -1,5 +1,6 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 ﻿using Microsoft.AspNetCore.Identity;
 =======
 ﻿using Microsoft.AspNetCore.Authorization;
@@ -9,6 +10,10 @@ using Microsoft.AspNetCore.Identity;
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 >>>>>>> 13e6ffc080444f4d6ec4606f5dee875f972f65ef
+=======
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+>>>>>>> 99ed8c8b14765d685e48fa4f71d640da432a2545
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -17,11 +22,14 @@ using PBL3_HealthCare.Models;
 using System;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 using System.Collections.Generic;
 =======
 >>>>>>> 4d46df048740c09244d19a84f1ba3e64e0307fcd
 =======
 >>>>>>> 13e6ffc080444f4d6ec4606f5dee875f972f65ef
+=======
+>>>>>>> 99ed8c8b14765d685e48fa4f71d640da432a2545
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -74,10 +82,13 @@ namespace PBL3_HealthCare.Controllers
 <<<<<<< HEAD
 =======
             ViewData["SpecialtyId"] = new SelectList(_context.Specialties, "Id", "Name");
+<<<<<<< HEAD
 >>>>>>> 4d46df048740c09244d19a84f1ba3e64e0307fcd
 =======
             ViewData["SpecialtyId"] = new SelectList(_context.Specialties, "Id", "Name");
 >>>>>>> 13e6ffc080444f4d6ec4606f5dee875f972f65ef
+=======
+>>>>>>> 99ed8c8b14765d685e48fa4f71d640da432a2545
             ViewData["UserId"] = new SelectList(_context.Users, "Id", "FullName");
             return View();
         }
@@ -203,6 +214,14 @@ namespace PBL3_HealthCare.Controllers
         private bool DoctorExists(int id)
         {
             return _context.Doctors.Any(e => e.Id == id);
+        }
+        public async Task<IActionResult> List()
+        {
+            var doctors = _context.Doctors
+                .Include(d => d.Specialty)
+                .Include(d => d.User);
+
+            return View(await doctors.ToListAsync());
         }
     }
 }
