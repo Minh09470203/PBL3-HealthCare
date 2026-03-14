@@ -15,6 +15,8 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
+// Đăng ký NotificationService để các Controller khác gọi được
+builder.Services.AddScoped<PBL3_HealthCare.Services.NotificationService>();
 
 var app = builder.Build();
 
