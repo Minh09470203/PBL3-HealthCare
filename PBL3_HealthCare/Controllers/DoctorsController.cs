@@ -197,7 +197,6 @@ namespace PBL3_HealthCare.Controllers
             var allDoctors = await _context.Doctors
                                   .Include(d => d.User)
                                   .Include(d => d.Specialty)
-                                  .Take(4)
                                   .ToListAsync();
 
             return View(allDoctors);

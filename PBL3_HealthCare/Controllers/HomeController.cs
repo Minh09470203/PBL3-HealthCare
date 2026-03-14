@@ -39,6 +39,8 @@ namespace PBL3_HealthCare.Controllers
             return View(topDoctors);
         }
 
+
+
         public IActionResult Privacy()
         {
             return View();
