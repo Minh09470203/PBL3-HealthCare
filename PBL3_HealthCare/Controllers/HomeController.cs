@@ -106,20 +106,30 @@ namespace PBL3_HealthCare.Controllers
             return View(model);
         }
 
+        // GET: /Home/MyHistory
+        [HttpGet]
         public async Task<IActionResult> MyHistory()
         {
+            // Bắt buộc phải đăng nhập mới xem được
             var userId = _userManager.GetUserId(User);
+            if (userId == null)
+            {
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
 
-            var appointments = await _context.Appointments
+            // Lọc đúng Lịch khám của ông này, sắp xếp ngày mới nhất nổi lên đầu
+            var myAppointments = await _context.Appointments
                 .Include(a => a.Doctor)
                     .ThenInclude(d => d.User)
                 .Include(a => a.Doctor)
-                    .ThenInclude(d => d.Specialty)
+                    .ThenInclude(d => d.Specialty) // Kéo theo chuyên khoa để View có cái hiển thị
                 .Where(a => a.PatientId == userId)
+                .OrderByDescending(a => a.Date)
                 .ToListAsync();
 
-            return View(appointments);
+            return View(myAppointments);
         }
+
 
         public IActionResult Privacy()
         {
