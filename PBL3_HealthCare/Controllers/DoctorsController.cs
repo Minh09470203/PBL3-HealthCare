@@ -191,6 +191,7 @@ namespace PBL3_HealthCare.Controllers
         {
             return _context.Doctors.Any(e => e.Id == id);
         }
+        [AllowAnonymous]
         public async Task<IActionResult> List()
         {
             var doctors = _context.Doctors
