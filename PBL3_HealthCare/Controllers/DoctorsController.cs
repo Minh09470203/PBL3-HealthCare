@@ -63,7 +63,7 @@ namespace PBL3_HealthCare.Controllers
         {
 
             ViewData["SpecialtyId"] = new SelectList(_context.Specialties, "Id", "Name");
-            ViewData["SpecialtyId"] = new SelectList(_context.Specialties, "Id", "Name");
+            
 
             ViewData["UserId"] = new SelectList(_context.Users, "Id", "FullName");
             return View();
@@ -194,11 +194,13 @@ namespace PBL3_HealthCare.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> List()
         {
-            var doctors = _context.Doctors
-                .Include(d => d.Specialty)
-                .Include(d => d.User);
+            var allDoctors = await _context.Doctors
+                                  .Include(d => d.User)
+                                  .Include(d => d.Specialty)
+                                  .Take(4)
+                                  .ToListAsync();
 
-            return View(await doctors.ToListAsync());
+            return View(allDoctors);
         }
     }
 }
