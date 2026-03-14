@@ -3,6 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using PBL3_HealthCare.Models;
 using PBL3_HealthCare.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 
 namespace PBL3_HealthCare.Controllers
 {
@@ -10,19 +14,26 @@ namespace PBL3_HealthCare.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public HomeController(ILogger<HomeController> logger, ApplicationDbContext context)
+        public HomeController(
+            ILogger<HomeController> logger,
+            ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager)
         {
             _logger = logger;
             _context = context;
+            _userManager = userManager;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            // Lấy Top 4 bác sĩ từ database
-            var topDoctors = _context.Doctors
-                                     .Take(4)
-                                     .ToList();
+            // Query lấy 4 bác sĩ đầu tiên, Include bảng User và Specialty
+            var topDoctors = await _context.Doctors
+                                           .Include(d => d.User)
+                                           .Include(d => d.Specialty)
+                                           .Take(4)
+                                           .ToListAsync();
 
             // truyền sang View
             return View(topDoctors);
