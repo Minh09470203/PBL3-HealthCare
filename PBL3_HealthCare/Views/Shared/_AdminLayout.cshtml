@@ -35,37 +35,57 @@
                     <span>Tổng quan (Dashboard)</span>
                 </a>
             </li>
-
             <hr class="sidebar-divider">
-            <div class="sidebar-heading">Quản trị hệ thống</div>
+
+            <div class="sidebar-heading">Nghiệp vụ</div>
 
             <li class="nav-item">
-                <a class="nav-link" asp-controller="Doctors" asp-action="Index">
-                    <i class="fas fa-fw fa-user-md"></i>
-                    <span>Quản lý Bác sĩ</span>
+                <a class="nav-link" asp-controller="Appointments" asp-action="Index">
+                    <i class="fas fa-fw fa-calendar-check"></i>
+                    <span>Quản lý Lịch khám</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link" asp-controller="Specialties" asp-action="Index">
-                    <i class="fas fa-fw fa-stethoscope"></i>
-                    <span>Quản lý Chuyên khoa</span>
+                <a class="nav-link" asp-controller="Schedules" asp-action="Index">
+                    <i class="fas fa-fw fa-clock"></i>
+                    <span>Quản lý Ca làm việc</span>
                 </a>
             </li>
 
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="Medicines" asp-action="Index">
-                    <i class="fas fa-fw fa-pills"></i>
-                    <span>Kho Thuốc</span>
-                </a>
-            </li>
+            @if (User.IsInRole("Admin"))
+            {
+                <hr class="sidebar-divider">
+                <div class="sidebar-heading">Quản trị hệ thống</div>
 
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="Patients" asp-action="Index">
-                    <i class="fas fa-fw fa-user-injured"></i>
-                    <span>Quản lý Bệnh nhân</span>
-                </a>
-            </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Doctors" asp-action="Index">
+                        <i class="fas fa-fw fa-user-md"></i>
+                        <span>Quản lý Bác sĩ</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Specialties" asp-action="Index">
+                        <i class="fas fa-fw fa-stethoscope"></i>
+                        <span>Quản lý Chuyên khoa</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Medicines" asp-action="Index">
+                        <i class="fas fa-fw fa-pills"></i>
+                        <span>Kho Thuốc</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Patients" asp-action="Index">
+                        <i class="fas fa-fw fa-user-injured"></i>
+                        <span>Quản lý Bệnh nhân</span>
+                    </a>
+                </li>
+            }
 
             <hr class="sidebar-divider d-none d-md-block">
             <div class="text-center d-none d-md-inline">
