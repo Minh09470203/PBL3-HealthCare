@@ -98,7 +98,7 @@ namespace PBL3_HealthCare.Controllers
                 if (isConflict)
                 {
                     ModelState.AddModelError("", "Rất tiếc! Bác sĩ đã có lịch hẹn vào thời gian này. Vui lòng chọn giờ khác.");
-                    ReloadDropdownAndReturnView(model);
+                    return ReloadDropdownAndReturnView(model);
                 }
 
                 // 2. NẾU TRỐNG LỊCH -> LƯU VÀO DB
