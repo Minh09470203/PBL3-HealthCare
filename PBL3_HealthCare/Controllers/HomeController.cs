@@ -64,6 +64,30 @@ namespace PBL3_HealthCare.Controllers
         {
             if (ModelState.IsValid)
             {
+                if (model.Date.Date < DateTime.Now.Date)
+                {
+                    ModelState.AddModelError("Date", "Lỗi: Không thể đặt lịch cho ngày trong quá khứ!");
+                    return ReloadDropdownAndReturnView(model);
+                }
+
+                var doctorExists = await _context.Doctors.AnyAsync(d => d.Id == model.DoctorId);
+                if (!doctorExists)
+                {
+                    ModelState.AddModelError("DoctorId", "Lỗi: Không tìm thấy hồ sơ Bác sĩ này!");
+                    return ReloadDropdownAndReturnView(model);
+                }
+
+                // BÁC SĨ CÓ CA LÀM VIỆC VÀO NGÀY ĐÓ KHÔNG? (Giờ hợp lệ)
+                var hasSchedule = await _context.Schedules.AnyAsync(s =>
+                    s.DoctorId == model.DoctorId &&
+                    s.Date.Date == model.Date.Date &&
+                    s.IsAvailable == true);
+
+                if (!hasSchedule)
+                {
+                    ModelState.AddModelError("Date", "Lỗi: Bác sĩ không có lịch trực hoặc đã nghỉ vào ngày này!");
+                    return ReloadDropdownAndReturnView(model);
+                }
                 // 1. THUẬT TOÁN CHECK TRÙNG LỊCH (CỰC KỲ QUAN TRỌNG)
                 bool isConflict = _context.Appointments.Any(a =>
                     a.DoctorId == model.DoctorId &&
@@ -73,15 +97,8 @@ namespace PBL3_HealthCare.Controllers
 
                 if (isConflict)
                 {
-                    // Bắn lỗi đỏ lòm ra giao diện cho khách biết
                     ModelState.AddModelError("", "Rất tiếc! Bác sĩ đã có lịch hẹn vào thời gian này. Vui lòng chọn giờ khác.");
-
-                    // Load lại danh sách bác sĩ cho Dropdown để không bị lỗi màn hình trắng
-                    var fallbackDoctors = _context.Doctors.Include(d => d.User).Include(d => d.Specialty)
-                        .Select(d => new { Id = d.Id, DisplayName = "Bs. " + d.User.FullName + " (" + d.Specialty.Name + ")" }).ToList();
-                    ViewData["DoctorId"] = new SelectList(fallbackDoctors, "Id", "DisplayName", model.DoctorId);
-
-                    return View(model);
+                    ReloadDropdownAndReturnView(model);
                 }
 
                 // 2. NẾU TRỐNG LỊCH -> LƯU VÀO DB
@@ -93,7 +110,7 @@ namespace PBL3_HealthCare.Controllers
                 }
 
                 model.PatientId = userId;
-                model.Status = AppointmentStatus.Pending; // Mặc định là Chờ duyệt
+                model.Status = AppointmentStatus.Pending; 
                 model.CreatedAt = DateTime.Now;
 
                 _context.Appointments.Add(model);
@@ -102,6 +119,16 @@ namespace PBL3_HealthCare.Controllers
                 TempData["Success"] = "Đặt lịch thành công! Vui lòng chờ phòng khám xác nhận.";
                 return RedirectToAction(nameof(MyHistory)); // Đá thẳng sang trang Lịch sử
             }
+
+            return ReloadDropdownAndReturnView(model);
+        }
+        // HÀM HỖ TRỢ: Load lại danh sách Bác sĩ nếu form bị lỗi (tránh bị trắng trang)
+        private IActionResult ReloadDropdownAndReturnView(Appointment model)
+        {
+            var fallbackDoctors = _context.Doctors.Include(d => d.User).Include(d => d.Specialty)
+                .Select(d => new { Id = d.Id, DisplayName = "Bs. " + d.User.FullName + " (" + d.Specialty.Name + ")" }).ToList();
+
+            ViewData["DoctorId"] = new SelectList(fallbackDoctors, "Id", "DisplayName", model.DoctorId);
 
             return View(model);
         }
