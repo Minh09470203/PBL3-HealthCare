@@ -92,6 +92,7 @@ namespace PBL3_HealthCare.Controllers
             {
                 _context.Add(appointment);
                 await _context.SaveChangesAsync();
+                TempData["Success"] = "Tạo lịch khám thành công!";
                 return RedirectToAction(nameof(Index));
             }
             ViewData["DoctorId"] = new SelectList(_context.Doctors, "Id", "Id", appointment.DoctorId);
