@@ -8,6 +8,7 @@ using PBL3_HealthCare.Models;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 
 namespace PBL3_HealthCare.Controllers
 {
