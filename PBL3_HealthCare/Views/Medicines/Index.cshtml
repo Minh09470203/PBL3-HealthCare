@@ -1,51 +1,241 @@
 ﻿@model IEnumerable<PBL3_HealthCare.Models.Medicine>
 
 @{
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
-}
-
-@{
     ViewData["Title"] = "Quản lý Kho thuốc";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<div class="card shadow mb-4">
-    <div class="card-header py-3 d-flex justify-content-between align-items-center">
-        <h6 class="m-0 font-weight-bold text-primary">Danh sách Kho thuốc</h6>
-        <a asp-action="Create" class="btn btn-primary btn-sm shadow-sm">
-            <i class="fas fa-plus fa-sm text-white-50"></i> Thêm mới
-        </a>
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/medicines.css" />
+}
+
+<style>
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+    }
+
+        .page-header h4 {
+            font-weight: 700;
+            color: #2d3748;
+            margin: 0;
+        }
+
+        .page-header p {
+            color: #9fa5b5;
+            font-size: .85rem;
+            margin: .25rem 0 0;
+        }
+
+    .btn-add {
+        background: linear-gradient(135deg,#6f42c1,#4d2b99);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: .6rem 1.4rem;
+        font-weight: 600;
+        font-size: .88rem;
+        box-shadow: 0 4px 12px rgba(111,66,193,.3);
+        transition: transform .15s;
+    }
+
+        .btn-add:hover {
+            transform: translateY(-1px);
+            color: #fff;
+        }
+
+    .data-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 24px rgba(111,66,193,.08);
+        overflow: hidden;
+    }
+
+        .data-card .card-body {
+            padding: 0;
+        }
+
+    table.dataTable thead th {
+        background: #faf8ff;
+        color: #5a5c69;
+        font-size: .78rem;
+        text-transform: uppercase;
+        letter-spacing: .8px;
+        font-weight: 700;
+        border-bottom: 2px solid #ede8ff !important;
+        border-top: none !important;
+        padding: 1rem 1.25rem !important;
+    }
+
+    table.dataTable tbody td {
+        padding: .85rem 1.25rem !important;
+        vertical-align: middle;
+        font-size: .88rem;
+        color: #2d3748;
+        border-bottom: 1px solid #f0f2fa !important;
+    }
+
+    table.dataTable tbody tr:hover td {
+        background: #faf8ff;
+    }
+
+    table.dataTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+
+    .medicine-name {
+        font-weight: 700;
+        color: #2d3748;
+    }
+
+    .unit-pill {
+        background: #ede8ff;
+        color: #6f42c1;
+        padding: .25rem .7rem;
+        border-radius: 12px;
+        font-size: .75rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .price-text {
+        font-weight: 700;
+        color: #1cc88a;
+    }
+
+    .stock-text {
+        font-weight: 600;
+    }
+
+    .stock-low {
+        color: #e74a3b;
+    }
+
+    .stock-ok {
+        color: #2d3748;
+    }
+
+    .stock-warn-badge {
+        background: #fff8e1;
+        color: #856404;
+        border: 1.5px solid #ffe082;
+        padding: .2rem .6rem;
+        border-radius: 10px;
+        font-size: .72rem;
+        font-weight: 700;
+        margin-left: .4rem;
+    }
+
+    .btn-action {
+        border-radius: 8px;
+        padding: .3rem .7rem;
+        font-size: .78rem;
+        font-weight: 600;
+        border: none;
+        transition: transform .1s;
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+    }
+
+        .btn-action:hover {
+            transform: translateY(-1px);
+        }
+
+    .btn-action-edit {
+        background: #fff8e0;
+        color: #b8860b;
+    }
+
+    .btn-action-detail {
+        background: #ede8ff;
+        color: #6f42c1;
+    }
+
+    .btn-action-delete {
+        background: #fde8e6;
+        color: #e74a3b;
+    }
+
+    .dataTables_wrapper .dataTables_filter input {
+        border: 1.5px solid #e3e6f0;
+        border-radius: 10px;
+        padding: .4rem .9rem;
+        font-size: .85rem;
+    }
+
+    .dataTables_wrapper .dataTables_length select {
+        border: 1.5px solid #e3e6f0;
+        border-radius: 8px;
+        padding: .3rem .6rem;
+        font-size: .85rem;
+    }
+
+    .dataTables_wrapper {
+        padding: 1.25rem;
+    }
+
+    .dataTables_info, .dataTables_paginate {
+        padding: .75rem 0 0 !important;
+    }
+</style>
+
+<div class="page-header">
+    <div>
+        <h4><i class="fas fa-pills mr-2" style="color:#6f42c1;"></i>Quản lý Kho thuốc</h4>
+        <p>Danh sách dược phẩm tồn kho trong hệ thống</p>
     </div>
+    <a asp-action="Create" class="btn btn-add">
+        <i class="fas fa-plus"></i> Nhập thuốc mới
+    </a>
+</div>
+
+<div class="data-card card mb-4">
     <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                <thead>
+        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Tên thuốc</th>
+                    <th>Đơn vị</th>
+                    <th>Tồn kho</th>
+                    <th>Đơn giá</th>
+                    <th class="text-center" style="width:130px;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
                     <tr>
-                        <th>@Html.DisplayNameFor(model => model.Name)</th>
-                        <th>@Html.DisplayNameFor(model => model.StockQuantity)</th>
-                        <th>@Html.DisplayNameFor(model => model.Unit)</th>
-                        <th>@Html.DisplayNameFor(model => model.Price)</th>
-                        <th class="text-center">Thao tác</th>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div style="width:32px;height:32px;background:linear-gradient(135deg,#6f42c1,#4d2b99);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.8rem;margin-right:.65rem;flex-shrink:0;">
+                                    <i class="fas fa-capsules"></i>
+                                </div>
+                                <span class="medicine-name">@Html.DisplayFor(m => item.Name)</span>
+                            </div>
+                        </td>
+                        <td><span class="unit-pill">@Html.DisplayFor(m => item.Unit)</span></td>
+                        <td>
+                            <span class="stock-text @(item.StockQuantity < 10 ? "stock-low" : "stock-ok")">
+                                @Html.DisplayFor(m => item.StockQuantity)
+                            </span>
+                            @if (item.StockQuantity < 10)
+                            {
+                                <span class="stock-warn-badge"><i class="fas fa-exclamation-triangle mr-1"></i>Thấp</span>
+                            }
+                        </td>
+                        <td><span class="price-text">@string.Format("{0:N0}", item.Price) <small style="color:#9fa5b5;font-weight:400;">đ</small></span></td>
+                        <td class="text-center">
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action btn-action-edit"><i class="fas fa-edit"></i> Sửa</a>
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn-action btn-action-detail"><i class="fas fa-eye"></i></a>
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn-action btn-action-delete"><i class="fas fa-trash"></i></a>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model)
-                    {
-                        <tr>
-                            <td>@Html.DisplayFor(modelItem => item.Name)</td>
-                            <td>@Html.DisplayFor(modelItem => item.StockQuantity)</td>
-                            <td>@Html.DisplayFor(modelItem => item.Unit)</td>
-                            <td>@string.Format("{0:N0}", item.Price)</td>
-                            <td class="text-center">
-                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Sửa</a>
-                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm">Xem</a>
-                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm">Xóa</a>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+                }
+            </tbody>
+        </table>
     </div>
 </div>
 
@@ -53,9 +243,8 @@
     <script>
         $(document).ready(function() {
             $('#dataTable').DataTable({
-                "language": {
-                    "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Vietnamese.json"
-                }
+                "language": { "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Vietnamese.json" },
+                "dom": '<"d-flex justify-content-between align-items-center mb-3"lf>rt<"d-flex justify-content-between align-items-center"ip>'
             });
         });
     </script>

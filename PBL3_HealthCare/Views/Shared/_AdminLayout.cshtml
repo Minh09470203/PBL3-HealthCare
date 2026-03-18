@@ -13,7 +13,6 @@
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,i,300,i,400,i,600,i,700,i,800,i,900,i" rel="stylesheet">
 
     <link href="~/css/sb-admin-2.min.css" rel="stylesheet">
-
     <link href="~/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
 </head>
 
@@ -35,37 +34,57 @@
                     <span>Tổng quan (Dashboard)</span>
                 </a>
             </li>
-
             <hr class="sidebar-divider">
-            <div class="sidebar-heading">Quản trị hệ thống</div>
+
+            <div class="sidebar-heading">Nghiệp vụ</div>
 
             <li class="nav-item">
-                <a class="nav-link" asp-controller="Doctors" asp-action="Index">
-                    <i class="fas fa-fw fa-user-md"></i>
-                    <span>Quản lý Bác sĩ</span>
+                <a class="nav-link" asp-controller="Appointments" asp-action="Index">
+                    <i class="fas fa-fw fa-calendar-check"></i>
+                    <span>Quản lý Lịch khám</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link" asp-controller="Specialties" asp-action="Index">
-                    <i class="fas fa-fw fa-stethoscope"></i>
-                    <span>Quản lý Chuyên khoa</span>
+                <a class="nav-link" asp-controller="Schedules" asp-action="Index">
+                    <i class="fas fa-fw fa-clock"></i>
+                    <span>Quản lý Ca làm việc</span>
                 </a>
             </li>
 
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="Medicines" asp-action="Index">
-                    <i class="fas fa-fw fa-pills"></i>
-                    <span>Kho Thuốc</span>
-                </a>
-            </li>
+            @if (User.IsInRole("Admin"))
+            {
+                <hr class="sidebar-divider">
+                <div class="sidebar-heading">Quản trị hệ thống</div>
 
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="Patients" asp-action="Index">
-                    <i class="fas fa-fw fa-user-injured"></i>
-                    <span>Quản lý Bệnh nhân</span>
-                </a>
-            </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Doctors" asp-action="Index">
+                        <i class="fas fa-fw fa-user-md"></i>
+                        <span>Quản lý Bác sĩ</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Specialties" asp-action="Index">
+                        <i class="fas fa-fw fa-stethoscope"></i>
+                        <span>Quản lý Chuyên khoa</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Medicines" asp-action="Index">
+                        <i class="fas fa-fw fa-pills"></i>
+                        <span>Kho Thuốc</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Patients" asp-action="Index">
+                        <i class="fas fa-fw fa-user-injured"></i>
+                        <span>Quản lý Bệnh nhân</span>
+                    </a>
+                </li>
+            }
 
             <hr class="sidebar-divider d-none d-md-block">
             <div class="text-center d-none d-md-inline">
@@ -144,6 +163,42 @@
     <script src="~/vendor/datatables/jquery.dataTables.min.js"></script>
     <script src="~/vendor/datatables/dataTables.bootstrap4.min.js"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function () {
+            // Lấy thông điệp từ TempData (do Backend gửi qua)
+            var successMsg = '@TempData["Success"]';
+            var errorMsg = '@TempData["Error"]';
+
+            // Cấu hình Toast (thông báo nhỏ ở góc màn hình)
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end', // Góc phải màn hình
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+
+            // Nếu có tin nhắn thành công
+            if (successMsg) {
+                Toast.fire({
+                    icon: 'success',
+                    title: successMsg
+                });
+            }
+
+            // Nếu có tin nhắn lỗi
+            if (errorMsg) {
+                Toast.fire({
+                    icon: 'error',
+                    title: errorMsg
+                });
+            }
+        });
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
+    @await RenderSectionAsync("Styles", required: false)
+
 </body>
 </html>

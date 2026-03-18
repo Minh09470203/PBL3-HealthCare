@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Identity;
+﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -44,16 +44,9 @@ namespace PBL3_HealthCare.Controllers
         [HttpGet]
         public IActionResult BookAppointment()
         {
-            // Gộp tên Bác sĩ và tên Khoa hiển thị cho đẹp (Vd: "Bs. Nguyễn Văn A - Răng Hàm Mặt")
-            var doctorsList = _context.Doctors
-                .Include(d => d.User)
-                .Include(d => d.Specialty)
-                .Select(d => new {
-                    Id = d.Id,
-                    DisplayName = "Bs. " + d.User.FullName + " (" + d.Specialty.Name + ")"
-                }).ToList();
+            // Thêm dòng này để bắn thông báo sang file _AdminLayout.cshtml
+            TempData["Success"] = "Chào Thái Leader! Hệ thống SweetAlert2 đã sẵn sàng hoạt động.";
 
-            ViewData["DoctorId"] = new SelectList(doctorsList, "Id", "DisplayName");
             return View();
         }
 
@@ -173,5 +166,3 @@ namespace PBL3_HealthCare.Controllers
         }
     }
 }
-
-
