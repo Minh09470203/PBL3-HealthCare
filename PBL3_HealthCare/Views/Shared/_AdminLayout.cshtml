@@ -13,7 +13,6 @@
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,i,300,i,400,i,600,i,700,i,800,i,900,i" rel="stylesheet">
 
     <link href="~/css/sb-admin-2.min.css" rel="stylesheet">
-
     <link href="~/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
 </head>
 
@@ -163,6 +162,40 @@
 
     <script src="~/vendor/datatables/jquery.dataTables.min.js"></script>
     <script src="~/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function () {
+            // Lấy thông điệp từ TempData (do Backend gửi qua)
+            var successMsg = '@TempData["Success"]';
+            var errorMsg = '@TempData["Error"]';
+
+            // Cấu hình Toast (thông báo nhỏ ở góc màn hình)
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end', // Góc phải màn hình
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+
+            // Nếu có tin nhắn thành công
+            if (successMsg) {
+                Toast.fire({
+                    icon: 'success',
+                    title: successMsg
+                });
+            }
+
+            // Nếu có tin nhắn lỗi
+            if (errorMsg) {
+                Toast.fire({
+                    icon: 'error',
+                    title: errorMsg
+                });
+            }
+        });
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
     @await RenderSectionAsync("Styles", required: false)

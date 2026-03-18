@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using PBL3_HealthCare.Models;
 
@@ -15,6 +15,9 @@ namespace PBL3_HealthCare.Controllers
 
         public IActionResult Index()
         {
+            // Thêm dòng này để bắn thông báo sang file _AdminLayout.cshtml
+            TempData["Success"] = "Chào Thái Leader! Hệ thống SweetAlert2 đã sẵn sàng hoạt động.";
+
             return View();
         }
 
