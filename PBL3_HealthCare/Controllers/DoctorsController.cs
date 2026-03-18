@@ -1,3 +1,9 @@
+
+﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -6,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using PBL3_HealthCare.Data;
 using PBL3_HealthCare.Models;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -54,7 +61,10 @@ namespace PBL3_HealthCare.Controllers
         // GET: Doctors/Create
         public IActionResult Create()
         {
+
             ViewData["SpecialtyId"] = new SelectList(_context.Specialties, "Id", "Name");
+            
+
             ViewData["UserId"] = new SelectList(_context.Users, "Id", "FullName");
             return View();
         }
@@ -184,11 +194,12 @@ namespace PBL3_HealthCare.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> List()
         {
-            var doctors = _context.Doctors
-                .Include(d => d.Specialty)
-                .Include(d => d.User);
+            var allDoctors = await _context.Doctors
+                                  .Include(d => d.User)
+                                  .Include(d => d.Specialty)
+                                  .ToListAsync();
 
-            return View(await doctors.ToListAsync());
+            return View(allDoctors);
         }
     }
 }
