@@ -1,69 +1,75 @@
 ﻿@model PBL3_HealthCare.Models.Appointment
 
 @{
-    ViewData["Title"] = "Delete";
+    ViewData["Title"] = "Xóa Lịch khám";
+    Layout = "_AdminLayout";
 }
 
-<h1>Delete</h1>
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/appointments.css" />
+}
 
-<h3>Are you sure you want to delete this?</h3>
-<div>
-    <h4>Appointment</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Patient)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Patient.Id)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Doctor)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Doctor.Id)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Date)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Date)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Reason)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Reason)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Status)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Status)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.TimeSlot)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.TimeSlot)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Symptoms)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Symptoms)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedAt)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedAt)
-        </dd>
-    </dl>
-    
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="Id" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index">Back to List</a>
-    </form>
+<a asp-action="Index" class="btn btn-light btn-sm mb-3" style="border-radius:8px;"><i class="fas fa-arrow-left mr-1"></i>Quay lại danh sách</a>
+
+<div class="delete-card card mb-4">
+    <div class="danger-header">
+        <div class="danger-icon"><i class="fas fa-calendar-times"></i></div>
+        <h5>Xóa Lịch khám</h5>
+        <p>Hành động này không thể hoàn tác</p>
+    </div>
+    <div class="delete-body">
+        <div class="appt-preview">
+            <div class="preview-id">Lịch khám #@Model?.Id</div>
+            <div class="preview-title">
+                <i class="fas fa-procedures mr-1 text-danger"></i> Bệnh nhân @Model?.Patient?.Id
+                &nbsp;•&nbsp;
+                <i class="fas fa-user-md mr-1 text-danger"></i> BS @Model?.Doctor?.Id
+            </div>
+        </div>
+
+        <div class="info-row">
+            <span class="label">Ngày khám</span>
+            <span class="value">@Model?.Date.ToString("dd/MM/yyyy")</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Khung giờ</span>
+            <span class="value">@(Model?.TimeSlot.ToString(@"hh\:mm") ?? "—")</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Trạng thái</span>
+            <span class="value">
+                @if (Model?.Status.ToString() == "Pending")
+                {
+                    <span class="status-badge status-pending">⏳ Chờ duyệt</span>
+                }
+                else if (Model?.Status.ToString() == "Confirmed")
+                {
+
+                    <span class="status-badge status-confirmed">✅ Xác nhận</span>
+                }
+                else
+                {
+
+                    <span class="status-badge status-cancelled">❌ Đã hủy</span>
+                }
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="label">Lý do</span>
+            <span class="value">@(Model?.Reason ?? "—")</span>
+        </div>
+
+        <div class="warning-box">
+            <i class="fas fa-exclamation-triangle mr-2"></i>
+            <strong>Lưu ý:</strong> Xóa lịch khám này sẽ xóa vĩnh viễn toàn bộ thông tin liên quan.
+        </div>
+
+        <form asp-action="Delete">
+            <input type="hidden" asp-for="Id" />
+            <div class="d-flex" style="gap:.75rem">
+                <button type="submit" class="btn btn-confirm-delete"><i class="fas fa-trash mr-1"></i>Xác nhận xóa</button>
+                <a asp-action="Index" class="btn btn-cancel-soft"><i class="fas fa-ban mr-1"></i>Hủy bỏ</a>
+            </div>
+        </form>
+    </div>
 </div>

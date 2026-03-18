@@ -1,61 +1,55 @@
 ﻿@model PBL3_HealthCare.Models.Doctor
 
 @{
+    ViewData["Title"] = "Xóa Bác sĩ";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-@{
-    ViewData["Title"] = "Delete";
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/doctors.css" />
 }
 
-<h1>Delete</h1>
+<a asp-action="Index" class="btn btn-light btn-sm mb-3" style="border-radius:8px;"><i class="fas fa-arrow-left mr-1"></i>Quay lại danh sách</a>
 
-<h3>Are you sure you want to delete this?</h3>
-<div>
-    <h4>Doctor</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.User)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.User.Id)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Specialty)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Specialty.Name)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Bio)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Bio)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Degree)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Degree)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Price)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Price)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Image)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Image)
-        </dd>
-    </dl>
-    
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="Id" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index">Back to List</a>
-    </form>
+<div class="delete-card card mb-4">
+    <div class="danger-header">
+        <div class="danger-icon"><i class="fas fa-user-times"></i></div>
+        <h5>Xóa hồ sơ Bác sĩ</h5>
+        <p>Hành động này không thể hoàn tác</p>
+    </div>
+    <div class="delete-body">
+        <div class="preview-box">
+            <div class="preview-icon"><i class="fas fa-user-md"></i></div>
+            <div>
+                <div class="preview-name">@Model?.User?.FullName</div>
+                <div class="preview-meta"><i class="fas fa-stethoscope mr-1"></i>@Model?.Specialty?.Name</div>
+            </div>
+        </div>
+
+        <div class="info-row">
+            <span class="label">Bằng cấp</span>
+            <span class="value">@Model?.Degree</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Giá khám</span>
+            <span class="value" style="color:#1cc88a;font-weight:700;">@string.Format("{0:N0}", Model?.Price) VNĐ</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Tiểu sử</span>
+            <span class="value">@(string.IsNullOrWhiteSpace(Model?.Bio) ? "—" : (Model.Bio.Length > 50 ? Model.Bio.Substring(0, 50) + "..." : Model.Bio))</span>
+        </div>
+
+        <div class="warning-box">
+            <i class="fas fa-exclamation-triangle mr-2"></i>
+            <strong>Cảnh báo:</strong> Xóa bác sĩ sẽ ảnh hưởng đến tất cả lịch khám và ca làm việc liên quan.
+        </div>
+
+        <form asp-action="Delete">
+            <input type="hidden" asp-for="Id" />
+            <div class="d-flex" style="gap:.75rem">
+                <button type="submit" class="btn btn-confirm-delete"><i class="fas fa-trash mr-1"></i>Xác nhận xóa</button>
+                <a asp-action="Index" class="btn btn-cancel-soft"><i class="fas fa-ban mr-1"></i>Hủy bỏ</a>
+            </div>
+        </form>
+    </div>
 </div>

@@ -6,89 +6,244 @@
     Layout = "_AdminLayout";
 }
 
-<div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800">Quản lý Lịch khám</h1>
-    @if (User.IsInRole("Admin"))
-    {
-        <a asp-action="Create" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
-            <i class="fas fa-plus fa-sm text-white-50"></i> Tạo lịch mới
-        </a>
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/appointments.css" />
+}
+
+<style>
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
     }
+
+        .page-header h4 {
+            font-weight: 700;
+            color: #2d3748;
+            margin: 0;
+        }
+
+        .page-header p {
+            color: #9fa5b5;
+            font-size: .85rem;
+            margin: .25rem 0 0;
+        }
+
+    .btn-add {
+        background: linear-gradient(135deg,#1cc88a,#13855c);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: .6rem 1.4rem;
+        font-weight: 600;
+        font-size: .88rem;
+        box-shadow: 0 4px 12px rgba(28,200,138,.3);
+        transition: transform .15s;
+    }
+
+        .btn-add:hover {
+            transform: translateY(-1px);
+            color: #fff;
+            box-shadow: 0 6px 18px rgba(28,200,138,.4);
+        }
+
+    .data-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 24px rgba(28,200,138,.08);
+        overflow: hidden;
+    }
+
+        .data-card .card-body {
+            padding: 0;
+        }
+
+    table.dataTable thead th {
+        background: #f8fefc;
+        color: #5a5c69;
+        font-size: .78rem;
+        text-transform: uppercase;
+        letter-spacing: .8px;
+        font-weight: 700;
+        border-bottom: 2px solid #e0faf3 !important;
+        border-top: none !important;
+        padding: 1rem 1.25rem !important;
+    }
+
+    table.dataTable tbody td {
+        padding: .85rem 1.25rem !important;
+        vertical-align: middle;
+        font-size: .88rem;
+        color: #2d3748;
+        border-bottom: 1px solid #f0f2fa !important;
+    }
+
+    table.dataTable tbody tr:hover td {
+        background: #f8fefc;
+    }
+
+    table.dataTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: .3rem .75rem;
+        border-radius: 15px;
+        font-size: .75rem;
+        font-weight: 700;
+    }
+
+    .status-pending {
+        background: #fff8e1;
+        color: #856404;
+        border: 1.5px solid #ffe082;
+    }
+
+    .status-confirmed {
+        background: #e8fdf5;
+        color: #0a5f38;
+        border: 1.5px solid #a3e9c6;
+    }
+
+    .status-cancelled {
+        background: #fde8e6;
+        color: #842029;
+        border: 1.5px solid #f5c2c7;
+    }
+
+    .date-text {
+        font-weight: 600;
+        color: #2d3748;
+    }
+
+    .timeslot-text {
+        color: #36b9cc;
+        font-weight: 600;
+        font-size: .82rem;
+    }
+
+    .btn-action {
+        border-radius: 8px;
+        padding: .3rem .7rem;
+        font-size: .78rem;
+        font-weight: 600;
+        border: none;
+        transition: transform .1s;
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+    }
+
+        .btn-action:hover {
+            transform: translateY(-1px);
+        }
+
+    .btn-action-edit {
+        background: #fff8e0;
+        color: #b8860b;
+    }
+
+    .btn-action-detail {
+        background: #e8f0fe;
+        color: #4e73df;
+    }
+
+    .btn-action-delete {
+        background: #fde8e6;
+        color: #e74a3b;
+    }
+
+    .dataTables_wrapper .dataTables_filter input {
+        border: 1.5px solid #e3e6f0;
+        border-radius: 10px;
+        padding: .4rem .9rem;
+        font-size: .85rem;
+    }
+
+    .dataTables_wrapper .dataTables_length select {
+        border: 1.5px solid #e3e6f0;
+        border-radius: 8px;
+        padding: .3rem .6rem;
+        font-size: .85rem;
+    }
+
+    .dataTables_wrapper {
+        padding: 1.25rem;
+    }
+
+    .dataTables_info, .dataTables_paginate {
+        padding: .75rem 0 0 !important;
+    }
+</style>
+
+<div class="page-header">
+    <div>
+        <h4><i class="fas fa-calendar-check mr-2 text-success"></i>Quản lý Lịch khám</h4>
+        <p>Danh sách toàn bộ lịch hẹn khám trong hệ thống</p>
+    </div>
+    <a asp-action="Create" class="btn btn-add">
+        <i class="fas fa-plus"></i> Tạo lịch khám
+    </a>
 </div>
 
-<div class="card shadow mb-4">
+<div class="data-card card mb-4">
     <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
-                <thead class="thead-light">
+        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Bệnh nhân</th>
+                    <th>Bác sĩ</th>
+                    <th>Ngày khám</th>
+                    <th>Khung giờ</th>
+                    <th>Trạng thái</th>
+                    <th>Triệu chứng</th>
+                    <th class="text-center" style="width:130px;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
                     <tr>
-                        <th>Bệnh nhân</th>
-                        <th>Bác sĩ</th>
-                        <th>Ngày khám</th>
-                        <th>Trạng thái</th>
-                        <th>Ca khám</th>
-                        <th>Lý do / Triệu chứng</th>
-                        <th class="text-center">Thao tác</th>
+                        <td>@Html.DisplayFor(m => item.Patient.Id)</td>
+                        <td>@Html.DisplayFor(m => item.Doctor.Id)</td>
+                        <td><span class="date-text">@item.Date.ToString("dd/MM/yyyy")</span></td>
+                        <td><span class="timeslot-text"><i class="fas fa-clock mr-1"></i>@Html.DisplayFor(m => item.TimeSlot)</span></td>
+                        <td>
+                            @if (item.Status == AppointmentStatus.Pending)
+                            {
+                                <span class="status-badge status-pending">⏳ Chờ duyệt</span>
+                            }
+                            else if (item.Status == AppointmentStatus.Confirmed)
+                            {
+
+                                <span class="status-badge status-confirmed">✅ Xác nhận</span>
+                            }
+                            else if (item.Status == AppointmentStatus.Cancelled)
+                            {
+
+                                <span class="status-badge status-cancelled">❌ Đã hủy</span>
+                            }
+                            else
+                            {
+
+                                <span class="status-badge" style="background:#e8edff;color:#4e73df;">@item.Status</span>
+                            }
+                        </td>
+                        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                            @Html.DisplayFor(m => item.Symptoms)
+                        </td>
+                        <td class="text-center">
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action btn-action-edit"><i class="fas fa-edit"></i> Sửa</a>
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn-action btn-action-detail"><i class="fas fa-eye"></i></a>
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn-action btn-action-delete"><i class="fas fa-trash"></i></a>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model)
-                    {
-                        <tr>
-                            <td><strong>@(item.Patient?.FullName ?? "N/A")</strong></td>
-                            <td>@(item.Doctor?.User?.FullName ?? "N/A")</td>
-                            <td>@item.Date.ToString("dd/MM/yyyy")</td>
-                            <td>
-                                @if (item.Status == AppointmentStatus.Pending)
-                                {
-                                    <span class="badge badge-warning p-2">Chờ duyệt</span>
-                                }
-                                else if (item.Status == AppointmentStatus.Confirmed)
-                                {
-                                    <span class="badge badge-success p-2">Đã xác nhận</span>
-                                }
-                                else if (item.Status == AppointmentStatus.Cancelled)
-                                {
-                                    <span class="badge badge-danger p-2">Đã hủy</span>
-                                }
-                            </td>
-                            <td>@item.TimeSlot</td> 
-                            <td>
-                                <small><i>@item.Reason</i></small> <br />
-                                <span class="text-muted">@item.Symptoms</span>
-                            </td>
-                            <td class="text-center">
-                                @if (User.IsInRole("Doctor"))
-                                {
-                                    <div class="btn-group">
-                                        <a asp-action="Approve" asp-route-id="@item.Id" class="btn btn-success btn-sm btn-icon-split shadow-sm mr-2">
-                                            <span class="icon text-white-50"><i class="fas fa-check"></i></span>
-                                            <span class="text">Duyệt ca</span>
-                                        </a>
-                                        <a asp-action="Cancel" asp-route-id="@item.Id" class="btn btn-danger btn-sm btn-icon-split shadow-sm">
-                                            <span class="icon text-white-50"><i class="fas fa-times"></i></span>
-                                            <span class="text">Hủy ca</span>
-                                        </a>
-                                    </div>
-                                }
-                                else
-                                {
-                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-circle btn-sm shadow-sm" title="Chi tiết">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-circle btn-sm shadow-sm" title="Sửa">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-circle btn-sm shadow-sm" title="Xóa">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
-                                }
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+                }
+            </tbody>
+        </table>
     </div>
 </div>
 
@@ -96,10 +251,8 @@
     <script>
         $(document).ready(function () {
             $('#dataTable').DataTable({
-                "language": {
-                    "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Vietnamese.json"
-                },
-                "order": [[2, "desc"]] // Sắp xếp theo ngày mới nhất
+                "language": { "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Vietnamese.json" },
+                "dom": '<"d-flex justify-content-between align-items-center mb-3"lf>rt<"d-flex justify-content-between align-items-center"ip>'
             });
         });
     </script>
