@@ -1,50 +1,92 @@
 ﻿@model PBL3_HealthCare.Models.Doctor
 
 @{
-    ViewData["Title"] = "Thiết lập thông tin Bác sĩ";
+    ViewData["Title"] = "Thêm Bác sĩ mới";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Thông tin Bác sĩ mới</h6>
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/doctors.css" />
+}
+
+<a asp-action="Index" class="btn btn-light btn-sm mb-3" style="border-radius:8px;">
+    <i class="fas fa-arrow-left mr-1"></i>Quay lại
+</a>
+
+<div class="form-card create card mb-4">
+    <div class="card-header">
+        <h5><i class="fas fa-user-md mr-2"></i>Thêm Bác sĩ mới vào hệ thống</h5>
+        <p>Điền đầy đủ thông tin để tạo hồ sơ bác sĩ</p>
     </div>
     <div class="card-body">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <form asp-action="Create" autocomplete="off">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3" style="border-radius:10px;font-size:.85rem;"></div>
+
+            <p class="form-section-title blue"><i class="fas fa-id-card mr-1"></i>Thông tin cơ bản</p>
             <div class="row">
                 <div class="col-md-6">
-                    <div class="form-group mb-3">
-                        <label asp-for="UserId" class="control-label font-weight-bold">Tài khoản người dùng</label>
-                        <select asp-for="UserId" class="form-control" asp-items="ViewBag.UserId"></select>
+                    <div class="form-floating-custom">
+                        <label><i class="fas fa-user mr-1 text-muted"></i>Tài khoản người dùng</label>
+                        <select asp-for="UserId" class="form-control" asp-items="ViewBag.UserId">
+                            <option value="">-- Chọn tài khoản --</option>
+                        </select>
                     </div>
-                    <div class="form-group mb-3">
-                        <label asp-for="SpecialtyId" class="control-label font-weight-bold">Chuyên khoa</label>
-                        <select asp-for="SpecialtyId" class="form-control" asp-items="ViewBag.SpecialtyId"></select>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating-custom">
+                        <label><i class="fas fa-stethoscope mr-1 text-muted"></i>Chuyên khoa</label>
+                        <select asp-for="SpecialtyId" class="form-control" asp-items="ViewBag.SpecialtyId">
+                            <option value="">-- Chọn chuyên khoa --</option>
+                        </select>
                     </div>
-                    <div class="form-group mb-3">
-                        <label asp-for="Degree" class="control-label font-weight-bold">Bằng cấp/Học hàm</label>
-                        <input asp-for="Degree" class="form-control" placeholder="VD: Thạc sĩ, Tiến sĩ..." />
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating-custom">
+                        <label><i class="fas fa-graduation-cap mr-1 text-muted"></i>Bằng cấp / Học hàm</label>
+                        <div class="input-icon-wrap">
+                            <i class="input-icon fas fa-award"></i>
+                            <input asp-for="Degree" class="form-control" placeholder="VD: Tiến sĩ, Thạc sĩ Y khoa..." />
+                        </div>
                         <span asp-validation-for="Degree" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="form-group mb-3">
-                        <label asp-for="Price" class="control-label font-weight-bold">Giá khám (VNĐ)</label>
-                        <input asp-for="Price" class="form-control" type="number" />
+                    <div class="form-floating-custom">
+                        <label><i class="fas fa-money-bill-wave mr-1 text-muted"></i>Giá khám (VNĐ)</label>
+                        <div class="input-icon-wrap">
+                            <i class="input-icon fas fa-tag"></i>
+                            <input asp-for="Price" class="form-control" type="number" placeholder="0" />
+                        </div>
                         <span asp-validation-for="Price" class="text-danger"></span>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label asp-for="Bio" class="control-label font-weight-bold">Tiểu sử tóm tắt</label>
-                        <textarea asp-for="Bio" class="form-control" rows="4"></textarea>
-                        <span asp-validation-for="Bio" class="text-danger"></span>
                     </div>
                 </div>
             </div>
-            <hr />
-            <div class="form-group">
-                <button type="submit" class="btn btn-primary px-4">Lưu thông tin</button>
-                <a asp-action="Index" class="btn btn-secondary px-4 ml-2">Hủy bỏ</a>
+
+            <p class="form-section-title blue mt-2"><i class="fas fa-align-left mr-1"></i>Mô tả & Hình ảnh</p>
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="form-floating-custom">
+                        <label>Tiểu sử / Giới thiệu bác sĩ</label>
+                        <textarea asp-for="Bio" class="form-control" rows="4" placeholder="Nhập mô tả ngắn về bác sĩ..."></textarea>
+                        <span asp-validation-for="Bio" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-floating-custom">
+                        <label><i class="fas fa-image mr-1 text-muted"></i>Đường dẫn ảnh đại diện</label>
+                        <div class="input-icon-wrap">
+                            <i class="input-icon fas fa-link"></i>
+                            <input asp-for="Image" class="form-control" placeholder="/img/doctors/..." />
+                        </div>
+                        <span asp-validation-for="Image" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <hr style="border-color:#e8edff;margin:1.5rem 0;">
+            <div class="d-flex" style="gap:.75rem">
+                <button type="submit" class="btn btn-save-blue"><i class="fas fa-check mr-1"></i>Lưu thông tin</button>
+                <a asp-action="Index" class="btn btn-cancel-soft"><i class="fas fa-times mr-1"></i>Hủy bỏ</a>
             </div>
         </form>
     </div>

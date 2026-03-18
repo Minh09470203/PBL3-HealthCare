@@ -1,47 +1,76 @@
 ﻿@model PBL3_HealthCare.Models.Schedule
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Tạo Ca làm việc mới";
+    Layout = "_AdminLayout";
 }
 
-<h1>Create</h1>
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/schedules.css" />
+}
 
-<h4>Schedule</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="DoctorId" class="control-label"></label>
-                <select asp-for="DoctorId" class ="form-control" asp-items="ViewBag.DoctorId"></select>
+<a asp-action="Index" class="btn btn-light btn-sm mb-3" style="border-radius:8px;"><i class="fas fa-arrow-left mr-1"></i>Quay lại</a>
+
+<div class="form-card create card mb-4" style="max-width:680px;">
+    <div class="card-header">
+        <h5><i class="fas fa-calendar-plus mr-2"></i>Tạo Ca làm việc mới</h5>
+        <p>Phân công ca trực cho bác sĩ</p>
+    </div>
+    <div class="card-body">
+        <form asp-action="Create" autocomplete="off">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3" style="border-radius:10px;font-size:.85rem;"></div>
+
+            <p class="form-section-title teal"><i class="fas fa-user-md mr-1"></i>Thông tin ca làm</p>
+
+            <div class="form-floating-custom">
+                <label>Bác sĩ phụ trách</label>
+                <select asp-for="DoctorId" class="form-control" asp-items="ViewBag.DoctorId">
+                    <option value="">-- Chọn bác sĩ --</option>
+                </select>
             </div>
-            <div class="form-group">
-                <label asp-for="Date" class="control-label"></label>
-                <input asp-for="Date" class="form-control" />
-                <span asp-validation-for="Date" class="text-danger"></span>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-floating-custom">
+                        <label>Ngày làm việc</label>
+                        <div class="input-icon-wrap">
+                            <i class="input-icon fas fa-calendar"></i>
+                            <input asp-for="Date" class="form-control" type="date" />
+                        </div>
+                        <span asp-validation-for="Date" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating-custom">
+                        <label>Ca làm việc</label>
+                        <div class="input-icon-wrap">
+                            <i class="input-icon fas fa-sun"></i>
+                            <input asp-for="Shift" class="form-control" placeholder="VD: Sáng, Chiều, Tối..." />
+                        </div>
+                        <span asp-validation-for="Shift" class="text-danger"></span>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Shift" class="control-label"></label>
-                <input asp-for="Shift" class="form-control" />
-                <span asp-validation-for="Shift" class="text-danger"></span>
+
+            <div class="availability-toggle">
+                <input class="form-check-input" type="checkbox" asp-for="IsAvailable" />
+                <div>
+                    <label asp-for="IsAvailable" class="toggle-label" style="cursor:pointer;margin:0;">Còn chỗ nhận lịch</label>
+                    <div class="toggle-desc">Bật nếu bác sĩ có thể nhận thêm bệnh nhân trong ca này</div>
+                </div>
             </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="IsAvailable" /> @Html.DisplayNameFor(model => model.IsAvailable)
-                </label>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+
+            <hr style="border-color:#e0f7fa;margin:1.5rem 0;">
+            <div class="d-flex" style="gap:.75rem">
+                <button type="submit" class="btn btn-save-teal"><i class="fas fa-check mr-1"></i>Tạo ca làm việc</button>
+                <a asp-action="Index" class="btn btn-cancel-soft"><i class="fas fa-times mr-1"></i>Hủy bỏ</a>
             </div>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }
