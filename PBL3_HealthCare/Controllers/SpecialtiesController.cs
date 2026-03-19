@@ -62,6 +62,7 @@ namespace PBL3_HealthCare.Controllers
             {
                 _context.Add(specialty);
                 await _context.SaveChangesAsync();
+                TempData["Success"] = "Thêm chuyên khoa thành công!";
                 return RedirectToAction(nameof(Index));
             }
             return View(specialty);
@@ -113,6 +114,7 @@ namespace PBL3_HealthCare.Controllers
                         throw;
                     }
                 }
+                TempData["Success"] = "Cập nhật chuyên khoa thành công!";
                 return RedirectToAction(nameof(Index));
             }
             return View(specialty);
@@ -148,6 +150,7 @@ namespace PBL3_HealthCare.Controllers
             }
 
             await _context.SaveChangesAsync();
+            TempData["Success"] = "Xóa chuyên khoa thành công!";
             return RedirectToAction(nameof(Index));
         }
 
