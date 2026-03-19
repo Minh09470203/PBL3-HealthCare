@@ -31,14 +31,17 @@ namespace PBL3_HealthCare.Controllers
         public async Task<IActionResult> Index()
         {
             // Query lấy 4 bác sĩ đầu tiên, Include bảng User và Specialty
-            var topDoctors = await _context.Doctors
+            var doctors = await _context.Doctors
                                            .Include(d => d.User)
                                            .Include(d => d.Specialty)
                                            .Take(4)
                                            .ToListAsync();
-
-            // truyền sang View
-            return View(topDoctors);
+            var viewModel = new HomeViewModel
+            {
+                TopDoctors = doctors.Take(4).ToList(),
+                AllDoctors = doctors
+            };
+            return View(viewModel);
         }
 
         // GET: /Home/BookAppointment (Gọi ra form điền)
@@ -113,7 +116,6 @@ namespace PBL3_HealthCare.Controllers
                 TempData["Success"] = "Đặt lịch thành công! Vui lòng chờ phòng khám xác nhận.";
                 return RedirectToAction(nameof(MyHistory)); // Đá thẳng sang trang Lịch sử
             }
-
             return ReloadDropdownAndReturnView(model);
         }
         // HÀM HỖ TRỢ: Load lại danh sách Bác sĩ nếu form bị lỗi (tránh bị trắng trang)
@@ -164,6 +166,19 @@ namespace PBL3_HealthCare.Controllers
             {
                 RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
             });
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetDoctorsBySpecialty(int specialtyId)
+        {
+            var doctors = await _context.Doctors
+                .Include(d => d.User)
+                .Where(d => d.SpecialtyId == specialtyId)
+                .Select(d => new {
+                    value = d.Id,
+                    text = "BS. " + d.User.FullName
+                })
+                .ToListAsync();
+            return Json(doctors);
         }
     }
 }
