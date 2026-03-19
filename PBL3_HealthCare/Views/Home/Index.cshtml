@@ -193,95 +193,29 @@
 
                 <div class="col-md-8">
                     <div class="row no-gutters">
-                        <div class="col-md-4">
-                            <div class="department-wrap p-4 ftco-animate">
-                                <div class="text p-2 text-center">
-                                    <div class="icon">
-                                        <span class="flaticon-stethoscope"></span>
+                        @if (ViewBag.TopSpecialties != null)
+                        {
+                            foreach (var khoa in ViewBag.TopSpecialties)
+                            {
+                                <div class="col-md-4 d-flex">
+                                    <div class="department-wrap p-4 ftco-animate align-self-stretch w-100">
+                                        <div class="text p-2 text-center">
+                                            <div class="icon">
+                                                <span class="flaticon-stethoscope"></span>
+                                            </div>
+                                            <h3><a asp-controller="Home" asp-action="DoctorList" asp-route-specialtyId="@khoa.Id">@khoa.Name</a></h3>
+                                            <p>Khám và điều trị chuyên sâu các bệnh lý thuộc chuyên khoa @khoa.Name.</p>
+                                        </div>
                                     </div>
-                                    <h3><a href="#">Thần kinh</a></h3>
-                                    <p>Chẩn đoán và điều trị các bệnh lý liên quan đến não bộ, tủy sống và hệ thần kinh như đột quỵ, đau đầu, động kinh và rối loạn thần kinh.</p>
                                 </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="col-12 p-5 text-center">
+                                <p class="text-muted">Đang cập nhật danh sách chuyên khoa...</p>
                             </div>
-                            <div class="department-wrap p-4 ftco-animate">
-                                <div class="text p-2 text-center">
-                                    <div class="icon">
-                                        <span class="flaticon-stethoscope"></span>
-                                    </div>
-                                    <h3><a href="#">Ngoại khoa</a></h3>
-                                    <p>Thực hiện các ca phẫu thuật điều trị bệnh lý bằng phương pháp can thiệp ngoại khoa với đội ngũ bác sĩ giàu kinh nghiệm.</p>
-                                </div>
-                            </div>
-                            <div class="department-wrap p-4 ftco-animate">
-                                <div class="text p-2 text-center">
-                                    <div class="icon">
-                                        <span class="flaticon-stethoscope"></span>
-                                    </div>
-                                    <h3><a href="#">Nha khoa</a></h3>
-                                    <p>Chăm sóc sức khỏe răng miệng, điều trị sâu răng, viêm nướu, chỉnh nha và thẩm mỹ răng.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-4">
-                            <div class="department-wrap p-4 ftco-animate">
-                                <div class="text p-2 text-center">
-                                    <div class="icon">
-                                        <span class="flaticon-stethoscope"></span>
-                                    </div>
-                                    <h3><a href="#">Nhãn khoa</a></h3>
-                                    <p>Khám và điều trị các bệnh về mắt như cận thị, viễn thị, đục thủy tinh thể, glaucoma và các vấn đề thị lực khác.</p>
-                                </div>
-                            </div>
-                            <div class="department-wrap p-4 ftco-animate">
-                                <div class="text p-2 text-center">
-                                    <div class="icon">
-                                        <span class="flaticon-stethoscope"></span>
-                                    </div>
-                                    <h3><a href="#">Nội tổng quát</a></h3>
-                                    <p>Khám và điều trị các bệnh lý nội khoa phổ biến, tư vấn sức khỏe và theo dõi tình trạng bệnh lâu dài.</p>
-                                </div>
-                            </div>
-                            <div class="department-wrap p-4 ftco-animate">
-                                <div class="text p-2 text-center">
-                                    <div class="icon">
-                                        <span class="flaticon-stethoscope"></span>
-                                    </div>
-                                    <h3><a href="#">Chấn thương chỉnh hình</a></h3>
-                                    <p>Điều trị các chấn thương về xương khớp, gãy xương, trật khớp và các bệnh lý cơ xương khớp.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-4">
-                            <div class="department-wrap p-4 ftco-animate">
-                                <div class="text p-2 text-center">
-                                    <div class="icon">
-                                        <span class="flaticon-stethoscope"></span>
-                                    </div>
-                                    <h3><a href="#">Chẩn đoán hình ảnh MRI</a></h3>
-                                    <p>Sử dụng công nghệ cộng hưởng từ (MRI) để chẩn đoán chính xác các bệnh lý bên trong cơ thể mà không cần phẫu thuật.</p>
-                                </div>
-                            </div>
-                            <div class="department-wrap p-4 ftco-animate">
-                                <div class="text p-2 text-center">
-                                    <div class="icon">
-                                        <span class="flaticon-stethoscope"></span>
-                                    </div>
-                                    <h3><a href="#">Chụp X-quang</a></h3>
-                                    <p>Dịch vụ chụp X-quang giúp phát hiện nhanh chóng các vấn đề về xương, phổi và nhiều bệnh lý khác.</p>
-                                </div>
-                            </div>
-                            <div class="department-wrap p-4 ftco-animate">
-                                <div class="text p-2 text-center">
-                                    <div class="icon">
-                                        <span class="flaticon-stethoscope"></span>
-                                    </div>
-                                    <h3><a href="#">Tim mạch</a></h3>
-                                    <p>Chẩn đoán và điều trị các bệnh về tim và mạch máu như tăng huyết áp, bệnh mạch vành, suy tim và rối loạn nhịp tim</p>
-                                </div>
-                            </div>
-                        </div>
+                        }
                     </div>
                 </div>
             </div>

@@ -20,11 +20,13 @@
         <div class="info-grid">
             <div class="info-item">
                 <div class="info-label"><i class="fas fa-procedures mr-1"></i>Bệnh nhân</div>
-                <div class="info-value">@Model?.Patient?.Id</div>
+                @* SỬA: Hiện FullName của Bệnh nhân *@
+                <div class="info-value font-weight-bold text-dark">@(Model?.Patient?.FullName ?? "N/A")</div>
             </div>
             <div class="info-item green">
                 <div class="info-label"><i class="fas fa-user-md mr-1"></i>Bác sĩ</div>
-                <div class="info-value">@Model?.Doctor?.Id</div>
+                @* SỬA: Hiện FullName của Bác sĩ *@
+                <div class="info-value font-weight-bold text-dark">BS. @(Model?.Doctor?.User?.FullName ?? "N/A")</div>
             </div>
             <div class="info-item yellow">
                 <div class="info-label"><i class="fas fa-calendar mr-1"></i>Ngày khám</div>
@@ -41,23 +43,20 @@
             <div class="info-item red">
                 <div class="info-label"><i class="fas fa-traffic-light mr-1"></i>Trạng thái</div>
                 <div class="info-value">
-                    @if (Model?.Status.ToString() == "Pending")
+                    @if (Model?.Status == AppointmentStatus.Pending)
                     {
                         <span class="status-badge status-pending">⏳ Chờ duyệt</span>
                     }
-                    else if (Model?.Status.ToString() == "Confirmed")
+                    else if (Model?.Status == AppointmentStatus.Confirmed)
                     {
-
                         <span class="status-badge status-confirmed">✅ Đã xác nhận</span>
                     }
-                    else if (Model?.Status.ToString() == "Cancelled")
+                    else if (Model?.Status == AppointmentStatus.Cancelled)
                     {
-
                         <span class="status-badge status-cancelled">❌ Đã hủy</span>
                     }
                     else
                     {
-
                         <span class="status-badge" style="background:#e8edff;color:#4e73df;">@Model?.Status</span>
                     }
                 </div>
@@ -68,14 +67,16 @@
         {
             <div class="text-box mb-3">
                 <div class="label"><i class="fas fa-question-circle mr-1"></i>Lý do khám</div>
-                <p>@Model.Reason</p>
+                <p class="text-dark">@Model.Reason</p>
             </div>
         }
+
+        @* Tui giữ lại Symptoms này phòng khi sau này bác sĩ muốn điền thêm triệu chứng lâm sàng vào *@
         @if (!string.IsNullOrWhiteSpace(Model?.Symptoms))
         {
             <div class="text-box">
-                <div class="label"><i class="fas fa-notes-medical mr-1"></i>Triệu chứng</div>
-                <p>@Model.Symptoms</p>
+                <div class="label"><i class="fas fa-notes-medical mr-1"></i>Triệu chứng (Bác sĩ ghi chú)</div>
+                <p class="text-dark">@Model.Symptoms</p>
             </div>
         }
     </div>

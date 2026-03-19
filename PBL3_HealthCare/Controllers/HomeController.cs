@@ -1,14 +1,15 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Identity;
 using PBL3_HealthCare.Data;
 using PBL3_HealthCare.Models;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
 
 namespace PBL3_HealthCare.Controllers
 {
@@ -30,6 +31,7 @@ namespace PBL3_HealthCare.Controllers
 
         public async Task<IActionResult> Index()
         {
+            ViewBag.TopSpecialties = await _context.Specialties.Take(6).ToListAsync();
             // Query lấy 4 bác sĩ đầu tiên, Include bảng User và Specialty
             var doctors = await _context.Doctors
                                            .Include(d => d.User)
@@ -38,24 +40,103 @@ namespace PBL3_HealthCare.Controllers
                                            .ToListAsync();
             var viewModel = new HomeViewModel
             {
-                TopDoctors = doctors.Take(4).ToList(),
+                TopDoctors = doctors,
                 AllDoctors = doctors
             };
-     
+
             return View(viewModel);
         }
 
-        // GET: /Home/BookAppointment (Gọi ra form điền)
-        [HttpGet]
-        public IActionResult BookAppointment()
+        // ==========================================
+        // KHU VỰC 1: LUỒNG TÌM KIẾM BÁC SĨ & LỊCH KHÁM
+        // ==========================================
+
+        // 1. LẤY DANH SÁCH BÁC SĨ (CÓ LỌC KHOA)
+        public async Task<IActionResult> DoctorList(int? specialtyId)
         {
-            // Thêm dòng này để bắn thông báo sang file _AdminLayout.cshtml
-            TempData["Success"] = "Chào Thái Leader! Hệ thống SweetAlert2 đã sẵn sàng hoạt động.";
-            ViewBag.SpecialtyId = new SelectList(_context.Specialties, "Id", "Name");
-            return View();
+            var query = _context.Doctors
+                .Include(d => d.User)
+                .Include(d => d.Specialty)
+                .AsQueryable();
+
+            if (specialtyId.HasValue)
+            {
+                query = query.Where(d => d.SpecialtyId == specialtyId);
+                ViewBag.SpecialtyName = await _context.Specialties
+                    .Where(s => s.Id == specialtyId)
+                    .Select(s => s.Name)
+                    .FirstOrDefaultAsync();
+            }
+
+            return View(await query.ToListAsync());
         }
 
-        // POST: /Home/BookAppointment (Hứng data khách bấm nút Đặt)
+        // 2. LẤY HỒ SƠ CHI TIẾT & BẢNG GIỜ KHÁM
+        public async Task<IActionResult> DoctorProfile(int id)
+        {
+            var doctor = await _context.Doctors
+                .Include(d => d.Specialty)
+                .Include(d => d.User)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (doctor == null) return NotFound();
+
+            // Khởi tạo danh sách giờ và 3 ngày tới
+            var timeSlots = new List<string> { "08:00", "09:00", "10:00", "14:00", "15:00", "16:00" };
+            var next3Days = new List<DateTime> { DateTime.Now.Date, DateTime.Now.Date.AddDays(1), DateTime.Now.Date.AddDays(2) };
+
+            // Lấy danh sách lịch ĐÃ CÓ NGƯỜI ĐẶT
+            var bookedAppointments = await _context.Appointments
+                .Where(a => a.DoctorId == id &&
+                            a.Date >= DateTime.Now.Date &&
+                            a.Date <= DateTime.Now.Date.AddDays(2) &&
+                            a.Status != AppointmentStatus.Cancelled)
+                .ToListAsync();
+
+            ViewBag.Next3Days = next3Days;
+            ViewBag.TimeSlots = timeSlots;
+            ViewBag.BookedAppointments = bookedAppointments;
+
+            return View(doctor);
+        }
+
+        // ==========================================
+        // KHU VỰC 2: XỬ LÝ ĐẶT LỊCH (BOOKING)
+        // ==========================================
+
+        // GET: /Home/BookAppointment (Hứng data từ DoctorProfile)
+        [HttpGet]
+        public async Task<IActionResult> BookAppointment(int? doctorId, DateTime? date, string timeSlot)
+        {
+            if (!User.Identity.IsAuthenticated)
+            {
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
+
+            if (doctorId == null || date == null || string.IsNullOrEmpty(timeSlot))
+            {
+                TempData["Error"] = "Vui lòng chọn Khoa và Bác sĩ trước khi đặt lịch!";
+                return RedirectToAction("DoctorList", "Home");
+            }
+
+            var doctor = await _context.Doctors.Include(d => d.User).FirstOrDefaultAsync(d => d.Id == doctorId);
+            if (doctor == null) return NotFound();
+
+            // Khởi tạo Model để chống lỗi NullReferenceException
+            var model = new Appointment
+            {
+                DoctorId = doctorId.Value,
+                Date = date.Value,
+                TimeSlot = TimeSpan.Parse(timeSlot)
+            };
+
+            ViewBag.DoctorName = $"BS. {doctor.User.FullName}";
+            ViewBag.DisplayDate = date.Value.ToString("dd/MM/yyyy");
+
+            return View(model);
+        }
+
+        // POST: /Home/BookAppointment (Xử lý lưu vào Database)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> BookAppointment([Bind("DoctorId,Date,TimeSlot,Reason")] Appointment model)
@@ -68,96 +149,84 @@ namespace PBL3_HealthCare.Controllers
                 if (model.Date.Date < DateTime.Now.Date)
                 {
                     ModelState.AddModelError("Date", "Lỗi: Không thể đặt lịch cho ngày trong quá khứ!");
-                    return ReloadDropdownAndReturnView(model);
+                    return await ReloadViewOnError(model);
                 }
 
                 var doctorExists = await _context.Doctors.AnyAsync(d => d.Id == model.DoctorId);
                 if (!doctorExists)
                 {
                     ModelState.AddModelError("DoctorId", "Lỗi: Không tìm thấy hồ sơ Bác sĩ này!");
-                    return ReloadDropdownAndReturnView(model);
+                    return await ReloadViewOnError(model);
                 }
 
-                // BÁC SĨ CÓ CA LÀM VIỆC VÀO NGÀY ĐÓ KHÔNG? (Giờ hợp lệ)
-                var hasSchedule = await _context.Schedules.AnyAsync(s =>
-                    s.DoctorId == model.DoctorId &&
-                    s.Date.Date == model.Date.Date &&
-                    s.IsAvailable == true);
-
-                if (!hasSchedule)
-                {
-                    ModelState.AddModelError("Date", "Lỗi: Bác sĩ không có lịch trực hoặc đã nghỉ vào ngày này!");
-                    return ReloadDropdownAndReturnView(model);
-                }
-                // 1. THUẬT TOÁN CHECK TRÙNG LỊCH (CỰC KỲ QUAN TRỌNG)
-                bool isConflict = _context.Appointments.Any(a =>
+                // THUẬT TOÁN CHECK TRÙNG LỊCH (Chặn nếu có người nhanh tay đặt trước)
+                bool isConflict = await _context.Appointments.AnyAsync(a =>
                     a.DoctorId == model.DoctorId &&
                     a.Date == model.Date &&
                     a.TimeSlot == model.TimeSlot &&
-                    a.Status != AppointmentStatus.Cancelled); // Nếu lịch cũ đã bị Hủy thì khách mới vẫn đặt được
+                    a.Status != AppointmentStatus.Cancelled);
 
                 if (isConflict)
                 {
                     ModelState.AddModelError("", "Rất tiếc! Bác sĩ đã có lịch hẹn vào thời gian này. Vui lòng chọn giờ khác.");
-                    return ReloadDropdownAndReturnView(model);
+                    return await ReloadViewOnError(model);
                 }
 
-                // 2. NẾU TRỐNG LỊCH -> LƯU VÀO DB
+                // LƯU VÀO DB
                 var userId = _userManager.GetUserId(User);
                 if (userId == null)
                 {
-                    // Chưa đăng nhập thì đá văng ra trang Login
                     return RedirectToPage("/Account/Login", new { area = "Identity" });
                 }
 
                 model.PatientId = userId;
-                model.Status = AppointmentStatus.Pending; 
+                model.Status = AppointmentStatus.Pending;
                 model.CreatedAt = DateTime.Now;
 
                 _context.Appointments.Add(model);
                 await _context.SaveChangesAsync();
 
                 TempData["Success"] = "Đặt lịch thành công! Vui lòng chờ phòng khám xác nhận.";
-                return RedirectToAction(nameof(MyHistory)); // Đá thẳng sang trang Lịch sử
+                return RedirectToAction(nameof(MyHistory));
             }
-            return ReloadDropdownAndReturnView(model);
+
+            return await ReloadViewOnError(model);
         }
-        // HÀM HỖ TRỢ: Load lại danh sách Bác sĩ nếu form bị lỗi (tránh bị trắng trang)
-        private IActionResult ReloadDropdownAndReturnView(Appointment model)
+
+        // Hàm hỗ trợ nạp lại thông tin nếu Form bị lỗi (Chống màn hình trắng)
+        private async Task<IActionResult> ReloadViewOnError(Appointment model)
         {
-            ViewBag.SpecialtyId = new SelectList(_context.Specialties, "Id", "Name");
-            var fallbackDoctors = _context.Doctors.Include(d => d.User).Include(d => d.Specialty)
-                .Select(d => new { Id = d.Id, DisplayName = "Bs. " + d.User.FullName + " (" + d.Specialty.Name + ")" }).ToList();
-
-            ViewData["DoctorId"] = new SelectList(fallbackDoctors, "Id", "DisplayName", model.DoctorId);
-
-            return View(model);
+            var doctor = await _context.Doctors.Include(d => d.User).FirstOrDefaultAsync(d => d.Id == model.DoctorId);
+            ViewBag.DoctorName = doctor != null ? $"BS. {doctor.User.FullName}" : "Đang cập nhật";
+            ViewBag.DisplayDate = model.Date.ToString("dd/MM/yyyy");
+            return View("BookAppointment", model);
         }
+
+        // ==========================================
+        // KHU VỰC 3: CÁC TRANG CÒN LẠI
+        // ==========================================
 
         // GET: /Home/MyHistory
         [HttpGet]
         public async Task<IActionResult> MyHistory()
         {
-            // Bắt buộc phải đăng nhập mới xem được
             var userId = _userManager.GetUserId(User);
             if (userId == null)
             {
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
             }
 
-            // Lọc đúng Lịch khám của ông này, sắp xếp ngày mới nhất nổi lên đầu
             var myAppointments = await _context.Appointments
                 .Include(a => a.Doctor)
                     .ThenInclude(d => d.User)
                 .Include(a => a.Doctor)
-                    .ThenInclude(d => d.Specialty) // Kéo theo chuyên khoa để View có cái hiển thị
+                    .ThenInclude(d => d.Specialty)
                 .Where(a => a.PatientId == userId)
                 .OrderByDescending(a => a.Date)
                 .ToListAsync();
 
             return View(myAppointments);
         }
-
 
         public IActionResult Privacy()
         {
@@ -171,21 +240,6 @@ namespace PBL3_HealthCare.Controllers
             {
                 RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
             });
-        }
-        [HttpGet]
-        public async Task<JsonResult> GetDoctorsBySpecialty(int specialtyId)
-        {
-            var doctors = await _context.Doctors
-        .Include(d => d.User)
-        .Where(d => d.SpecialtyId == specialtyId)
-        .Select(d => new {
-            id = d.Id,                             // Cho Index.cshtml xài
-            fullName = "BS. " + d.User.FullName,   // Cho Index.cshtml xài
-            value = d.Id,                          // Cho BookAppointment.cshtml xài
-            text = "BS. " + d.User.FullName        // Cho BookAppointment.cshtml xài
-        })
-        .ToListAsync();
-            return Json(doctors);
         }
     }
 }

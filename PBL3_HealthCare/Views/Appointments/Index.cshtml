@@ -199,7 +199,7 @@
                     <th>Ngày khám</th>
                     <th>Khung giờ</th>
                     <th>Trạng thái</th>
-                    <th>Triệu chứng</th>
+                    <th>Lý do khám</th>
                     <th class="text-center" style="width:130px;">Thao tác</th>
                 </tr>
             </thead>
@@ -207,8 +207,8 @@
                 @foreach (var item in Model)
                 {
                     <tr>
-                        <td>@Html.DisplayFor(m => item.Patient.Id)</td>
-                        <td>@Html.DisplayFor(m => item.Doctor.Id)</td>
+                        <td><span class="font-weight-bold">@(item.Patient?.FullName ?? item.PatientId)</span></td>
+                        <td>BS. @(item.Doctor?.User?.FullName ?? "Bác sĩ")</td>
                         <td><span class="date-text">@item.Date.ToString("dd/MM/yyyy")</span></td>
                         <td><span class="timeslot-text"><i class="fas fa-clock mr-1"></i>@Html.DisplayFor(m => item.TimeSlot)</span></td>
                         <td>
@@ -232,8 +232,8 @@
                                 <span class="status-badge" style="background:#e8edff;color:#4e73df;">@item.Status</span>
                             }
                         </td>
-                        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                            @Html.DisplayFor(m => item.Symptoms)
+                        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="@item.Reason">
+                            @(string.IsNullOrEmpty(item.Reason) ? "---" : item.Reason)
                         </td>
                         <td class="text-center">
                             <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action btn-action-edit"><i class="fas fa-edit"></i> Sửa</a>

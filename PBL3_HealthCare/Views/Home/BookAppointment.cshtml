@@ -1,58 +1,45 @@
-﻿@model PBL3_HealthCare.Models.Appointment
+﻿@using Microsoft.AspNetCore.Identity
+@using PBL3_HealthCare.Models
+@inject UserManager<ApplicationUser> UserManager
+
+@model PBL3_HealthCare.Models.Appointment
 @{
+    ViewData["Title"] = "Xác nhận đặt lịch khám";
     Layout = "~/Views/Shared/_Layout.cshtml";
-    ViewData["Title"] = "Đặt lịch khám";
+
+    // Fix for CS0103: Define fullName and email from the current user
+    var fullName = UserManager.GetUserAsync(User).Result?.FullName ?? "";
+    var email = UserManager.GetUserAsync(User).Result?.Email ?? "";
 }
 
-@* Phần Hero Section giữ nguyên giao diện của bạn *@
-<section class="hero-wrap hero-wrap-2" style="background-image: url('/images/bg_1.jpg');" data-stellar-background-ratio="0.5">
-    <div class="overlay"></div>
-    <div class="container">
-        <div class="row no-gutters slider-text align-items-end justify-content-start">
-            <div class="col-md-9 ftco-animate pb-4">
-                <h1 class="mb-3 bread">Appointment</h1>
-                <p class="breadcrumbs">
-                    <span class="mr-2"><a asp-controller="Home" asp-action="Index">Home <i class="ion-ios-arrow-forward"></i></a></span> 
-                    <span>Appointment <i class="ion-ios-arrow-forward"></i></span>
-                </p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="ftco-section ftco-no-pt ftco-no-pb ftco-services-2 bg-light">
-    <div class="container">
-        <div class="row d-flex">
-            @* Cột bên trái: Giới thiệu dịch vụ *@
-            <div class="col-md-7 py-5">
-                <div class="py-lg-5">
-                    <div class="row justify-content-center pb-5">
-                        <div class="col-md-12 heading-section ftco-animate">
-                            <h2 class="mb-3">Our Services</h2>
-                        </div>
-                    </div>
-                    <div class="row">
-                        @* Giữ lại các block services như cũ của bạn... *@
-                        <div class="col-md-6 d-flex align-self-stretch ftco-animate">
-                            <div class="media block-6 services d-flex">
-                                <div class="icon justify-content-center align-items-center d-flex"><span class="flaticon-ambulance"></span></div>
-                                <div class="media-body pl-md-4">
-                                    <h3 class="heading mb-3">Emergency Services</h3>
-                                    <p>Dịch vụ cấp cứu 24/7 luôn sẵn sàng hỗ trợ bạn.</p>
-                                </div>
-                            </div>
-                        </div>
-                        @* (Bạn có thể copy lại các dịch vụ khác từ file cũ vào đây) *@
-                    </div>
+<div class="container mt-5 pt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <h4 class="mb-0 text-white font-weight-bold">XÁC NHẬN THÔNG TIN ĐẶT LỊCH</h4>
                 </div>
-            </div>
+                <div class="card-body p-4 p-md-5">
 
-            @* Cột bên phải: Form đặt lịch - PHẦN QUAN TRỌNG NHẤT *@
-            <div class="col-md-5 d-flex">
-                <div class="appointment-wrap bg-white p-5 d-flex align-items-center">
-                    <form asp-controller="Home" asp-action="BookAppointment" method="post" class="appointment-form ftco-animate">
-                        <h3>Đặt lịch tư vấn</h3>
-                        
+                    <div class="bg-light p-4 rounded mb-4 border">
+                        <h5 class="text-info font-weight-bold mb-3"><i class="icon-calendar mr-2"></i> Lịch hẹn của bạn</h5>
+                        <p class="mb-2" style="font-size: 16px;"><strong>Bác sĩ phụ trách:</strong> @ViewBag.DoctorName</p>
+                        <p class="mb-2" style="font-size: 16px;"><strong>Ngày khám:</strong> @ViewBag.DisplayDate</p>
+                        <p class="mb-0" style="font-size: 16px;">
+                            <strong>Khung giờ:</strong>
+                            <span class="badge badge-primary px-3 py-2" style="font-size: 15px;">@Model.TimeSlot.ToString(@"hh\:mm")</span>
+                        </p>
+                    </div>
+
+                    <form asp-controller="Home" asp-action="BookAppointment" method="post" class="appointment-form">
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden" asp-for="DoctorId" />
+                        <input type="hidden" asp-for="Date" />
+                        <input type="hidden" name="TimeSlot" value="@Model.TimeSlot.ToString(@"hh\:mm")" />
+
+                        <h5 class="text-secondary font-weight-bold mb-3 border-bottom pb-2">Hồ sơ bệnh nhân</h5>
+
                         @if (!ViewData.ModelState.IsValid)
                         {
                             <div class="alert alert-danger" role="alert">
@@ -60,113 +47,32 @@
                             </div>
                         }
 
-                        <div class="form-group">
-                            <div class="form-field">
-                                <div class="select-wrap">
-                                    <div class="icon"><span class="ion-ios-arrow-down"></span></div>
-                                    @* Dropdown Chuyên khoa *@
-                                    <select id="specialtySelect" class="form-control" asp-items="@ViewBag.SpecialtyId">
-                                        <option value="">-- Chọn Chuyên khoa --</option>
-                                    </select>
-                                </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label class="text-muted mb-1">Họ và tên</label>
+                                <input type="text" class="form-control" value="@fullName" readonly style="background-color: #e9ecef; cursor: not-allowed;">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted mb-1">Tài khoản (Email)</label>
+                                <input type="text" class="form-control" value="@email" readonly style="background-color: #e9ecef; cursor: not-allowed;">
                             </div>
                         </div>
 
-                        <div class="form-group">
-                            <div class="form-field">
-                                <div class="select-wrap">
-                                    <div class="icon"><span class="ion-ios-arrow-down"></span></div>
-                                    @* Dropdown Bác sĩ - Sẽ được load động bằng JS *@
-                                    <select asp-for="DoctorId" id="doctorSelect" class="form-control">
-                                        <option value="">-- Chọn Bác sĩ --</option>
-                                    </select>
-                                </div>
-                            </div>
+                        <div class="form-group mt-4">
+                            <label class="font-weight-bold">Triệu chứng / Lý do khám <span class="text-danger">*</span></label>
+                            <textarea asp-for="Reason" cols="30" rows="4" class="form-control" required placeholder="Ví dụ: Đau đầu kéo dài, sốt cao, cần tư vấn nhổ răng khôn..."></textarea>
+                            <small class="form-text text-muted">Mô tả rõ triệu chứng giúp bác sĩ chẩn đoán sơ bộ tốt hơn.</small>
                         </div>
 
-                        <div class="form-group">
-                            <div class="input-wrap">
-                                <div class="icon"><span class="ion-md-calendar"></span></div>
-                                @* Ngày khám *@
-                                <input asp-for="Date" type="date" class="form-control" min="@DateTime.Now.ToString("yyyy-MM-dd")">
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <div class="input-wrap">
-                                <div class="icon"><span class="ion-ios-clock"></span></div>
-                                @* Giờ khám *@
-                                <select asp-for="TimeSlot" class="form-control">
-                                    <option value="08:00">08:00 AM</option>
-                                    <option value="09:00">09:00 AM</option>
-                                    <option value="10:00">10:00 AM</option>
-                                    <option value="14:00">02:00 PM</option>
-                                    <option value="15:00">03:00 PM</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            @* Lý do khám *@
-                            <textarea asp-for="Reason" cols="30" rows="3" class="form-control" placeholder="Triệu chứng hoặc lý do khám..."></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <input type="submit" value="Xác nhận đặt lịch" class="btn btn-secondary py-3 px-4">
+                        <div class="form-group text-center mt-5">
+                            <button type="submit" class="btn btn-primary py-3 px-5 w-100 font-weight-bold text-uppercase" style="border-radius: 30px;">
+                                Hoàn tất đặt lịch
+                            </button>
+                            <p class="mt-3 text-muted"><small><i class="icon-check-circle"></i> Đặt lịch hoàn toàn miễn phí</small></p>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
-</section>
-
-@section Scripts {
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
-
-    <script>
-        $(document).ready(function () {
-            // 1. Kiểm tra xem JQuery có chạy không
-            console.log("✅ File Script đã load thành công!");
-
-            // 2. Bắt sự kiện khi khách chọn Chuyên khoa
-            $('#specialtySelect').change(function () {
-                var specialtyId = $(this).val();
-
-                console.log("👉 Bạn vừa chọn Khoa ID: ", specialtyId);
-
-                if (specialtyId) {
-                    // DÙNG @Url.Action THAY VÌ GÕ CỨNG ĐƯỜNG DẪN ĐỂ TRÁNH LỖI 404
-                    var apiUrl = '@Url.Action("GetDoctorsBySpecialty", "Home")';
-                    console.log("🔗 Đang gọi API tới: ", apiUrl);
-
-                    $.ajax({
-                        url: apiUrl,
-                        type: 'GET',
-                        data: { specialtyId: specialtyId },
-                        success: function (data) {
-                            console.log("📦 BE trả về dữ liệu: ", data); // Xem thử DB có trả về bác sĩ nào ko
-
-                            var items = '<option value="">-- Chọn Bác sĩ --</option>';
-                            $.each(data, function (i, doctor) {
-                                items += "<option value='" + doctor.value + "'>" + doctor.text + "</option>";
-                            });
-
-                            $('#doctorSelect').html(items);
-                            console.log("🎨 Đã nhét thẻ <option> vào Dropdown Bác sĩ!");
-                        },
-                        error: function (xhr, status, error) {
-                            // NẾU API SẬP HOẶC LỖI 500, NÓ SẼ BÁO VÀO ĐÂY
-                            console.error("❌ LỖI GỌI API: ", error);
-                            console.error("Chi tiết lỗi: ", xhr.responseText);
-                            alert("Lỗi kết nối đến Server! Nhấn F12 để xem chi tiết.");
-                        }
-                    });
-                } else {
-                    $('#doctorSelect').html('<option value="">-- Chọn Bác sĩ --</option>');
-                }
-            });
-        });
-    </script>
-}
+</div>
