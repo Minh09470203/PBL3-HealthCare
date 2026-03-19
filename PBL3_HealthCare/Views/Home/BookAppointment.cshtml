@@ -53,12 +53,19 @@
                     <form asp-controller="Home" asp-action="BookAppointment" method="post" class="appointment-form ftco-animate">
                         <h3>Đặt lịch tư vấn</h3>
                         
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                <div asp-validation-summary="All" class="text-danger mb-0"></div>
+                            </div>
+                        }
+
                         <div class="form-group">
                             <div class="form-field">
                                 <div class="select-wrap">
                                     <div class="icon"><span class="ion-ios-arrow-down"></span></div>
                                     @* Dropdown Chuyên khoa *@
-                                    <select id="specialtySelect" class="form-control" asp-items="ViewBag.SpecialtyId">
+                                    <select id="specialtySelect" class="form-control" asp-items="@ViewBag.SpecialtyId">
                                         <option value="">-- Chọn Chuyên khoa --</option>
                                     </select>
                                 </div>
@@ -115,18 +122,46 @@
 </section>
 
 @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+
     <script>
         $(document).ready(function () {
-            // Logic AJAX: Khi chọn chuyên khoa -> Load bác sĩ tương ứng
+            // 1. Kiểm tra xem JQuery có chạy không
+            console.log("✅ File Script đã load thành công!");
+
+            // 2. Bắt sự kiện khi khách chọn Chuyên khoa
             $('#specialtySelect').change(function () {
                 var specialtyId = $(this).val();
+
+                console.log("👉 Bạn vừa chọn Khoa ID: ", specialtyId);
+
                 if (specialtyId) {
-                    $.getJSON('/Home/GetDoctorsBySpecialty', { specialtyId: specialtyId }, function (data) {
-                        var items = '<option value="">-- Chọn Bác sĩ --</option>';
-                        $.each(data, function (i, doctor) {
-                            items += "<option value='" + doctor.value + "'>" + doctor.text + "</option>";
-                        });
-                        $('#doctorSelect').html(items);
+                    // DÙNG @Url.Action THAY VÌ GÕ CỨNG ĐƯỜNG DẪN ĐỂ TRÁNH LỖI 404
+                    var apiUrl = '@Url.Action("GetDoctorsBySpecialty", "Home")';
+                    console.log("🔗 Đang gọi API tới: ", apiUrl);
+
+                    $.ajax({
+                        url: apiUrl,
+                        type: 'GET',
+                        data: { specialtyId: specialtyId },
+                        success: function (data) {
+                            console.log("📦 BE trả về dữ liệu: ", data); // Xem thử DB có trả về bác sĩ nào ko
+
+                            var items = '<option value="">-- Chọn Bác sĩ --</option>';
+                            $.each(data, function (i, doctor) {
+                                items += "<option value='" + doctor.value + "'>" + doctor.text + "</option>";
+                            });
+
+                            $('#doctorSelect').html(items);
+                            console.log("🎨 Đã nhét thẻ <option> vào Dropdown Bác sĩ!");
+                        },
+                        error: function (xhr, status, error) {
+                            // NẾU API SẬP HOẶC LỖI 500, NÓ SẼ BÁO VÀO ĐÂY
+                            console.error("❌ LỖI GỌI API: ", error);
+                            console.error("Chi tiết lỗi: ", xhr.responseText);
+                            alert("Lỗi kết nối đến Server! Nhấn F12 để xem chi tiết.");
+                        }
                     });
                 } else {
                     $('#doctorSelect').html('<option value="">-- Chọn Bác sĩ --</option>');

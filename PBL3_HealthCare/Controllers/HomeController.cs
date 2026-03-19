@@ -41,6 +41,7 @@ namespace PBL3_HealthCare.Controllers
                 TopDoctors = doctors.Take(4).ToList(),
                 AllDoctors = doctors
             };
+     
             return View(viewModel);
         }
 
@@ -50,7 +51,7 @@ namespace PBL3_HealthCare.Controllers
         {
             // Thêm dòng này để bắn thông báo sang file _AdminLayout.cshtml
             TempData["Success"] = "Chào Thái Leader! Hệ thống SweetAlert2 đã sẵn sàng hoạt động.";
-
+            ViewBag.SpecialtyId = new SelectList(_context.Specialties, "Id", "Name");
             return View();
         }
 
@@ -59,6 +60,9 @@ namespace PBL3_HealthCare.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> BookAppointment([Bind("DoctorId,Date,TimeSlot,Reason")] Appointment model)
         {
+            ModelState.Remove("PatientId");
+            ModelState.Remove("Status");
+
             if (ModelState.IsValid)
             {
                 if (model.Date.Date < DateTime.Now.Date)
@@ -121,6 +125,7 @@ namespace PBL3_HealthCare.Controllers
         // HÀM HỖ TRỢ: Load lại danh sách Bác sĩ nếu form bị lỗi (tránh bị trắng trang)
         private IActionResult ReloadDropdownAndReturnView(Appointment model)
         {
+            ViewBag.SpecialtyId = new SelectList(_context.Specialties, "Id", "Name");
             var fallbackDoctors = _context.Doctors.Include(d => d.User).Include(d => d.Specialty)
                 .Select(d => new { Id = d.Id, DisplayName = "Bs. " + d.User.FullName + " (" + d.Specialty.Name + ")" }).ToList();
 
@@ -171,13 +176,15 @@ namespace PBL3_HealthCare.Controllers
         public async Task<JsonResult> GetDoctorsBySpecialty(int specialtyId)
         {
             var doctors = await _context.Doctors
-                .Include(d => d.User)
-                .Where(d => d.SpecialtyId == specialtyId)
-                .Select(d => new {
-                    value = d.Id,
-                    text = "BS. " + d.User.FullName
-                })
-                .ToListAsync();
+        .Include(d => d.User)
+        .Where(d => d.SpecialtyId == specialtyId)
+        .Select(d => new {
+            id = d.Id,                             // Cho Index.cshtml xài
+            fullName = "BS. " + d.User.FullName,   // Cho Index.cshtml xài
+            value = d.Id,                          // Cho BookAppointment.cshtml xài
+            text = "BS. " + d.User.FullName        // Cho BookAppointment.cshtml xài
+        })
+        .ToListAsync();
             return Json(doctors);
         }
     }

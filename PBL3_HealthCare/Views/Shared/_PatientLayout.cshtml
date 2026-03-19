@@ -22,35 +22,6 @@
 
             <div class="sidebar-heading mt-3">Thông tin</div>
 
-            <li class="nav-item dropdown no-arrow">
-                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <span class="mr-2 d-none d-lg-inline text-gray-600 small">
-                        @(User.Identity.Name ?? "Bệnh nhân")
-                    </span>
-                    <img class="img-profile rounded-circle" src="~/img/undraw_profile.svg">
-                </a>
-                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <span class="mr-2 d-none d-lg-inline text-gray-600 small">
-                        @(User.Identity.Name ?? "Bệnh nhân")
-                    </span>
-                    <img class="img-profile rounded-circle" src="~/img/undraw_profile.svg">
-                </a>
-                <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
-                    <a class="dropdown-item" asp-controller="Home" asp-action="MyHistory">
-                        <i class="fas fa-history fa-sm fa-fw mr-2 text-gray-400"></i>
-                        Lịch sử khám
-                    </a>
-                    <div class="dropdown-divider"></div>
-                    <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home")" method="post">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="dropdown-item" style="border: none; background: none; width: 100%; text-align: left;">
-                            <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
-                            Đăng xuất
-                        </button>
-                    </form>
-                </div>
-            </li>
-
             <hr class="sidebar-divider d-none d-md-block">
             <div class="text-center d-none d-md-inline">
                 <button class="rounded-circle border-0" id="sidebarToggle"></button>
@@ -65,10 +36,27 @@
                     <ul class="navbar-nav ml-auto">
                         <div class="topbar-divider d-none d-sm-block"></div>
                         <li class="nav-item dropdown no-arrow">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
-                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Bệnh nhân</span>
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdownTop" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">
+                                    @(User.Identity.Name ?? "Bệnh nhân")
+                                </span>
                                 <img class="img-profile rounded-circle" src="~/img/undraw_profile.svg">
                             </a>
+
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdownTop">
+                                <a class="dropdown-item" asp-controller="Home" asp-action="MyHistory">
+                                    <i class="fas fa-history fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Lịch sử khám
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home")" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="dropdown-item" style="border: none; background: none; width: 100%; text-align: left;">
+                                        <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                                        Đăng xuất
+                                    </button>
+                                </form>
+                            </div>
                         </li>
                     </ul>
                 </nav>

@@ -32,7 +32,7 @@
     <link rel="stylesheet" href="css/icomoon.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body data-spy="scroll" data-target=".site-navbar-target" data-offset="300">
+<body>
     <div class="py-1 bg-black top">
         <div class="container">
             <div class="row no-gutters d-flex align-items-start align-items-center px-md-0">
@@ -64,8 +64,7 @@
                                     <a href="/Identity/Account/Register" class="mr-3 text-white">Đăng ký</a>
                                     <a href="/Identity/Account/Login" class="text-white">Đăng nhập</a>
                                 }
-                                <!-- Thêm dòng debug tạm thời -->
-                                <span class="text-warning ml-3">Auth: @User.Identity.IsAuthenticated</span>
+                                
                             </div>
                         </div>
                     </div>
@@ -87,7 +86,7 @@
                     <li class="nav-item"><a href="#department-section" class="nav-link"><span>Khoa</span></a></li>
                     <li class="nav-item"><a href="#doctor-section" class="nav-link"><span>Bác sĩ</span></a></li>
                     <li class="nav-item"><a href="#contact-section" class="nav-link"><span>Liên hệ</span></a></li>
-                    <li class="nav-item cta mr-md-2"><a href="#about-section" class="nav-link">Đặt lịch khám</a></li>
+                    <li class="nav-item cta mr-md-2"><a asp-controller="Home" asp-action="BookAppointment" class="nav-link">Đặt lịch khám</a></li>
                 </ul>
             </div>
         </div>
@@ -102,7 +101,7 @@
                         <span class="subheading">Chào mừng đến với SuperStar Medical Center</span>
                         <h1 class="mb-4">Chúng tôi luôn ở đây <br>để chăm sóc sức khỏe của bạn</h1>
                         <p class="mb-4">Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts. Separated they live in Bookmarksgrove.</p>
-                        <p><a href="#about-section" class="btn btn-primary py-3 px-4">Đặt lịch khám</a></p>
+                        <p><a asp-controller="Home" asp-action="BookAppointment" class="btn btn-primary py-3 px-4">Đặt lịch khám</a></p>
                     </div>
                 </div>
             </div>
@@ -181,147 +180,10 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="col-md-5 d-flex">
-                    <div class="appointment-wrap bg-white p-4 p-md-5 d-flex align-items-center">
-                        <form id="appointmentForm" asp-controller="Home" asp-action="BookAppointment" method="post" class="appointment-form ftco-animate">
-                            @Html.AntiForgeryToken()   <!-- Thêm token chống CSRF -->
-
-                            <h3>Đăng ký lịch khám</h3>
-
-                            <!-- Dropdown Chuyên khoa -->
-                            <div class="form-group">
-                                <div class="form-field">
-                                    <div class="select-wrap">
-                                        <div class="icon"><span class="ion-ios-arrow-down"></span></div>
-                                        <select id="specialtySelect" name="SpecialtyId" class="form-control" required>
-                                            <option value="">-- Chọn Chuyên khoa --</option>
-                                            <option value="1">Thần kinh</option>
-                                            <option value="2">Nha khoa</option>
-                                            <option value="3">Nhãn khoa</option>
-                                            <option value="4">Tim mạch</option>
-                                            <option value="5">Ngoại khoa</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Dropdown Bác sĩ -->
-                            <div class="form-group">
-                                <div class="form-field">
-                                    <div class="select-wrap">
-                                        <div class="icon"><span class="ion-ios-arrow-down"></span></div>
-                                        <select name="DoctorId" id="doctorSelect" class="form-control" required>
-                                            <option value="">-- Chọn Bác sĩ --</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Ngày khám -->
-                            <div class="form-group">
-                                <div class="input-wrap">
-                                    <div class="icon"><span class="ion-md-calendar"></span></div>
-                                    <input name="Date" type="date" class="form-control" required
-                                           min="@DateTime.Now.ToString("yyyy-MM-dd")">
-                                </div>
-                            </div>
-
-                            <!-- Giờ khám -->
-                            <div class="form-group">
-                                <div class="input-wrap">
-                                    <div class="icon"><span class="ion-ios-clock"></span></div>
-                                    <select name="TimeSlot" class="form-control" required>
-                                        <option value="08:00">08:00 AM</option>
-                                        <option value="09:00">09:00 AM</option>
-                                        <option value="10:00">10:00 AM</option>
-                                        <option value="14:00">02:00 PM</option>
-                                        <option value="15:00">03:00 PM</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- Lý do khám -->
-                            <div class="form-group">
-                                <textarea name="Reason" cols="30" rows="3" class="form-control" required
-                                          placeholder="Mô tả triệu chứng hoặc lý do khám..."></textarea>
-                            </div>
-
-                            <div class="form-group">
-                                <input type="submit" value="Đặt lịch ngay" class="btn btn-secondary py-3 px-4">
-                            </div>
-                        </form>
-                    </div>
-                </div>
             </div>
         </div>
     </section>
-    @section Scripts {
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
-
-        <script>
-            $(document).ready(function() {
-                // Load bác sĩ theo chuyên khoa
-                $('#specialtySelect').change(function() {
-                    var specialtyId = $(this).val();
-                    var doctorSelect = $('#doctorSelect');
-
-                    if (specialtyId) {
-                        $.ajax({
-                            url: '@Url.Action("GetDoctorsBySpecialty", "Home")',
-                            type: 'GET',
-                            data: { specialtyId: specialtyId },
-                            success: function(data) {
-                                doctorSelect.empty().append('<option value="">-- Chọn Bác sĩ --</option>');
-                                $.each(data, function(index, doctor) {
-                                    doctorSelect.append('<option value="' + doctor.id + '">' + doctor.fullName + '</option>');
-                                });
-                            }
-                        });
-                    } else {
-                        doctorSelect.empty().append('<option value="">-- Chọn Bác sĩ --</option>');
-                    }
-                });
-
-                // Xử lý submit form bằng AJAX
-                $('#appointmentForm').submit(function(e) {
-                    e.preventDefault();
-
-                    // Kiểm tra validation HTML5
-                    if (!this.checkValidity()) {
-                        this.reportValidity();
-                        return;
-                    }
-
-                    var formData = $(this).serialize();
-
-                    $.ajax({
-                        url: '@Url.Action("BookAppointment", "Home")',
-                        type: 'POST',
-                        data: formData,
-                        success: function(response) {
-                            // Hiển thị thông báo thành công
-                            toastr.success('Đặt lịch thành công!', 'Thông báo', {
-                                positionClass: 'toast-top-right',
-                                timeOut: 3000
-                            });
-                            // Reset form
-                            $('#appointmentForm')[0].reset();
-                            $('#doctorSelect').empty().append('<option value="">-- Chọn Bác sĩ --</option>');
-                        },
-                        error: function(xhr) {
-                            if (xhr.status === 401) { // Chưa đăng nhập
-                                window.location.href = '/Identity/Account/Login';
-                            } else {
-                                alert('Có lỗi xảy ra, vui lòng thử lại.');
-                            }
-                        }
-                    });
-                });
-            });
-        </script>
-    }
+    
     <section class="ftco-section ftco-no-pt ftco-no-pb" id="department-section">
         <div class="container-fluid px-0">
             <div class="row no-gutters">
@@ -623,6 +485,6 @@
 
     <script src="js/main.js"></script>
 
-
+   
 </body>
 </html>
