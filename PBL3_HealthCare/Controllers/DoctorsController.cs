@@ -91,6 +91,7 @@ namespace PBL3_HealthCare.Controllers
                     }
                     await _userManager.AddToRoleAsync(user, "Doctor");
                 }
+                TempData["Success"] = "Thêm bác sĩ thành công!";
 
                 return RedirectToAction(nameof(Index));
             }
@@ -146,6 +147,7 @@ namespace PBL3_HealthCare.Controllers
                         throw;
                     }
                 }
+                TempData["Success"] = "Cập nhật bác sĩ thành công!";
                 return RedirectToAction(nameof(Index));
             }
             ViewData["SpecialtyId"] = new SelectList(_context.Specialties, "Id", "Name", doctor.SpecialtyId);
@@ -185,6 +187,7 @@ namespace PBL3_HealthCare.Controllers
             }
 
             await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Xóa bác sĩ thành công!";
             return RedirectToAction(nameof(Index));
         }
 

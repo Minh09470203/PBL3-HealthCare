@@ -148,6 +148,7 @@ namespace PBL3_HealthCare.Controllers
                         throw;
                     }
                 }
+                TempData["Success"] = "Cập nhật lịch khám thành công!";
                 return RedirectToAction(nameof(Index));
             }
             ViewData["DoctorId"] = new SelectList(_context.Doctors, "Id", "Id", appointment.DoctorId);
@@ -187,6 +188,7 @@ namespace PBL3_HealthCare.Controllers
             }
 
             await _context.SaveChangesAsync();
+            TempData["Success"] = "Xóa lịch khám thành công!";
             return RedirectToAction(nameof(Index));
         }
 
