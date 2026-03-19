@@ -31,14 +31,18 @@ namespace PBL3_HealthCare.Controllers
         public async Task<IActionResult> Index()
         {
             // Query lấy 4 bác sĩ đầu tiên, Include bảng User và Specialty
-            var topDoctors = await _context.Doctors
+            var doctors = await _context.Doctors
                                            .Include(d => d.User)
                                            .Include(d => d.Specialty)
                                            .Take(4)
                                            .ToListAsync();
-
-            // truyền sang View
-            return View(topDoctors);
+            var viewModel = new HomeViewModel
+            {
+                TopDoctors = doctors.Take(4).ToList(),
+                AllDoctors = doctors
+            };
+     
+            return View(viewModel);
         }
 
         // GET: /Home/BookAppointment (Gọi ra form điền)
@@ -47,7 +51,7 @@ namespace PBL3_HealthCare.Controllers
         {
             // Thêm dòng này để bắn thông báo sang file _AdminLayout.cshtml
             TempData["Success"] = "Chào Thái Leader! Hệ thống SweetAlert2 đã sẵn sàng hoạt động.";
-
+            ViewBag.SpecialtyId = new SelectList(_context.Specialties, "Id", "Name");
             return View();
         }
 
@@ -56,6 +60,9 @@ namespace PBL3_HealthCare.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> BookAppointment([Bind("DoctorId,Date,TimeSlot,Reason")] Appointment model)
         {
+            ModelState.Remove("PatientId");
+            ModelState.Remove("Status");
+
             if (ModelState.IsValid)
             {
                 if (model.Date.Date < DateTime.Now.Date)
@@ -113,12 +120,12 @@ namespace PBL3_HealthCare.Controllers
                 TempData["Success"] = "Đặt lịch thành công! Vui lòng chờ phòng khám xác nhận.";
                 return RedirectToAction(nameof(MyHistory)); // Đá thẳng sang trang Lịch sử
             }
-
             return ReloadDropdownAndReturnView(model);
         }
         // HÀM HỖ TRỢ: Load lại danh sách Bác sĩ nếu form bị lỗi (tránh bị trắng trang)
         private IActionResult ReloadDropdownAndReturnView(Appointment model)
         {
+            ViewBag.SpecialtyId = new SelectList(_context.Specialties, "Id", "Name");
             var fallbackDoctors = _context.Doctors.Include(d => d.User).Include(d => d.Specialty)
                 .Select(d => new { Id = d.Id, DisplayName = "Bs. " + d.User.FullName + " (" + d.Specialty.Name + ")" }).ToList();
 
@@ -164,6 +171,21 @@ namespace PBL3_HealthCare.Controllers
             {
                 RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
             });
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetDoctorsBySpecialty(int specialtyId)
+        {
+            var doctors = await _context.Doctors
+        .Include(d => d.User)
+        .Where(d => d.SpecialtyId == specialtyId)
+        .Select(d => new {
+            id = d.Id,                             // Cho Index.cshtml xài
+            fullName = "BS. " + d.User.FullName,   // Cho Index.cshtml xài
+            value = d.Id,                          // Cho BookAppointment.cshtml xài
+            text = "BS. " + d.User.FullName        // Cho BookAppointment.cshtml xài
+        })
+        .ToListAsync();
+            return Json(doctors);
         }
     }
 }

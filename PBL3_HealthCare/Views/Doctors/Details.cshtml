@@ -2,7 +2,14 @@
 
 @{
     ViewData["Title"] = "Chi tiết Bác sĩ";
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    if (User.IsInRole("Admin"))
+    {
+        Layout = "~/Views/Shared/_AdminLayout.cshtml"; // (Sửa lại tên file layout admin của ông cho đúng nhé)
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_Layout.cshtml"; // Layout trang khách của Fun san
+    }
 }
 
 @section Styles {
