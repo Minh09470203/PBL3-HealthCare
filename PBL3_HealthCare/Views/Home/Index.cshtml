@@ -1,12 +1,13 @@
 ﻿﻿@{
-ViewData["Title"] = "SS Medical Center";
-Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "SS Medical Center";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 @using Microsoft.AspNetCore.Identity
 @using PBL3_HealthCare.Models
-@inject SignInManager<ApplicationUser> SignInManager
-@inject UserManager<ApplicationUser> UserManager
-
+@using System.Security.Claims
+@* @inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager *@
+@model PBL3_HealthCare.Models.HomeViewModel
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -31,7 +32,7 @@ Layout = "~/Views/Shared/_Layout.cshtml";
     <link rel="stylesheet" href="css/icomoon.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body data-spy="scroll" data-target=".site-navbar-target" data-offset="300">
+<body>
     <div class="py-1 bg-black top">
         <div class="container">
             <div class="row no-gutters d-flex align-items-start align-items-center px-md-0">
@@ -47,12 +48,15 @@ Layout = "~/Views/Shared/_Layout.cshtml";
                         </div>
                         <div class="col-md-5 pr-4 d-flex topper align-items-center text-lg-right justify-content-end">
                             <div class="mb-0 register-link d-flex align-items-center">
-                                @if (SignInManager.IsSignedIn(User))
+                                @if (User.Identity.IsAuthenticated)
                                 {
-                                    var user = await UserManager.GetUserAsync(User);
-                                    <span class="text-white mr-3 fw-bold" style="font-size: 14px;">Xin chào, @(user?.FullName ?? User.Identity?.Name)!</span>
-                                    <form class="form-inline m-0" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="~/">
-                                        <button type="submit" class="btn btn-sm btn-danger text-white" style="border-radius: 5px;">Đăng xuất</button>
+                                    var userName = User.FindFirstValue(ClaimTypes.Name) ?? User.Identity.Name;
+                                    <a asp-controller="Home" asp-action="Profile" class="mr-3 text-white text-decoration-none">
+                                        Xin chào @User.Identity.Name
+                                    </a>
+                                    <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-link text-white p-0 border-0">Đăng xuất</button>
                                     </form>
                                 }
                                 else
@@ -60,6 +64,7 @@ Layout = "~/Views/Shared/_Layout.cshtml";
                                     <a href="/Identity/Account/Register" class="mr-3 text-white">Đăng ký</a>
                                     <a href="/Identity/Account/Login" class="text-white">Đăng nhập</a>
                                 }
+                                
                             </div>
                         </div>
                     </div>
@@ -81,7 +86,7 @@ Layout = "~/Views/Shared/_Layout.cshtml";
                     <li class="nav-item"><a href="#department-section" class="nav-link"><span>Khoa</span></a></li>
                     <li class="nav-item"><a href="#doctor-section" class="nav-link"><span>Bác sĩ</span></a></li>
                     <li class="nav-item"><a href="#contact-section" class="nav-link"><span>Liên hệ</span></a></li>
-                    <li class="nav-item cta mr-md-2"><a href="appointment.html" class="nav-link">Đặt lịch khám</a></li>
+                    <li class="nav-item cta mr-md-2"><a asp-controller="Home" asp-action="BookAppointment" class="nav-link">Đặt lịch khám</a></li>
                 </ul>
             </div>
         </div>
@@ -96,7 +101,7 @@ Layout = "~/Views/Shared/_Layout.cshtml";
                         <span class="subheading">Chào mừng đến với SuperStar Medical Center</span>
                         <h1 class="mb-4">Chúng tôi luôn ở đây <br>để chăm sóc sức khỏe của bạn</h1>
                         <p class="mb-4">Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts. Separated they live in Bookmarksgrove.</p>
-                        <p><a href="#" class="btn btn-primary py-3 px-4">Đặt lịch khám</a></p>
+                        <p><a asp-controller="Home" asp-action="BookAppointment" class="btn btn-primary py-3 px-4">Đặt lịch khám</a></p>
                     </div>
                 </div>
             </div>
@@ -116,7 +121,7 @@ Layout = "~/Views/Shared/_Layout.cshtml";
                             <div class="col-md-12 heading-section ftco-animate p-4 p-lg-5">
                                 <h2 class="mb-4">Chúng tôi là <span>Mediplus</span> siêu sao</h2>
                                 <p>Hãy tự tin đến khám tại phòng của chúng tôi.</p>
-                                <p><a href="#" class="btn btn-primary py-3 px-4">Đặt lịch khám</a> <a href="#" class="btn btn-secondary py-3 px-4">Contact us</a></p>
+                                <p><a href="#about-section" class="btn btn-primary py-3 px-4">Đặt lịch khám</a> <a href="#" class="btn btn-secondary py-3 px-4">Contact us</a></p>
                             </div>
                         </div>
                     </div>
@@ -127,9 +132,7 @@ Layout = "~/Views/Shared/_Layout.cshtml";
 
     <section class="ftco-section ftco-no-pt ftco-no-pb ftco-services-2 bg-light">
         <div class="container">
-            <div class="row d-flex align-items-center">
-
-
+            <div class="row d-flex">
                 <div class="col-md-7 py-5">
                     <div class="py-lg-5">
                         <div class="row justify-content-center pb-5">
@@ -137,70 +140,50 @@ Layout = "~/Views/Shared/_Layout.cshtml";
                                 <h2 class="mb-3">Dịch vụ của chúng tôi</h2>
                             </div>
                         </div>
-
                         <div class="row">
                             <div class="col-md-6 d-flex align-self-stretch ftco-animate">
                                 <div class="media block-6 services d-flex">
-                                    <div class="icon d-flex justify-content-center align-items-center">
-                                        <span class="flaticon-ambulance"></span>
-                                    </div>
+                                    <div class="icon justify-content-center align-items-center d-flex"><span class="flaticon-ambulance"></span></div>
                                     <div class="media-body pl-md-4">
                                         <h3 class="heading mb-3">Dịch vụ cấp cứu</h3>
-                                        <p>Mô tả dịch vụ...</p>
+                                        <p>Luôn sẵn sàng hỗ trợ trong mọi tình huống khẩn cấp 24/7.</p>
                                     </div>
                                 </div>
                             </div>
-
                             <div class="col-md-6 d-flex align-self-stretch ftco-animate">
                                 <div class="media block-6 services d-flex">
-                                    <div class="icon d-flex justify-content-center align-items-center">
-                                        <span class="flaticon-doctor"></span>
-                                    </div>
+                                    <div class="icon justify-content-center align-items-center d-flex"><span class="flaticon-doctor"></span></div>
                                     <div class="media-body pl-md-4">
                                         <h3 class="heading mb-3">Bác sĩ chuyên môn cao</h3>
-                                        <p>Mô tả dịch vụ...</p>
+                                        <p>Đội ngũ y bác sĩ giàu kinh nghiệm, tận tâm với bệnh nhân.</p>
                                     </div>
                                 </div>
                             </div>
-
                             <div class="col-md-6 d-flex align-self-stretch ftco-animate">
                                 <div class="media block-6 services d-flex">
-                                    <div class="icon d-flex justify-content-center align-items-center">
-                                        <span class="flaticon-stethoscope"></span>
-                                    </div>
+                                    <div class="icon justify-content-center align-items-center d-flex"><span class="flaticon-stethoscope"></span></div>
                                     <div class="media-body pl-md-4">
                                         <h3 class="heading mb-3">Khám bệnh ngoại trú</h3>
-                                        <p>Mô tả dịch vụ...</p>
+                                        <p>Quy trình khám chữa bệnh nhanh chóng, hiệu quả.</p>
                                     </div>
                                 </div>
                             </div>
-
                             <div class="col-md-6 d-flex align-self-stretch ftco-animate">
                                 <div class="media block-6 services d-flex">
-                                    <div class="icon d-flex justify-content-center align-items-center">
-                                        <span class="flaticon-24-hours"></span>
-                                    </div>
+                                    <div class="icon justify-content-center align-items-center d-flex"><span class="flaticon-24-hours"></span></div>
                                     <div class="media-body pl-md-4">
                                         <h3 class="heading mb-3">Dịch vụ 24 giờ</h3>
-                                        <p>Mô tả dịch vụ...</p>
+                                        <p>Hệ thống hỗ trợ trực tuyến và trực tiếp mọi lúc mọi nơi.</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 </div>
-
-
-                <div class="col-md-5">
-                    <img src="'/img/bg_login.jpg';" class="img-fluid" alt="services">
-                </div>
-
             </div>
         </div>
     </section>
-
-
+    
     <section class="ftco-section ftco-no-pt ftco-no-pb" id="department-section">
         <div class="container-fluid px-0">
             <div class="row no-gutters">
@@ -210,95 +193,29 @@ Layout = "~/Views/Shared/_Layout.cshtml";
 
                 <div class="col-md-8">
                     <div class="row no-gutters">
-                        <div class="col-md-4">
-                            <div class="department-wrap p-4 ftco-animate">
-                                <div class="text p-2 text-center">
-                                    <div class="icon">
-                                        <span class="flaticon-stethoscope"></span>
+                        @if (ViewBag.TopSpecialties != null)
+                        {
+                            foreach (var khoa in ViewBag.TopSpecialties)
+                            {
+                                <div class="col-md-4 d-flex">
+                                    <div class="department-wrap p-4 ftco-animate align-self-stretch w-100">
+                                        <div class="text p-2 text-center">
+                                            <div class="icon">
+                                                <span class="flaticon-stethoscope"></span>
+                                            </div>
+                                            <h3><a asp-controller="Home" asp-action="DoctorList" asp-route-specialtyId="@khoa.Id">@khoa.Name</a></h3>
+                                            <p>Khám và điều trị chuyên sâu các bệnh lý thuộc chuyên khoa @khoa.Name.</p>
+                                        </div>
                                     </div>
-                                    <h3><a href="#">Thần kinh</a></h3>
-                                    <p>Chẩn đoán và điều trị các bệnh lý liên quan đến não bộ, tủy sống và hệ thần kinh như đột quỵ, đau đầu, động kinh và rối loạn thần kinh.</p>
                                 </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="col-12 p-5 text-center">
+                                <p class="text-muted">Đang cập nhật danh sách chuyên khoa...</p>
                             </div>
-                            <div class="department-wrap p-4 ftco-animate">
-                                <div class="text p-2 text-center">
-                                    <div class="icon">
-                                        <span class="flaticon-stethoscope"></span>
-                                    </div>
-                                    <h3><a href="#">Ngoại khoa</a></h3>
-                                    <p>Thực hiện các ca phẫu thuật điều trị bệnh lý bằng phương pháp can thiệp ngoại khoa với đội ngũ bác sĩ giàu kinh nghiệm.</p>
-                                </div>
-                            </div>
-                            <div class="department-wrap p-4 ftco-animate">
-                                <div class="text p-2 text-center">
-                                    <div class="icon">
-                                        <span class="flaticon-stethoscope"></span>
-                                    </div>
-                                    <h3><a href="#">Nha khoa</a></h3>
-                                    <p>Chăm sóc sức khỏe răng miệng, điều trị sâu răng, viêm nướu, chỉnh nha và thẩm mỹ răng.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-4">
-                            <div class="department-wrap p-4 ftco-animate">
-                                <div class="text p-2 text-center">
-                                    <div class="icon">
-                                        <span class="flaticon-stethoscope"></span>
-                                    </div>
-                                    <h3><a href="#">Nhãn khoa</a></h3>
-                                    <p>Khám và điều trị các bệnh về mắt như cận thị, viễn thị, đục thủy tinh thể, glaucoma và các vấn đề thị lực khác.</p>
-                                </div>
-                            </div>
-                            <div class="department-wrap p-4 ftco-animate">
-                                <div class="text p-2 text-center">
-                                    <div class="icon">
-                                        <span class="flaticon-stethoscope"></span>
-                                    </div>
-                                    <h3><a href="#">Nội tổng quát</a></h3>
-                                    <p>Khám và điều trị các bệnh lý nội khoa phổ biến, tư vấn sức khỏe và theo dõi tình trạng bệnh lâu dài.</p>
-                                </div>
-                            </div>
-                            <div class="department-wrap p-4 ftco-animate">
-                                <div class="text p-2 text-center">
-                                    <div class="icon">
-                                        <span class="flaticon-stethoscope"></span>
-                                    </div>
-                                    <h3><a href="#">Chấn thương chỉnh hình</a></h3>
-                                    <p>Điều trị các chấn thương về xương khớp, gãy xương, trật khớp và các bệnh lý cơ xương khớp.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-4">
-                            <div class="department-wrap p-4 ftco-animate">
-                                <div class="text p-2 text-center">
-                                    <div class="icon">
-                                        <span class="flaticon-stethoscope"></span>
-                                    </div>
-                                    <h3><a href="#">Chẩn đoán hình ảnh MRI</a></h3>
-                                    <p>Sử dụng công nghệ cộng hưởng từ (MRI) để chẩn đoán chính xác các bệnh lý bên trong cơ thể mà không cần phẫu thuật.</p>
-                                </div>
-                            </div>
-                            <div class="department-wrap p-4 ftco-animate">
-                                <div class="text p-2 text-center">
-                                    <div class="icon">
-                                        <span class="flaticon-stethoscope"></span>
-                                    </div>
-                                    <h3><a href="#">Chụp X-quang</a></h3>
-                                    <p>Dịch vụ chụp X-quang giúp phát hiện nhanh chóng các vấn đề về xương, phổi và nhiều bệnh lý khác.</p>
-                                </div>
-                            </div>
-                            <div class="department-wrap p-4 ftco-animate">
-                                <div class="text p-2 text-center">
-                                    <div class="icon">
-                                        <span class="flaticon-stethoscope"></span>
-                                    </div>
-                                    <h3><a href="#">Tim mạch</a></h3>
-                                    <p>Chẩn đoán và điều trị các bệnh về tim và mạch máu như tăng huyết áp, bệnh mạch vành, suy tim và rối loạn nhịp tim</p>
-                                </div>
-                            </div>
-                        </div>
+                        }
                     </div>
                 </div>
             </div>
@@ -314,93 +231,44 @@ Layout = "~/Views/Shared/_Layout.cshtml";
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-6 col-lg-3 ftco-animate">
-                    <div class="staff">
-                        <div class="img-wrap d-flex align-items-stretch">
-                            <div class="img align-self-stretch" style="background-image: url('/img/bs2.jpg');"></div>
-                        </div>
-                        <div class="text pt-3 text-center">
-                            <h3 class="mb-2">Dr. Nguyen Phu Minh Thai</h3>
-                            <span class="position mb-2">Bác sĩ thần kinh</span>
-                            <div class="faded">
-                                <p>I am gay.</p>
-                                <ul class="ftco-social text-center">
-                                    <li class="ftco-animate"><a href="#"><span class="icon-twitter"></span></a></li>
-                                    <li class="ftco-animate"><a href="#"><span class="icon-facebook"></span></a></li>
-                                    <li class="ftco-animate"><a href="#"><span class="icon-google-plus"></span></a></li>
-                                    <li class="ftco-animate"><a href="#"><span class="icon-instagram"></span></a></li>
-                                </ul>
-                                <p><a href="#" class="btn btn-primary">Đặt lịch ngay</a></p>
+                @if (Model?.TopDoctors != null && Model.TopDoctors.Any())
+                {
+                    foreach (var doctor in Model.TopDoctors)
+                    {
+                        <div class="col-md-6 col-lg-3 ftco-animate">
+                            <div class="staff">
+                                <div class="img-wrap d-flex align-items-stretch">
+                                    @* Sử dụng ảnh từ database, nếu không có thì dùng ảnh mặc định *@
+                                    <div class="img align-self-stretch" style="background-image: url(/images/doctors/@(doctor.Image ?? "default.jpg"));"></div>
+                                </div>
+                                <div class="text pt-3 text-center">
+                                    <h3 class="mb-2">@(doctor.User?.FullName ?? "Bác sĩ")</h3>
+                                    <span class="position mb-2">@(doctor.Specialty?.Name ?? "Chuyên khoa")</span>
+                                    <div class="faded">
+                                        <p>Tận tâm - Chuyên nghiệp - Chất lượng cao.</p>
+                                        <ul class="ftco-social text-center">
+                                            <li class="ftco-animate"><a href="#"><span class="icon-twitter"></span></a></li>
+                                            <li class="ftco-animate"><a href="#"><span class="icon-facebook"></span></a></li>
+                                            <li class="ftco-animate"><a href="#"><span class="icon-google-plus"></span></a></li>
+                                            <li class="ftco-animate"><a href="#"><span class="icon-instagram"></span></a></li>
+                                        </ul>
+                                        <p><a asp-controller="Home" asp-action="DoctorProfile" asp-route-id="@doctor.Id" class="btn btn-primary">Đặt lịch ngay</a></p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                    }
+                }
+                else
+                {
+                    <div class="col-md-12 text-center">
+                        <p>Hiện đang cập nhật danh sách bác sĩ tiêu biểu...</p>
                     </div>
-                </div>
-                <div class="col-md-6 col-lg-3 ftco-animate">
-                    <div class="staff">
-                        <div class="img-wrap d-flex align-items-stretch">
-                            <div class="img align-self-stretch" style="background-image: url('/img/bs3.jpg');"></div>
-                        </div>
-                        <div class="text pt-3 text-center">
-                            <h3 class="mb-2">Dr. Nguyen Phu Thinh</h3>
-                            <span class="position mb-2">Bác sĩ nhãn khoa</span>
-                            <div class="faded">
-                                <p>tù ngay.</p>
-                                <ul class="ftco-social text-center">
-                                    <li class="ftco-animate"><a href="#"><span class="icon-twitter"></span></a></li>
-                                    <li class="ftco-animate"><a href="#"><span class="icon-facebook"></span></a></li>
-                                    <li class="ftco-animate"><a href="#"><span class="icon-google-plus"></span></a></li>
-                                    <li class="ftco-animate"><a href="#"><span class="icon-instagram"></span></a></li>
-                                </ul>
-                                <p><a href="#" class="btn btn-primary">Đặt lịch ngay</a></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-3 ftco-animate">
-                    <div class="staff">
-                        <div class="img-wrap d-flex align-items-stretch">
-                            <div class="img align-self-stretch" style="background-image: url('/img/bs.jpg');"></div>
-                        </div>
-                        <div class="text pt-3 text-center">
-                            <h3 class="mb-2">Dr. Nguyen Duc Minh</h3>
-                            <span class="position mb-2">Bác sĩ nha khoa</span>
-                            <div class="faded">
-                                <p>Siêu sao.</p>
-                                <ul class="ftco-social text-center">
-                                    <li class="ftco-animate"><a href="#"><span class="icon-twitter"></span></a></li>
-                                    <li class="ftco-animate"><a href="#"><span class="icon-facebook"></span></a></li>
-                                    <li class="ftco-animate"><a href="#"><span class="icon-google-plus"></span></a></li>
-                                    <li class="ftco-animate"><a href="#"><span class="icon-instagram"></span></a></li>
-                                </ul>
-                                <p><a href="#" class="btn btn-primary">Đặt lịch ngay</a></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-3 ftco-animate">
-                    <div class="staff">
-                        <div class="img-wrap d-flex align-items-stretch">
-                            <div class="img align-self-stretch" style="background-image: url('/img/bs.jpg');"></div>
-                        </div>
-                        <div class="text pt-3 text-center">
-                            <h3 class="mb-2">Dr. Nguyen Huy Hung</h3>
-                            <span class="position mb-2">Bác sĩ nhi khoa</span>
-                            <div class="faded">
-                                <p>Rác, đặt lịch = chết.</p>
-                                <ul class="ftco-social text-center">
-                                    <li class="ftco-animate"><a href="#"><span class="icon-twitter"></span></a></li>
-                                    <li class="ftco-animate"><a href="#"><span class="icon-facebook"></span></a></li>
-                                    <li class="ftco-animate"><a href="#"><span class="icon-google-plus"></span></a></li>
-                                    <li class="ftco-animate"><a href="#"><span class="icon-instagram"></span></a></li>
-                                </ul>
-                                <p><a href="#" class="btn btn-primary">Đặt lịch ngay</a></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                }
             </div>
         </div>
     </section>
+    
 
     <section class="ftco-section contact-section" id="contact-section">
         <div class="container">
@@ -551,5 +419,6 @@ Layout = "~/Views/Shared/_Layout.cshtml";
 
     <script src="js/main.js"></script>
 
+   
 </body>
 </html>

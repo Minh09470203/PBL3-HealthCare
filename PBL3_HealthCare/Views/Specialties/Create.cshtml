@@ -5,41 +5,64 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Thêm mới Chuyên khoa</h6>
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/specialties.css" />
+}
+
+<a asp-action="Index" class="btn btn-light btn-sm mb-3" style="border-radius:8px;">
+    <i class="fas fa-arrow-left mr-1"></i>Quay lại
+</a>
+
+<div class="form-card create card mb-4" style="max-width:720px;">
+    <div class="card-header">
+        <h5><i class="fas fa-stethoscope mr-2"></i>Tạo Chuyên khoa mới</h5>
+        <p>Thêm chuyên khoa mới vào hệ thống</p>
     </div>
     <div class="card-body">
-        <div class="row">
-            <div class="col-md-6">
-                <form asp-action="Create">
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <form asp-action="Create" autocomplete="off">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3" style="border-radius:10px;font-size:.85rem;"></div>
 
-                    <div class="form-group mb-3">
-                        <label asp-for="Name" class="control-label font-weight-bold">Tên chuyên khoa</label>
-                        <input asp-for="Name" class="form-control" />
+            <p class="form-section-title red"><i class="fas fa-info-circle mr-1"></i>Thông tin chuyên khoa</p>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-floating-custom">
+                        <label>Tên chuyên khoa</label>
+                        <div class="input-icon-wrap">
+                            <i class="input-icon fas fa-stethoscope"></i>
+                            <input asp-for="Name" class="form-control" placeholder="VD: Tim mạch, Nhi khoa..." />
+                        </div>
                         <span asp-validation-for="Name" class="text-danger"></span>
                     </div>
-
-                    <div class="form-group mb-3">
-                        <label asp-for="Description" class="control-label font-weight-bold">Mô tả</label>
-                        <input asp-for="Description" class="form-control" />
-                        <span asp-validation-for="Description" class="text-danger"></span>
-                    </div>
-
-                    <div class="form-group mb-4">
-                        <label asp-for="Image" class="control-label font-weight-bold">Ảnh</label>
-                        <input asp-for="Image" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating-custom">
+                        <label>Đường dẫn hình ảnh</label>
+                        <div class="input-icon-wrap">
+                            <i class="input-icon fas fa-link"></i>
+                            <input asp-for="Image" class="form-control" placeholder="/img/specialties/..." id="imageInput" />
+                        </div>
                         <span asp-validation-for="Image" class="text-danger"></span>
                     </div>
-
-                    <div class="form-group">
-                        <button type="submit" class="btn btn-primary px-4">Tạo mới</button>
-                        <a asp-action="Index" class="btn btn-secondary px-4 ml-2">Quay lại</a>
+                    <div class="image-preview-box" id="imagePreview">
+                        <div class="no-image"><i class="fas fa-image"></i></div>
+                        <p>Nhập URL để xem trước ảnh</p>
                     </div>
-                </form>
+                </div>
+                <div class="col-12">
+                    <div class="form-floating-custom">
+                        <label>Mô tả chuyên khoa</label>
+                        <textarea asp-for="Description" class="form-control" rows="3" placeholder="Mô tả ngắn về chuyên khoa này..."></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+                </div>
             </div>
-        </div>
+
+            <hr style="border-color:#fde8e6;margin:1.5rem 0;">
+            <div class="d-flex" style="gap:.75rem">
+                <button type="submit" class="btn btn-save-red"><i class="fas fa-check mr-1"></i>Tạo chuyên khoa</button>
+                <a asp-action="Index" class="btn btn-cancel-soft"><i class="fas fa-times mr-1"></i>Hủy bỏ</a>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -47,4 +70,15 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        document.getElementById('imageInput').addEventListener('input', function () {
+            var url = this.value.trim();
+            var box = document.getElementById('imagePreview');
+            if (url) {
+                box.innerHTML = '<img src="' + url + '" alt="Preview" onerror="this.parentElement.innerHTML=\'<div class=no-image><i class=fas\\ fa-image></i></div><p>Không tải được ảnh</p>\'" />';
+            } else {
+                box.innerHTML = '<div class="no-image"><i class="fas fa-image"></i></div><p>Nhập URL để xem trước ảnh</p>';
+            }
+        });
+    </script>
 }

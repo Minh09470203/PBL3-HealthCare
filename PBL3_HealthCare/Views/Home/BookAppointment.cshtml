@@ -1,0 +1,78 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using PBL3_HealthCare.Models
+@inject UserManager<ApplicationUser> UserManager
+
+@model PBL3_HealthCare.Models.Appointment
+@{
+    ViewData["Title"] = "Xác nhận đặt lịch khám";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // Fix for CS0103: Define fullName and email from the current user
+    var fullName = UserManager.GetUserAsync(User).Result?.FullName ?? "";
+    var email = UserManager.GetUserAsync(User).Result?.Email ?? "";
+}
+
+<div class="container mt-5 pt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <h4 class="mb-0 text-white font-weight-bold">XÁC NHẬN THÔNG TIN ĐẶT LỊCH</h4>
+                </div>
+                <div class="card-body p-4 p-md-5">
+
+                    <div class="bg-light p-4 rounded mb-4 border">
+                        <h5 class="text-info font-weight-bold mb-3"><i class="icon-calendar mr-2"></i> Lịch hẹn của bạn</h5>
+                        <p class="mb-2" style="font-size: 16px;"><strong>Bác sĩ phụ trách:</strong> @ViewBag.DoctorName</p>
+                        <p class="mb-2" style="font-size: 16px;"><strong>Ngày khám:</strong> @ViewBag.DisplayDate</p>
+                        <p class="mb-0" style="font-size: 16px;">
+                            <strong>Khung giờ:</strong>
+                            <span class="badge badge-primary px-3 py-2" style="font-size: 15px;">@Model.TimeSlot.ToString(@"hh\:mm")</span>
+                        </p>
+                    </div>
+
+                    <form asp-controller="Home" asp-action="BookAppointment" method="post" class="appointment-form">
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden" asp-for="DoctorId" />
+                        <input type="hidden" asp-for="Date" />
+                        <input type="hidden" name="TimeSlot" value="@Model.TimeSlot.ToString(@"hh\:mm")" />
+
+                        <h5 class="text-secondary font-weight-bold mb-3 border-bottom pb-2">Hồ sơ bệnh nhân</h5>
+
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                <div asp-validation-summary="All" class="text-danger mb-0"></div>
+                            </div>
+                        }
+
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label class="text-muted mb-1">Họ và tên</label>
+                                <input type="text" class="form-control" value="@fullName" readonly style="background-color: #e9ecef; cursor: not-allowed;">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted mb-1">Tài khoản (Email)</label>
+                                <input type="text" class="form-control" value="@email" readonly style="background-color: #e9ecef; cursor: not-allowed;">
+                            </div>
+                        </div>
+
+                        <div class="form-group mt-4">
+                            <label class="font-weight-bold">Triệu chứng / Lý do khám <span class="text-danger">*</span></label>
+                            <textarea asp-for="Reason" cols="30" rows="4" class="form-control" required placeholder="Ví dụ: Đau đầu kéo dài, sốt cao, cần tư vấn nhổ răng khôn..."></textarea>
+                            <small class="form-text text-muted">Mô tả rõ triệu chứng giúp bác sĩ chẩn đoán sơ bộ tốt hơn.</small>
+                        </div>
+
+                        <div class="form-group text-center mt-5">
+                            <button type="submit" class="btn btn-primary py-3 px-5 w-100 font-weight-bold text-uppercase" style="border-radius: 30px;">
+                                Hoàn tất đặt lịch
+                            </button>
+                            <p class="mt-3 text-muted"><small><i class="icon-check-circle"></i> Đặt lịch hoàn toàn miễn phí</small></p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

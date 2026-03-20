@@ -1,58 +1,75 @@
 ﻿@model PBL3_HealthCare.Models.Doctor
 
 @{
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Chi tiết Bác sĩ";
+    if (User.IsInRole("Admin"))
+    {
+        Layout = "~/Views/Shared/_AdminLayout.cshtml"; // (Sửa lại tên file layout admin của ông cho đúng nhé)
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_Layout.cshtml"; // Layout trang khách của Fun san
+    }
 }
 
-@{
-    ViewData["Title"] = "Details";
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/doctors.css" />
 }
 
-<h1>Details</h1>
+<a asp-action="Index" class="btn btn-light btn-sm mb-3" style="border-radius:8px;"><i class="fas fa-arrow-left mr-1"></i>Quay lại danh sách</a>
 
-<div>
-    <h4>Doctor</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.User)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.User.Id)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Specialty)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Specialty.Name)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Bio)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Bio)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Degree)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Degree)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Price)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Price)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Image)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Image)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+<div class="detail-card card mb-4">
+    <div class="doctor-hero">
+        <div class="d-flex align-items-center">
+            @if (!string.IsNullOrEmpty(Model?.Image))
+            {
+                <img src="@Model.Image" alt="@Model.User?.FullName" class="doctor-avatar mr-3"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                <div class="doctor-avatar-placeholder mr-3" style="display:none;"><i class="fas fa-user-md"></i></div>
+            }
+            else
+            {
+                <div class="doctor-avatar-placeholder mr-3"><i class="fas fa-user-md"></i></div>
+            }
+            <div>
+                <h4>@Model?.User?.FullName</h4>
+                <span class="specialty-badge"><i class="fas fa-stethoscope mr-1"></i>@Model?.Specialty?.Name</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="detail-body">
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label"><i class="fas fa-graduation-cap mr-1"></i>Bằng cấp</div>
+                <div class="info-value">@(Model?.Degree ?? "—")</div>
+            </div>
+            <div class="info-item accent-green">
+                <div class="info-label"><i class="fas fa-money-bill-wave mr-1"></i>Giá khám</div>
+                <div class="info-value" style="color:#1cc88a;">@string.Format("{0:N0}", Model?.Price) <small style="font-size:.7rem;font-weight:400;">VNĐ</small></div>
+            </div>
+            <div class="info-item accent-yellow">
+                <div class="info-label"><i class="fas fa-envelope mr-1"></i>Email</div>
+                <div class="info-value">@(Model?.User?.Email ?? "—")</div>
+            </div>
+            <div class="info-item accent-red">
+                <div class="info-label"><i class="fas fa-id-badge mr-1"></i>Mã bác sĩ</div>
+                <div class="info-value">#@Model?.Id</div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model?.Bio))
+        {
+            <div class="bio-box">
+                <div class="bio-label"><i class="fas fa-align-left mr-1"></i>Tiểu sử</div>
+                <p>@Model.Bio</p>
+            </div>
+        }
+    </div>
+
+    <div class="action-bar">
+        <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-edit-action"><i class="fas fa-edit mr-1"></i>Chỉnh sửa</a>
+        <a asp-action="Delete" asp-route-id="@Model?.Id" class="btn btn-delete-action"><i class="fas fa-trash mr-1"></i>Xóa</a>
+        <a asp-action="Index" class="btn btn-back-action ml-auto"><i class="fas fa-list mr-1"></i>Danh sách</a>
+    </div>
 </div>
