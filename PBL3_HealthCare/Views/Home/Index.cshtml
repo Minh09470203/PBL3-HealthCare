@@ -239,7 +239,7 @@
                             <div class="staff">
                                 <div class="img-wrap d-flex align-items-stretch">
                                     @* Sử dụng ảnh từ database, nếu không có thì dùng ảnh mặc định *@
-                                    <div class="img align-self-stretch" style="background-image: url(/images/doctors/@(doctor.Image ?? "default.jpg"));"></div>
+                                    <div class="img align-self-stretch" style="background-image: url('/img/@(doctor.Image ?? "default.jpg")');"></div>
                                 </div>
                                 <div class="text pt-3 text-center">
                                     <h3 class="mb-2">@(doctor.User?.FullName ?? "Bác sĩ")</h3>
