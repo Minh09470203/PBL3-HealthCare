@@ -36,6 +36,20 @@ namespace PBL3_HealthCare.Controllers
 
         public async Task<IActionResult> Index()
         {
+            if (User.Identity.IsAuthenticated)
+            {
+                // Kiểm tra xem ông này là Admin hay Bác sĩ
+                if (User.IsInRole("Admin"))
+                {
+                    // Admin thì đá bay về trang quản lý chuyên khoa/dashboard
+                    return RedirectToAction("Index", "Specialties");
+                }
+                else if (User.IsInRole("Doctor"))
+                {
+                    // Bác sĩ thì đá về trang lịch hẹn/lịch làm việc
+                    return RedirectToAction("Index", "Appointments");
+                }
+            }
             ViewBag.TopSpecialties = await _context.Specialties.Take(6).ToListAsync();
             // Query lấy 4 bác sĩ đầu tiên, Include bảng User và Specialty
             var doctors = await _context.Doctors
