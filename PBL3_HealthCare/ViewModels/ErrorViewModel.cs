@@ -1,4 +1,4 @@
-namespace PBL3_HealthCare.Models
+namespace PBL3_HealthCare.ViewModels
 {
     public class ErrorViewModel
     {

@@ -12,6 +12,7 @@ using PBL3_HealthCare.Data;
 using PBL3_HealthCare.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using PBL3_HealthCare.ViewModels;
 
 namespace PBL3_HealthCare.Controllers
 {
