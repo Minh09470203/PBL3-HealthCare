@@ -7,7 +7,7 @@ namespace PBL3_HealthCare.ViewModels
     public class CreatePrescriptionVM
     {
         [Required]
-        public int AppointmentId { get; set; } // Thuộc về lịch khám nào
+        public int MedicalRecordId { get; set; }
 
         [Required(ErrorMessage = "Vui lòng nhập chẩn đoán")]
         public string Diagnosis { get; set; } // Chẩn đoán bệnh
