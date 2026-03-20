@@ -3,7 +3,14 @@
 
 @{
     ViewData["Title"] = "Quản lý Lịch khám";
-    Layout = "_AdminLayout";
+    if (User.IsInRole("Admin"))
+    {
+        Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    }
+    else if (User.IsInRole("Doctor"))
+    {
+        Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    }
 }
 
 @section Styles {

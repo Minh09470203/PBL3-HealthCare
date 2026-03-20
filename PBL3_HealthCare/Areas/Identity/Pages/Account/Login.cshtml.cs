@@ -117,23 +117,39 @@ namespace PBL3_HealthCare.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
-                    // Lấy tài khoản vừa đăng nhập thành công
-                    var user = await _userManager.FindByEmailAsync(Input.Email);
 
-                    // Lấy danh sách Quyền (Role) của tài khoản đó
+                    // ==========================================
+                    // LOGIC "CẢNH SÁT GIAO THÔNG" CHIA ĐƯỜNG
+                    // ==========================================
+
+                    // 1. Tìm xem người vừa đăng nhập là ai
+                    var user = await _userManager.FindByEmailAsync(Input.Email);
                     var roles = await _userManager.GetRolesAsync(user);
 
-                    // PHÂN LUỒNG TẠI ĐÂY
-                    if (roles.Contains("Admin") || roles.Contains("Doctor"))
+                    // 2. Chặn lỗi kẹt ReturnUrl (Nếu Bác sĩ mà bị hệ thống đẩy nhầm vào trang Admin thì bẻ lái ngay)
+                    if (!string.IsNullOrEmpty(returnUrl) && returnUrl != "/" && returnUrl != "~/")
                     {
-                        // Nếu là Admin/Bác sĩ -> Đá văng thẳng vào trang Quản lý
-                        return LocalRedirect("~/Doctors/Index");
+                        if (roles.Contains("Doctor") && returnUrl.Contains("Doctors", StringComparison.OrdinalIgnoreCase))
+                        {
+                            return LocalRedirect("~/Appointments/Index"); // Bẻ lái Bác sĩ về đúng nhà
+                        }
+                        return LocalRedirect(returnUrl);
+                    }
+
+                    // 3. Nếu đăng nhập bình thường (không có ReturnUrl), chia đường theo Role
+                    if (roles.Contains("Admin"))
+                    {
+                        return LocalRedirect("~/Doctors/Index"); // Admin thì vào quản lý
+                    }
+                    else if (roles.Contains("Doctor"))
+                    {
+                        return LocalRedirect("~/Appointments/Index"); // Bác sĩ thì vào xem lịch khám
                     }
                     else
                     {
-                        // Nếu là Patient (Bệnh nhân) -> Trả về trang chủ mặt tiền
-                        return LocalRedirect("~/");
+                        return LocalRedirect("~/Home/Index"); // Bệnh nhân (hoặc User thường) thì về Trang chủ
                     }
+                    // ==========================================
                 }
                 if (result.RequiresTwoFactor)
                 {

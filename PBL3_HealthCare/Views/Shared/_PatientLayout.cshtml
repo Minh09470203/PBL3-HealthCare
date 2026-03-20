@@ -21,6 +21,19 @@
             <hr class="sidebar-divider my-0">
 
             <div class="sidebar-heading mt-3">Thông tin</div>
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="Home" asp-action="Profile">
+                    <i class="fas fa-fw fa-user-edit"></i>
+                    <span>Hồ sơ cá nhân</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="Home" asp-action="MyHistory">
+                    <i class="fas fa-fw fa-history"></i>
+                    <span>Lịch sử khám</span>
+                </a>
+            </li>
 
             <hr class="sidebar-divider d-none d-md-block">
             <div class="text-center d-none d-md-inline">
@@ -66,7 +79,23 @@
             </div>
         </div>
     </div>
-
+    @if (TempData["Success"] != null)
+    {
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: '@TempData["Success"]',
+                    showConfirmButton: false,
+                    timer: 4000,
+                    timerProgressBar: true
+                });
+            });
+        </script>
+    }
     <script src="~/vendor/jquery/jquery.min.js"></script>
     <script src="~/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="~/vendor/jquery-easing/jquery.easing.min.js"></script>

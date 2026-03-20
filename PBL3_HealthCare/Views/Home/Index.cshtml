@@ -51,7 +51,7 @@
                                 @if (User.Identity.IsAuthenticated)
                                 {
                                     var userName = User.FindFirstValue(ClaimTypes.Name) ?? User.Identity.Name;
-                                    <a asp-controller="Home" asp-action="MyHistory" class="mr-3 text-white text-decoration-none">
+                                    <a asp-controller="Home" asp-action="Profile" class="mr-3 text-white text-decoration-none">
                                         Xin chào @User.Identity.Name
                                     </a>
                                     <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post" class="d-inline">
@@ -252,7 +252,7 @@
                                             <li class="ftco-animate"><a href="#"><span class="icon-google-plus"></span></a></li>
                                             <li class="ftco-animate"><a href="#"><span class="icon-instagram"></span></a></li>
                                         </ul>
-                                        <p><a asp-controller="Doctors" asp-action="Details" asp-route-id="@doctor.Id" class="btn btn-primary">Đặt lịch ngay</a></p>
+                                        <p><a asp-controller="Home" asp-action="DoctorProfile" asp-route-id="@doctor.Id" class="btn btn-primary">Đặt lịch ngay</a></p>
                                     </div>
                                 </div>
                             </div>

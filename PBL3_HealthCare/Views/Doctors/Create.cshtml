@@ -19,7 +19,7 @@
         <p>Điền đầy đủ thông tin để tạo hồ sơ bác sĩ</p>
     </div>
     <div class="card-body">
-        <form asp-action="Create" autocomplete="off">
+        <form asp-action="Create" autocomplete="off" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3" style="border-radius:10px;font-size:.85rem;"></div>
 
             <p class="form-section-title blue"><i class="fas fa-id-card mr-1"></i>Thông tin cơ bản</p>
@@ -73,12 +73,12 @@
                 </div>
                 <div class="col-md-4">
                     <div class="form-floating-custom">
-                        <label><i class="fas fa-image mr-1 text-muted"></i>Đường dẫn ảnh đại diện</label>
-                        <div class="input-icon-wrap">
-                            <i class="input-icon fas fa-link"></i>
-                            <input asp-for="Image" class="form-control" placeholder="/img/doctors/..." />
+                        <label><i class="fas fa-image mr-1 text-muted"></i>Tải ảnh đại diện lên</label>
+                        <div class="custom-file mt-2">
+                            <input type="file" name="AvatarFile" class="custom-file-input" id="customFileCreate" accept="image/*" required>
+                            <label class="custom-file-label" for="customFileCreate" data-browse="Chọn file">Chọn ảnh từ máy tính...</label>
                         </div>
-                        <span asp-validation-for="Image" class="text-danger"></span>
+                        <small class="text-muted mt-2 d-block">Định dạng hỗ trợ: JPG, PNG, JPEG.</small>
                     </div>
                 </div>
             </div>
@@ -96,4 +96,13 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        // Script hiển thị tên file khi Admin chọn ảnh
+        $(document).ready(function () {
+            $('.custom-file-input').on('change', function () {
+                var fileName = $(this).val().split('\\').pop();
+                $(this).next('.custom-file-label').addClass("selected").html(fileName);
+            });
+        });
+    </script>
 }

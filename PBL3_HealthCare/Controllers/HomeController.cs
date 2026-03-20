@@ -10,6 +10,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Identity;
 using PBL3_HealthCare.Data;
 using PBL3_HealthCare.Models;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 
 namespace PBL3_HealthCare.Controllers
 {
@@ -18,15 +20,17 @@ namespace PBL3_HealthCare.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
-
+        private readonly IWebHostEnvironment _webHostEnvironment;
         public HomeController(
             ILogger<HomeController> logger,
             ApplicationDbContext context,
-            UserManager<ApplicationUser> userManager)
+            UserManager<ApplicationUser> userManager,
+            IWebHostEnvironment webHostEnvironment)
         {
             _logger = logger;
             _context = context;
             _userManager = userManager;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         public async Task<IActionResult> Index()
@@ -115,7 +119,6 @@ namespace PBL3_HealthCare.Controllers
 
             if (doctorId == null || date == null || string.IsNullOrEmpty(timeSlot))
             {
-                TempData["Error"] = "Vui lòng chọn Khoa và Bác sĩ trước khi đặt lịch!";
                 return RedirectToAction("DoctorList", "Home");
             }
 
@@ -226,6 +229,123 @@ namespace PBL3_HealthCare.Controllers
                 .ToListAsync();
 
             return View(myAppointments);
+        }
+
+        // ==========================================
+        // QUẢN LÝ HỒ SƠ BỆNH NHÂN (PROFILE)
+        // ==========================================
+
+        // GET: /Home/Profile
+        [HttpGet]
+        public async Task<IActionResult> Profile()
+        {
+            // Lấy thông tin người dùng đang đăng nhập
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
+
+            return View(user); // Truyền thẳng object User ra View
+        }
+
+        // POST: /Home/Profile (Xử lý khi bấm nút Lưu)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Profile(string FullName, string PhoneNumber, DateTime? DOB, string Gender, string Address, string Email, IFormFile AvatarFile)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
+
+            // Cập nhật các trường thông tin
+            user.FullName = FullName;
+            user.PhoneNumber = PhoneNumber;
+            user.Gender = Gender;
+            user.Address = Address;
+            user.DateOfBirth = DOB;
+            user.Email = Email;
+
+            if (AvatarFile != null && AvatarFile.Length > 0)
+            {
+                // 1. Trỏ đường dẫn tới thư mục wwwroot/images/ (hoặc wwwroot/images/doctors)
+                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "img");
+
+                // 2. Tạo tên file duy nhất (Chống trùng tên bằng Guid)
+                string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(AvatarFile.FileName);
+
+                // 3. Đường dẫn lưu file vật lý trên máy
+                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                // 4. Copy file từ luồng (stream) vào ổ cứng
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await AvatarFile.CopyToAsync(fileStream);
+                }
+
+                // 5. Cập nhật tên file vào thuộc tính của Model để lưu xuống Database (cột Image/Avatar)
+                user.Avatar = uniqueFileName; // Đảm bảo trong bảng User hoặc Doctor ông có cột này
+            }
+            // LƯU Ý CHO MINH: Nếu trong bảng ApplicationUser của ông có thêm các cột 
+            // như Address (Địa chỉ), DOB (Ngày sinh)... thì ông bổ sung thêm tham số 
+            // vào hàm này và gán giá trị ở đây nhé. Ví dụ: user.Address = Address;
+
+            var result = await _userManager.UpdateAsync(user);
+            if (result.Succeeded)
+            {
+                TempData["Success"] = "Cập nhật hồ sơ cá nhân thành công!";
+                return RedirectToAction(nameof(Profile));
+            }
+
+            TempData["Error"] = "Có lỗi xảy ra, không thể cập nhật hồ sơ!";
+            return View(user);
+        }
+        // GET: /Home/ChangePassword
+        [HttpGet]
+        public IActionResult ChangePassword()
+        {
+            return View();
+        }
+
+        // POST: /Home/ChangePassword
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(string oldPassword, string newPassword, string confirmPassword)
+        {
+            if (string.IsNullOrEmpty(oldPassword) || string.IsNullOrEmpty(newPassword))
+            {
+                TempData["Error"] = "Vui lòng nhập đầy đủ thông tin!";
+                return View();
+            }
+
+            if (newPassword != confirmPassword)
+            {
+                TempData["Error"] = "Mật khẩu mới và xác nhận mật khẩu không khớp!";
+                return View();
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            var result = await _userManager.ChangePasswordAsync(user, oldPassword, newPassword);
+
+            if (result.Succeeded)
+            {
+                TempData["Success"] = "Đổi mật khẩu thành công!";
+                // Đổi pass xong đá về trang Profile
+                return RedirectToAction(nameof(Profile));
+            }
+
+            // Nếu mật khẩu cũ sai hoặc pass mới không đủ độ khó (chưa có chữ hoa, số...)
+            foreach (var error in result.Errors)
+            {
+                TempData["Error"] = "Lỗi: " + error.Description;
+                return View();
+            }
+
+            return View();
         }
 
         public IActionResult Privacy()
