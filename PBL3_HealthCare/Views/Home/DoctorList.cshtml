@@ -4,38 +4,59 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container mt-5 pt-5 mb-5">
-    <h2 class="text-center mb-4 font-weight-bold">
-        @(ViewBag.SpecialtyName != null ? $"Đội ngũ Bác sĩ khoa {ViewBag.SpecialtyName}" : "Tất cả đội ngũ Bác sĩ")
-    </h2>
+@section Styles {
+    <link rel="stylesheet" href="~/css/home/doctor-list.css" />
+}
 
-    @if (Model != null && Model.Any())
-    {
-        <div class="row">
-            @foreach (var item in Model)
+<section class="doctors-section">
+    <div class="container">
+        <p class="section-eyebrow">Đội ngũ y tế</p>
+        <h2 class="section-heading">
+            @if (ViewBag.SpecialtyName != null)
             {
-                <div class="col-md-4 mb-4 ftco-animate">
-                    <div class="card shadow-sm text-center h-100 staff border-0">
-                        <div class="img-wrap d-flex align-items-stretch" style="height: 250px;">
-                            <div class="img align-self-stretch w-100" style="background-image: url('/img/@(item.Image ?? "default.jpg")'); background-size: cover; background-position: top center;"></div>
-                        </div>
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title mt-2 font-weight-bold text-dark">BS. @(item.User?.FullName ?? "Đang cập nhật")</h5>
-                            <p class="text-primary mb-3">@(item.Specialty?.Name ?? "Chuyên khoa")</p>
-                            <div class="mt-auto">
-                                <a asp-controller="Home" asp-action="DoctorProfile" asp-route-id="@item.Id" class="btn btn-primary btn-block py-2">Xem lịch khám & Đặt hẹn</a>
+                <span>Khoa @ViewBag.SpecialtyName</span>
+            }
+            else
+            {
+                @:Tất cả <span>Bác sĩ</span>
+            }
+        </h2>
+
+        @if (Model != null && Model.Any())
+        {
+            <div class="row">
+                @foreach (var item in Model)
+                {
+                    <div class="col-md-4 col-sm-6 mb-4">
+                        <div class="doctor-card">
+                            <div class="photo-wrap">
+                                <img src="/img/doctors/@(item.Image ?? "default.jpg")"
+                                     alt="@item.User?.FullName"
+                                     onerror="this.src='/img/doctors/default.jpg'" />
+                                <span class="specialty-tag">@(item.Specialty?.Name ?? "Chuyên khoa")</span>
+                            </div>
+                            <div class="card-content">
+                                <div class="doctor-name">BS. @(item.User?.FullName ?? "Đang cập nhật")</div>
+                                <div class="doctor-degree">@(item.Degree ?? "")</div>
+                                <div class="price-row">
+                                    <span class="price-label">Giá khám</span>
+                                    <span class="price-value">@string.Format("{0:N0}", item.Price)đ</span>
+                                </div>
+                                <a asp-controller="Home" asp-action="DoctorInfo" asp-route-id="@item.Id"
+                                   class="btn-book">Xem lịch &amp; Đặt hẹn →</a>
                             </div>
                         </div>
                     </div>
-                </div>
-            }
-        </div>
-    }
-    else
-    {
-        <div class="text-center py-5">
-            <h4 class="text-muted">Chưa có bác sĩ nào thuộc chuyên khoa này.</h4>
-            <a asp-controller="Home" asp-action="Index" class="btn btn-secondary mt-3">Quay lại trang chủ</a>
-        </div>
-    }
-</div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <div class="empty-icon"><i class="fas fa-user-md"></i></div>
+                <p>Chưa có bác sĩ nào thuộc chuyên khoa này.</p>
+                <a asp-controller="Home" asp-action="Index" class="btn-back">Quay lại trang chủ</a>
+            </div>
+        }
+    </div>
+</section>

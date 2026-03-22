@@ -2,14 +2,23 @@
 
 @{
     ViewData["Title"] = "Tạo Lịch khám mới";
-    Layout = "_AdminLayout";
+    if (User.IsInRole("Admin"))
+    {
+        Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    }
+    else if (User.IsInRole("Doctor"))
+    {
+        Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    }
 }
 
 @section Styles {
     <link rel="stylesheet" href="~/css/admin/appointments.css" />
 }
 
-<a asp-action="Index" class="btn btn-light btn-sm mb-3" style="border-radius:8px;"><i class="fas fa-arrow-left mr-1"></i>Quay lại</a>
+<a asp-action="Index" class="btn btn-light btn-sm mb-3" style="border-radius:8px;">
+    <i class="fas fa-arrow-left mr-1"></i>Quay lại
+</a>
 
 <div class="form-card create card mb-4">
     <div class="card-header">
@@ -20,8 +29,12 @@
         <form asp-action="Create" autocomplete="off">
             <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3" style="border-radius:10px;font-size:.85rem;"></div>
 
-            <p class="form-section-title green"><i class="fas fa-users mr-1"></i>Thông tin liên quan</p>
+            <p class="form-section-title green">
+                <i class="fas fa-users mr-1"></i>Thông tin liên quan
+            </p>
+
             <div class="row">
+                <!-- Patient -->
                 <div class="col-md-6">
                     <div class="form-floating-custom">
                         <label><i class="fas fa-procedures mr-1 text-muted"></i>Bệnh nhân</label>
@@ -30,18 +43,32 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="form-floating-custom">
-                        <label><i class="fas fa-user-md mr-1 text-muted"></i>Bác sĩ phụ trách</label>
-                        <select asp-for="DoctorId" class="form-control" asp-items="ViewBag.DoctorId">
-                            <option value="">-- Chọn bác sĩ --</option>
-                        </select>
+
+                <!-- Doctor -->
+                @if (User.IsInRole("Admin"))
+                {
+                    <div class="col-md-6">
+                        <div class="form-floating-custom">
+                            <label><i class="fas fa-user-md mr-1 text-muted"></i>Bác sĩ phụ trách</label>
+                            <select asp-for="DoctorId" class="form-control" asp-items="ViewBag.DoctorId">
+                                <option value="">-- Chọn bác sĩ --</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
+                }
+                else if (User.IsInRole("Doctor"))
+                {
+                    <!-- Doctor không được chọn, nhưng vẫn submit -->
+                    <input type="hidden" asp-for="DoctorId" />
+                }
             </div>
 
-            <p class="form-section-title green"><i class="fas fa-clock mr-1"></i>Thời gian & Trạng thái</p>
+            <p class="form-section-title green">
+                <i class="fas fa-clock mr-1"></i>Thời gian & Trạng thái
+            </p>
+
             <div class="row">
+                <!-- Date -->
                 <div class="col-md-4">
                     <div class="form-floating-custom">
                         <label>Ngày khám</label>
@@ -52,6 +79,8 @@
                         <span asp-validation-for="Date" class="text-danger"></span>
                     </div>
                 </div>
+
+                <!-- TimeSlot -->
                 <div class="col-md-4">
                     <div class="form-floating-custom">
                         <label>Khung giờ</label>
@@ -62,21 +91,35 @@
                         <span asp-validation-for="TimeSlot" class="text-danger"></span>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="form-floating-custom">
-                        <label>Trạng thái</label>
-                        <select asp-for="Status" class="form-control">
-                            <option value="Pending">⏳ Chờ duyệt</option>
-                            <option value="Confirmed">✅ Đã xác nhận</option>
-                            <option value="Cancelled">❌ Đã hủy</option>
-                        </select>
-                        <span asp-validation-for="Status" class="text-danger"></span>
+
+                <!-- Status -->
+                @if (User.IsInRole("Admin"))
+                {
+                    <div class="col-md-4">
+                        <div class="form-floating-custom">
+                            <label>Trạng thái</label>
+                            <select asp-for="Status" class="form-control">
+                                <option value="Pending">Chờ duyệt</option>
+                                <option value="Confirmed">Đã xác nhận</option>
+                                <option value="Cancelled">Đã hủy</option>
+                            </select>
+                            <span asp-validation-for="Status" class="text-danger"></span>
+                        </div>
                     </div>
-                </div>
+                }
+                else if (User.IsInRole("Doctor"))
+                {
+                    <!-- Doctor không chọn status -->
+                    <input type="hidden" asp-for="Status" />
+                }
             </div>
 
-            <p class="form-section-title green"><i class="fas fa-notes-medical mr-1"></i>Thông tin y tế</p>
+            <p class="form-section-title green">
+                <i class="fas fa-notes-medical mr-1"></i>Thông tin y tế
+            </p>
+
             <div class="row">
+                <!-- Reason -->
                 <div class="col-md-6">
                     <div class="form-floating-custom">
                         <label>Lý do khám</label>
@@ -87,6 +130,8 @@
                         <span asp-validation-for="Reason" class="text-danger"></span>
                     </div>
                 </div>
+
+                <!-- Symptoms -->
                 <div class="col-md-6">
                     <div class="form-floating-custom">
                         <label>Triệu chứng</label>
@@ -94,22 +139,37 @@
                         <span asp-validation-for="Symptoms" class="text-danger"></span>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="form-floating-custom">
-                        <label>Ngày tạo</label>
-                        <div class="input-icon-wrap">
-                            <i class="input-icon fas fa-calendar-plus"></i>
-                            <input asp-for="CreatedAt" class="form-control" type="datetime-local" />
+
+                <!-- CreatedAt -->
+                @if (User.IsInRole("Admin"))
+                {
+                    <div class="col-md-6">
+                        <div class="form-floating-custom">
+                            <label>Ngày tạo</label>
+                            <div class="input-icon-wrap">
+                                <i class="input-icon fas fa-calendar-plus"></i>
+                                <input asp-for="CreatedAt" class="form-control" type="datetime-local" />
+                            </div>
+                            <span asp-validation-for="CreatedAt" class="text-danger"></span>
                         </div>
-                        <span asp-validation-for="CreatedAt" class="text-danger"></span>
                     </div>
-                </div>
+                }
+                else if (User.IsInRole("Doctor"))
+                {
+                    <!-- Doctor không nhập -->
+                    <input type="hidden" asp-for="CreatedAt" />
+                }
             </div>
 
             <hr style="border-color:#e0faf3;margin:1.5rem 0;">
+
             <div class="d-flex" style="gap:.75rem">
-                <button type="submit" class="btn btn-save-green"><i class="fas fa-check mr-1"></i>Tạo lịch khám</button>
-                <a asp-action="Index" class="btn btn-cancel-soft"><i class="fas fa-times mr-1"></i>Hủy bỏ</a>
+                <button type="submit" class="btn btn-save-green">
+                    <i class="fas fa-check mr-1"></i>Tạo lịch khám
+                </button>
+                <a asp-action="Index" class="btn btn-cancel-soft">
+                    <i class="fas fa-times mr-1"></i>Hủy bỏ
+                </a>
             </div>
         </form>
     </div>

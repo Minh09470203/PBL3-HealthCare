@@ -1,13 +1,10 @@
-﻿﻿<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-
     <title>@ViewBag.Title - Mediplus</title>
-
     <link href="https://fonts.googleapis.com/css?family=Poppins:100,200,300,400,500,600,700,800,900" rel="stylesheet">
-
     <link rel="stylesheet" href="~/mediplus-master/css/open-iconic-bootstrap.min.css">
     <link rel="stylesheet" href="~/mediplus-master/css/animate.css">
     <link rel="stylesheet" href="~/mediplus-master/css/owl.carousel.min.css">
@@ -19,12 +16,10 @@
     <link rel="stylesheet" href="~/mediplus-master/css/icomoon.css">
     <link rel="stylesheet" href="~/css/site.css">
     <link rel="stylesheet" href="~/mediplus-master/css/style.css">
+    @await RenderSectionAsync("Styles", required: false)    @* ← chuyển lên đây *@
 </head>
-
 <body>
-
     @RenderBody()
-
     <script src="~/mediplus-master/js/jquery.min.js"></script>
     <script src="~/mediplus-master/js/jquery-migrate-3.0.1.min.js"></script>
     <script src="~/mediplus-master/js/popper.min.js"></script>
@@ -38,6 +33,6 @@
     <script src="~/mediplus-master/js/jquery.animateNumber.min.js"></script>
     <script src="~/mediplus-master/js/scrollax.min.js"></script>
     <script src="~/mediplus-master/js/main.js"></script>
-    @RenderSection("Scripts", required: false)
+    @await RenderSectionAsync("Scripts", required: false)   @* ← thêm dòng này *@
 </body>
 </html>

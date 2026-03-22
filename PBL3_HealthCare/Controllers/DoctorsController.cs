@@ -87,7 +87,7 @@ namespace PBL3_HealthCare.Controllers
                     }
 
                     // Lưu đường dẫn vào Model (Ví dụ: "doctors/xyz.jpg")
-                    doctor.Image = "doctors/" + uniqueFileName;
+                    doctor.Image = uniqueFileName;
                 }
 
                 // Lưu Bác sĩ vào Database
@@ -153,7 +153,7 @@ namespace PBL3_HealthCare.Controllers
                         }
 
                         // Đè tên file mới vào (tên file cũ được View giữ nguyên nếu không chọn ảnh mới)
-                        doctor.Image = "doctors/" + uniqueFileName;
+                        doctor.Image = uniqueFileName;
                     }
 
                     _context.Update(doctor);

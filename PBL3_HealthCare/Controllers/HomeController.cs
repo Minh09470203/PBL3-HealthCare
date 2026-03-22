@@ -90,8 +90,8 @@ namespace PBL3_HealthCare.Controllers
             return View(await query.ToListAsync());
         }
 
-        // 2. LẤY HỒ SƠ CHI TIẾT & BẢNG GIỜ KHÁM
-        public async Task<IActionResult> DoctorProfile(int id)
+        // 2. LẤY THÔNG TIN CHI TIẾT & BẢNG GIỜ KHÁM
+        public async Task<IActionResult> DoctorInfo(int id)
         {
             var doctor = await _context.Doctors
                 .Include(d => d.Specialty)

@@ -27,12 +27,10 @@ namespace PBL3_HealthCare.Controllers
         // ==========================================
         private void PopulateNames(Appointment appointment = null)
         {
-            // Lấy danh sách Bệnh nhân kèm Tên thật (FullName)
             var patients = _context.Users
                 .Select(u => new { Id = u.Id, Name = u.FullName ?? u.UserName })
                 .ToList();
 
-            // Lấy danh sách Bác sĩ kèm Tên thật (thông qua bảng User)
             var doctors = _context.Doctors
                 .Include(d => d.User)
                 .Select(d => new { Id = d.Id, Name = "BS. " + d.User.FullName })
@@ -42,7 +40,9 @@ namespace PBL3_HealthCare.Controllers
             ViewData["DoctorId"] = new SelectList(doctors, "Id", "Name", appointment?.DoctorId);
         }
 
-        // GET: Appointments
+        // ==========================================
+        // INDEX
+        // ==========================================
         public async Task<IActionResult> Index()
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -66,15 +66,17 @@ namespace PBL3_HealthCare.Controllers
             return View(applicationDbContext);
         }
 
-        // GET: Appointments/Details/5
+        // ==========================================
+        // DETAILS
+        // ==========================================
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
 
             var appointment = await _context.Appointments
-                .Include(a => a.Patient) // Lấy thông tin Bệnh nhân (để có FullName)
+                .Include(a => a.Patient)
                 .Include(a => a.Doctor)
-                    .ThenInclude(d => d.User) // Lấy thông tin User của Bác sĩ (để có FullName)
+                    .ThenInclude(d => d.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (appointment == null) return NotFound();
@@ -82,18 +84,35 @@ namespace PBL3_HealthCare.Controllers
             return View(appointment);
         }
 
-        // GET: Appointments/Create
+        // ==========================================
+        // CREATE
+        // ==========================================
         public IActionResult Create()
         {
-            PopulateNames(); // Gọi hàm nạp tên thật
+            PopulateNames();
             return View();
         }
 
-        // POST: Appointments/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,PatientId,DoctorId,Date,Reason,Status,TimeSlot,Symptoms,CreatedAt")] Appointment appointment)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var isDoctor = await _userManager.IsInRoleAsync(currentUser, "Doctor");
+
+            // 🔥 BỔ SUNG: Nếu là Doctor → ép về đúng quyền
+            if (isDoctor)
+            {
+                var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == currentUser.Id);
+                if (doctor != null)
+                {
+                    appointment.DoctorId = doctor.Id;
+                }
+
+                appointment.Status = AppointmentStatus.Pending;
+                appointment.CreatedAt = DateTime.Now;
+            }
+
             if (ModelState.IsValid)
             {
                 _context.Add(appointment);
@@ -101,17 +120,19 @@ namespace PBL3_HealthCare.Controllers
                 TempData["Success"] = "Tạo lịch khám thành công!";
                 return RedirectToAction(nameof(Index));
             }
+
             PopulateNames(appointment);
             return View(appointment);
         }
 
-        // GET: Appointments/Edit/5
+        // ==========================================
+        // EDIT
+        // ==========================================
         [HttpGet]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
 
-            // THÊM .Include(a => a.Patient) Ở ĐÂY
             var appointment = await _context.Appointments
                 .Include(a => a.Patient)
                 .FirstOrDefaultAsync(m => m.Id == id);
@@ -122,7 +143,6 @@ namespace PBL3_HealthCare.Controllers
             return View(appointment);
         }
 
-        // POST: Appointments/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,PatientId,DoctorId,Date,Reason,Status,TimeSlot,Symptoms,CreatedAt")] Appointment appointment)
@@ -144,11 +164,14 @@ namespace PBL3_HealthCare.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
+
             PopulateNames(appointment);
             return View(appointment);
         }
 
-        // GET: Appointments/Delete/5
+        // ==========================================
+        // DELETE
+        // ==========================================
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -163,7 +186,6 @@ namespace PBL3_HealthCare.Controllers
             return View(appointment);
         }
 
-        // POST: Appointments/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -178,11 +200,9 @@ namespace PBL3_HealthCare.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        private bool AppointmentExists(int id)
-        {
-            return _context.Appointments.Any(e => e.Id == id);
-        }
-
+        // ==========================================
+        // UPDATE STATUS (ADMIN + DOCTOR DUYỆT)
+        // ==========================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateStatus(int id, AppointmentStatus newStatus)
@@ -190,12 +210,33 @@ namespace PBL3_HealthCare.Controllers
             var appointment = await _context.Appointments.FindAsync(id);
             if (appointment == null) return NotFound();
 
+            var currentUser = await _userManager.GetUserAsync(User);
+            var isDoctor = await _userManager.IsInRoleAsync(currentUser, "Doctor");
+
+            if (isDoctor)
+            {
+                var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == currentUser.Id);
+
+                // 🔥 CHỈ ĐƯỢC DUYỆT LỊCH CỦA CHÍNH MÌNH
+                if (doctor == null || appointment.DoctorId != doctor.Id)
+                    return Unauthorized();
+
+                // 🔥 CHỈ ĐƯỢC CHUYỂN TỪ PENDING
+                if (appointment.Status != AppointmentStatus.Pending)
+                    return BadRequest();
+            }
+
             appointment.Status = newStatus;
             _context.Update(appointment);
             await _context.SaveChangesAsync();
 
             TempData["Success"] = "Cập nhật trạng thái thành công!";
             return RedirectToAction(nameof(Index));
+        }
+
+        private bool AppointmentExists(int id)
+        {
+            return _context.Appointments.Any(e => e.Id == id);
         }
     }
 }
