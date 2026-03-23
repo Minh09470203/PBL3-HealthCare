@@ -1,18 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Identity;
 using PBL3_HealthCare.Data;
 using PBL3_HealthCare.Models;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
+using PBL3_HealthCare.Services;
 using PBL3_HealthCare.ViewModels;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
 using System.IO;
 
 namespace PBL3_HealthCare.Controllers
@@ -23,16 +24,19 @@ namespace PBL3_HealthCare.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly NotificationService _notificationService;
         public HomeController(
             ILogger<HomeController> logger,
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            IWebHostEnvironment webHostEnvironment)
+            IWebHostEnvironment webHostEnvironment,
+            NotificationService notificationService)
         {
             _logger = logger;
             _context = context;
             _userManager = userManager;
             _webHostEnvironment = webHostEnvironment;
+            _notificationService = notificationService;
         }
 
         public async Task<IActionResult> Index()
@@ -204,6 +208,17 @@ namespace PBL3_HealthCare.Controllers
 
                 _context.Appointments.Add(model);
                 await _context.SaveChangesAsync();
+
+                // Tìm thông tin bác sĩ để lấy cái UserId của ổng
+                var doctorInfo = await _context.Doctors.FindAsync(model.DoctorId);
+                if (doctorInfo != null)
+                {
+                    // Bắn thông báo cho bác sĩ
+                    await _notificationService.CreateNotification(
+                        doctorInfo.UserId,
+                        $"Có bệnh nhân vừa đặt lịch khám với bạn vào lúc {model.TimeSlot} ngày {model.Date:dd/MM/yyyy}."
+                    );
+                }
 
                 TempData["Success"] = "Đặt lịch thành công! Vui lòng chờ phòng khám xác nhận.";
                 return RedirectToAction(nameof(MyHistory));
@@ -464,6 +479,62 @@ namespace PBL3_HealthCare.Controllers
             {
                 RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
             });
+        }
+        // ==========================================
+        // CỔNG THÔNG TIN BỆNH NHÂN (PORTAL)
+        // ==========================================
+
+        // 1. Xem danh sách Bệnh án của tôi
+        public async Task<IActionResult> MyMedicalRecords()
+        {
+            var userId = _userManager.GetUserId(User);
+            if (userId == null) return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            // Bảo mật: Chỉ lấy bệnh án có PatientId trùng với người đang đăng nhập
+            var records = await _context.MedicalRecords
+                .Include(m => m.Doctor)
+                    .ThenInclude(d => d.User)
+                .Where(m => m.Appointment.PatientId == userId) // <--- Rào chắn bảo mật quan trọng
+                .OrderByDescending(m => m.CreatedAt)
+                .ToListAsync();
+
+            return View(records);
+        }
+
+        // 2. Xem danh sách Đơn thuốc của tôi
+        public async Task<IActionResult> MyPrescriptions()
+        {
+            var userId = _userManager.GetUserId(User);
+            if (userId == null) return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            // Bảo mật: Lấy đơn thuốc thông qua Bệnh án của đúng bệnh nhân đó
+            var prescriptions = await _context.Prescriptions
+                .Include(p => p.MedicalRecord)
+                    .ThenInclude(m => m.Doctor)
+                        .ThenInclude(d => d.User)
+                .Where(p => p.MedicalRecord.Appointment.PatientId == userId) // <--- Rào chắn bảo mật quan trọng
+                .OrderByDescending(p => p.CreatedDate)
+                .ToListAsync();
+
+            return View(prescriptions);
+        }
+
+        // 3. Xem danh sách Hóa đơn của tôi
+        public async Task<IActionResult> MyInvoices()
+        {
+            var userId = _userManager.GetUserId(User);
+            if (userId == null) return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            // Bảo mật: Lấy hóa đơn từ bệnh án của chính bệnh nhân
+            var invoices = await _context.Invoices
+                .Include(i => i.MedicalRecord)
+                    .ThenInclude(m => m.Doctor)
+                        .ThenInclude(d => d.User)
+                .Where(i => i.MedicalRecord.Appointment.PatientId == userId) // <--- Rào chắn bảo mật quan trọng
+                .OrderByDescending(i => i.CreatedAt)
+                .ToListAsync();
+
+            return View(invoices);
         }
     }
 }

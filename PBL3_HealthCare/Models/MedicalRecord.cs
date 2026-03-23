@@ -19,5 +19,8 @@ namespace PBL3_HealthCare.Models
         // Ngày tái khám (Có thể null nếu khỏi hẳn)
         public DateTime? ReExaminationDate { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public virtual Doctor Doctor { get; set; }
+        public virtual ApplicationUser ApplicationUser { get; set; }
+        public virtual ICollection<Prescription> Prescriptions { get; set; }
     }
 }
