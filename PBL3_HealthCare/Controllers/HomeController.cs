@@ -376,5 +376,61 @@ namespace PBL3_HealthCare.Controllers
                 RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
             });
         }
+        // ==========================================
+        // CỔNG THÔNG TIN BỆNH NHÂN (PORTAL)
+        // ==========================================
+
+        // 1. Xem danh sách Bệnh án của tôi
+        public async Task<IActionResult> MyMedicalRecords()
+        {
+            var userId = _userManager.GetUserId(User);
+            if (userId == null) return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            // Bảo mật: Chỉ lấy bệnh án có PatientId trùng với người đang đăng nhập
+            var records = await _context.MedicalRecords
+                .Include(m => m.Doctor)
+                    .ThenInclude(d => d.User)
+                .Where(m => m.Appointment.PatientId == userId) // <--- Rào chắn bảo mật quan trọng
+                .OrderByDescending(m => m.CreatedAt)
+                .ToListAsync();
+
+            return View(records);
+        }
+
+        // 2. Xem danh sách Đơn thuốc của tôi
+        public async Task<IActionResult> MyPrescriptions()
+        {
+            var userId = _userManager.GetUserId(User);
+            if (userId == null) return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            // Bảo mật: Lấy đơn thuốc thông qua Bệnh án của đúng bệnh nhân đó
+            var prescriptions = await _context.Prescriptions
+                .Include(p => p.MedicalRecord)
+                    .ThenInclude(m => m.Doctor)
+                        .ThenInclude(d => d.User)
+                .Where(p => p.MedicalRecord.Appointment.PatientId == userId) // <--- Rào chắn bảo mật quan trọng
+                .OrderByDescending(p => p.CreatedDate)
+                .ToListAsync();
+
+            return View(prescriptions);
+        }
+
+        // 3. Xem danh sách Hóa đơn của tôi
+        public async Task<IActionResult> MyInvoices()
+        {
+            var userId = _userManager.GetUserId(User);
+            if (userId == null) return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            // Bảo mật: Lấy hóa đơn từ bệnh án của chính bệnh nhân
+            var invoices = await _context.Invoices
+                .Include(i => i.MedicalRecord)
+                    .ThenInclude(m => m.Doctor)
+                        .ThenInclude(d => d.User)
+                .Where(i => i.MedicalRecord.Appointment.PatientId == userId) // <--- Rào chắn bảo mật quan trọng
+                .OrderByDescending(i => i.CreatedAt)
+                .ToListAsync();
+
+            return View(invoices);
+        }
     }
 }

@@ -15,7 +15,7 @@ namespace PBL3_HealthCare.Services
         }
 
         // Hàm này tuần sau BE 2 sẽ gọi để bắn thông báo
-        public void CreateNotification(string userId, string message)
+        public async Task CreateNotification(string userId, string message)
         {
             var notification = new Notification
             {
@@ -28,7 +28,7 @@ namespace PBL3_HealthCare.Services
             };
 
             _context.Notifications.Add(notification);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using PBL3_HealthCare.Data;
 using PBL3_HealthCare.Models;
+using PBL3_HealthCare.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,11 +16,12 @@ namespace PBL3_HealthCare.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
-
-        public AppointmentsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        private readonly NotificationService _notificationService;
+        public AppointmentsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, NotificationService notificationService)
         {
             _context = context;
             _userManager = userManager;
+            _notificationService = notificationService;
         }
 
         // ==========================================
@@ -99,6 +101,11 @@ namespace PBL3_HealthCare.Controllers
                 _context.Add(appointment);
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "Tạo lịch khám thành công!";
+                var doctor = await _context.Doctors.FindAsync(appointment.DoctorId);
+                if (doctor != null)
+                {
+                    await _notificationService.CreateNotification(doctor.UserId, $"Bạn có lịch hẹn mới vào ngày {appointment.Date:dd/MM/yyyy}");
+                }
                 return RedirectToAction(nameof(Index));
             }
             PopulateNames(appointment);
@@ -195,6 +202,8 @@ namespace PBL3_HealthCare.Controllers
             await _context.SaveChangesAsync();
 
             TempData["Success"] = "Cập nhật trạng thái thành công!";
+            await _notificationService.CreateNotification(appointment.PatientId, $"Lịch hẹn của bạn đã được cập nhật thành: {newStatus}");
+
             return RedirectToAction(nameof(Index));
         }
     }
