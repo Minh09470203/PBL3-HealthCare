@@ -10,7 +10,7 @@ namespace PBL3_HealthCare.Services
     public class InvoiceService
     {
         private readonly ApplicationDbContext _context;
-
+        private readonly NotificationService _notificationService;
         public InvoiceService(ApplicationDbContext context)
         {
             _context = context;
