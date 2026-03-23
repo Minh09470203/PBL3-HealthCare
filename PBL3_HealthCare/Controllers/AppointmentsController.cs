@@ -135,6 +135,8 @@ namespace PBL3_HealthCare.Controllers
 
             var appointment = await _context.Appointments
                 .Include(a => a.Patient)
+                .Include(a => a.Doctor)
+                .ThenInclude(d => d.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (appointment == null) return NotFound();
@@ -148,6 +150,19 @@ namespace PBL3_HealthCare.Controllers
         public async Task<IActionResult> Edit(int id, [Bind("Id,PatientId,DoctorId,Date,Reason,Status,TimeSlot,Symptoms,CreatedAt")] Appointment appointment)
         {
             if (id != appointment.Id) return NotFound();
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            var isDoctor = await _userManager.IsInRoleAsync(currentUser, "Doctor");
+
+            if (isDoctor)
+            {
+                var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == currentUser.Id);
+
+                if (doctor != null)
+                {
+                    appointment.DoctorId = doctor.Id; 
+                }
+            }
 
             if (ModelState.IsValid)
             {

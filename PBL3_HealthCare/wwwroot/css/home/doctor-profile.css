@@ -1,0 +1,281 @@
+/* ============================================================
+   doctor-profile.css — Trang hồ sơ cá nhân Bác sĩ
+   ============================================================ */
+
+/* === AVATAR CARD === */
+.profile-avatar-card {
+    border: none;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.09);
+    overflow: hidden;
+}
+
+    .profile-avatar-card .card-header {
+        background: #17a2b8;
+        padding: .85rem 1.25rem;
+        border: none;
+    }
+
+        .profile-avatar-card .card-header h6 {
+            color: #fff;
+            font-weight: 600;
+            font-size: .82rem;
+            margin: 0;
+        }
+
+    .profile-avatar-card .card-body {
+        padding: 1.5rem 1.25rem;
+        text-align: center;
+    }
+
+.avatar-wrap {
+    position: relative;
+    width: 130px;
+    height: 130px;
+    margin: 0 auto 1rem;
+    cursor: pointer;
+}
+
+    .avatar-wrap img {
+        width: 130px;
+        height: 130px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #e2e8ff;
+        transition: opacity .2s;
+    }
+
+    .avatar-wrap:hover img {
+        opacity: .75;
+    }
+
+.avatar-overlay {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: rgba(59,91,219,.6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity .2s;
+    pointer-events: none;
+}
+
+.avatar-wrap:hover .avatar-overlay {
+    opacity: 1;
+}
+
+.avatar-overlay i {
+    color: #fff;
+    font-size: 1.2rem;
+    margin-bottom: .2rem;
+}
+
+.avatar-overlay span {
+    color: #fff;
+    font-size: .7rem;
+    font-weight: 600;
+}
+
+.doctor-name {
+    font-weight: 700;
+    color: #1a1a2e;
+    font-size: 1rem;
+    margin-bottom: .15rem;
+}
+
+.doctor-role {
+    display: inline-block;
+    background: #d1ecf1;
+    color: #17a2b8;
+    font-size: .72rem;
+    font-weight: 700;
+    padding: .2rem .75rem;
+    border-radius: 20px;
+    margin-bottom: 1.1rem;
+}
+
+.upload-zone {
+    border: 1.5px dashed #ced4da;
+    border-radius: 4px;
+    padding: .6rem .85rem;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+    .upload-zone:hover {
+        border-color: #17a2b8;
+        background: #f0fafb;
+    }
+
+    .upload-zone input[type="file"] {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .upload-zone .upload-text {
+        font-size: .78rem;
+        color: #868e96;
+    }
+
+    .upload-zone .upload-btn {
+        background: #17a2b8;
+        color: #fff;
+        font-size: .72rem;
+        font-weight: 600;
+        padding: .25rem .75rem;
+        border-radius: 3px;
+        pointer-events: none;
+    }
+
+.btn-change-pass {
+    display: block;
+    width: 100%;
+    background: #f1f3f5;
+    color: #495057;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: .5rem 1rem;
+    font-size: .82rem;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    transition: background .15s;
+}
+
+    .btn-change-pass:hover {
+        background: #e9ecef;
+        color: #212529;
+        text-decoration: none;
+    }
+
+/* === INFO CARD === */
+.info-card {
+    border: none;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.09);
+    overflow: hidden;
+    margin-bottom: 1.25rem;
+}
+
+    .info-card .card-header {
+        background: #17a2b8;
+        padding: .85rem 1.25rem;
+        border: none;
+    }
+
+        .info-card .card-header h6 {
+            color: #fff;
+            font-weight: 600;
+            font-size: .82rem;
+            margin: 0;
+        }
+
+    .info-card .card-body {
+        padding: 1.5rem;
+    }
+
+/* === FORM CONTROLS === */
+.field-label {
+    font-size: .78rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: .35rem;
+    display: block;
+}
+
+    .field-label .req {
+        color: #c92a2a;
+        margin-left: .15rem;
+    }
+
+.form-control-custom {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: .55rem .9rem;
+    font-size: .88rem;
+    color: #212529;
+    width: 100%;
+    transition: border-color .15s, box-shadow .15s;
+    background: #fff;
+}
+
+    .form-control-custom:focus {
+        border-color: #17a2b8;
+        box-shadow: 0 0 0 2px rgba(59,91,219,.15);
+        outline: none;
+    }
+
+select.form-control-custom {
+    appearance: auto;
+}
+
+textarea.form-control-custom {
+    resize: vertical;
+    min-height: 95px;
+}
+
+.field-group {
+    margin-bottom: 1.1rem;
+}
+
+/* Price input wrapper */
+.price-wrap {
+    position: relative;
+}
+
+    .price-wrap .price-suffix {
+        position: absolute;
+        right: .8rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: .75rem;
+        color: #adb5bd;
+        pointer-events: none;
+    }
+
+    .price-wrap .form-control-custom {
+        padding-right: 3.5rem;
+    }
+
+/* === SUBMIT === */
+.btn-save {
+    background: #17a2b8;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: .55rem 1.75rem;
+    font-weight: 600;
+    font-size: .88rem;
+    transition: background .15s;
+    cursor: pointer;
+}
+
+    .btn-save:hover {
+        background: #138496;
+        color: #fff;
+    }
+
+/* === SUCCESS ALERT === */
+.alert-success-custom {
+    background: #ebfbee;
+    border: 1px solid #8ce99a;
+    border-radius: 4px;
+    padding: .75rem 1rem;
+    font-size: .85rem;
+    color: #2b7a3d;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}

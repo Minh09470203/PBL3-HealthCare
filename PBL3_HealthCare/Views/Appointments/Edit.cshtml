@@ -4,7 +4,14 @@
 
 @{
     ViewData["Title"] = "Chỉnh sửa Lịch khám";
-    Layout = "_AdminLayout";
+    if (User.IsInRole("Admin"))
+    {
+        Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    }
+    else if (User.IsInRole("Doctor"))
+    {
+        Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    }
 }
 
 @section Styles {
@@ -42,9 +49,19 @@
                 <div class="col-md-6">
                     <div class="form-floating-custom">
                         <label>Bác sĩ phụ trách</label>
-                        @* Chỗ này sẽ tự hiện Tên Bác Sĩ vì ông đã sửa ViewBag ở Controller *@
-                        <select asp-for="DoctorId" class="form-control" asp-items="ViewBag.DoctorId"></select>
-                        <span asp-validation-for="DoctorId" class="text-danger"></span>
+                        @if (User.IsInRole("Doctor"))
+                        {
+                            <input type="text" class="form-control"
+                                   value="@(Model.Doctor?.User?.FullName ?? "Bác sĩ")"
+                                   readonly style="background-color: #f8f9fc; cursor: not-allowed;" />
+
+                            <input type="hidden" asp-for="DoctorId" />
+                        }
+                        else
+                        {
+                            <select asp-for="DoctorId" class="form-control" asp-items="ViewBag.DoctorId"></select>
+                            <span asp-validation-for="DoctorId" class="text-danger"></span>
+                        }
                     </div>
                 </div>
             </div>

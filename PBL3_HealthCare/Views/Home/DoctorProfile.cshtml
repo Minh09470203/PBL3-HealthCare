@@ -1,0 +1,194 @@
+@model PBL3_HealthCare.Models.Doctor
+
+@{
+    ViewData["Title"] = "Hồ sơ Bác sĩ";
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/home/doctor-profile.css" />
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">
+        <i class="fas fa-user-md text-primary mr-2"></i>Hồ sơ cá nhân
+    </h1>
+</div>
+
+@* Success alert *@
+@if (TempData["Success"] != null)
+{
+    <div class="alert-success-custom">
+        <i class="fas fa-check-circle"></i>
+        @TempData["Success"]
+    </div>
+}
+
+<form asp-action="DoctorProfile" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+
+    <div class="row">
+
+        @* ── LEFT: Avatar + quick info ── *@
+        <div class="col-xl-4 col-lg-5 mb-4">
+            <div class="profile-avatar-card card">
+                <div class="card-header">
+                    <h6><i class="fas fa-camera mr-1"></i>Ảnh đại diện</h6>
+                </div>
+                <div class="card-body">
+                    @{
+                        var avatarSrc = string.IsNullOrEmpty(Model.Image)
+                            ? "/img/doctors/default.jpg"
+                            : "/img/doctors/" + Model.Image;
+                    }
+
+                    <div class="avatar-wrap" onclick="document.getElementById('avatarInput').click()">
+                        <img src="@avatarSrc" id="avatarPreview"
+                             alt="@Model.User?.FullName"
+                             onerror="this.src='/img/doctors/default.jpg'" />
+                        <div class="avatar-overlay">
+                            <i class="fas fa-camera"></i>
+                            <span>Đổi ảnh</span>
+                        </div>
+                    </div>
+
+                    <div class="doctor-name">BS. @(Model.User?.FullName ?? "Bác sĩ")</div>
+                    <div class="doctor-role">@(Model.Specialty?.Name ?? "Chuyên khoa")</div>
+
+                    @* File upload *@
+                    <div class="upload-zone">
+                        <input type="file" name="AvatarFile" id="avatarInput"
+                               accept="image/*" onchange="previewAvatar(this)" />
+                        <span class="upload-text" id="uploadLabel">Tải ảnh mới lên...</span>
+                        <span class="upload-btn">Chọn ảnh</span>
+                    </div>
+
+                    <div class="border-top pt-3">
+                        <a asp-controller="Home" asp-action="ChangePassword"
+                           class="btn-change-pass">
+                            <i class="fas fa-key mr-1"></i>Đổi mật khẩu
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* ── RIGHT: Forms ── *@
+        <div class="col-xl-8 col-lg-7">
+
+            @* ── Block 1: Thông tin tài khoản ── *@
+            <div class="info-card card">
+                <div class="card-header">
+                    <h6><i class="fas fa-id-card mr-1"></i>Thông tin tài khoản</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="field-group">
+                                <label class="field-label">Họ và tên <span class="req">*</span></label>
+                                <input type="text" name="FullName" class="form-control-custom"
+                                       value="@Model.User?.FullName" placeholder="Nguyễn Văn A" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="field-group">
+                                <label class="field-label">Email <span class="req">*</span></label>
+                                <input type="email" name="Email" class="form-control-custom"
+                                       value="@Model.User?.Email" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="field-group">
+                                <label class="field-label">Số điện thoại</label>
+                                <input type="tel" name="PhoneNumber" class="form-control-custom"
+                                       value="@Model.User?.PhoneNumber"
+                                       placeholder="Nhập số điện thoại" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="field-group">
+                                <label class="field-label">Địa chỉ</label>
+                                <input type="text" name="Address" class="form-control-custom"
+                                       value="@Model.User?.Address"
+                                       placeholder="Số nhà, đường, phường/xã..." />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* ── Block 2: Thông tin hành nghề ── *@
+            <div class="info-card card">
+                <div class="card-header">
+                    <h6><i class="fas fa-stethoscope mr-1"></i>Thông tin hành nghề</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="field-group">
+                                <label class="field-label">Chuyên khoa</label>
+                                <input type="text" class="form-control-custom"
+                                       value="@Model.Specialty?.Name"
+                                       readonly
+                                       style="background:#f8f9fa;color:#6c757d;cursor:not-allowed;"
+                                       title="Liên hệ Admin để thay đổi chuyên khoa" />
+                                <small style="font-size:.72rem;color:#adb5bd;">
+                                    Liên hệ Admin để thay đổi chuyên khoa
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="field-group">
+                                <label class="field-label">Bằng cấp / Học hàm <span class="req">*</span></label>
+                                <input type="text" name="Degree" class="form-control-custom"
+                                       value="@Model.Degree"
+                                       placeholder="VD: Tiến sĩ Y khoa, Thạc sĩ..." required />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="field-group">
+                                <label class="field-label">Giá khám (VNĐ) <span class="req">*</span></label>
+                                <div class="price-wrap">
+                                    <input type="number" name="Price" class="form-control-custom"
+                                           value="@Model.Price" min="0" step="1000" required />
+                                    <span class="price-suffix">đ</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="field-group">
+                                <label class="field-label">Tiểu sử / Giới thiệu bản thân</label>
+                                <textarea name="Bio" class="form-control-custom"
+                                          rows="4"
+                                          placeholder="Mô tả kinh nghiệm, thành tích, phong cách làm việc...">@Model.Bio</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-top pt-3 mt-2">
+                        <button type="submit" class="btn-save">
+                            <i class="fas fa-save mr-1"></i>Cập nhật hồ sơ
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        // Preview avatar trước khi upload
+        function previewAvatar(input) {
+            if (!input.files || !input.files[0]) return;
+            var file = input.files[0];
+            document.getElementById('uploadLabel').textContent = file.name;
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('avatarPreview').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    </script>
+}

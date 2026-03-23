@@ -243,9 +243,17 @@
                             @(string.IsNullOrEmpty(item.Reason) ? "---" : item.Reason)
                         </td>
                         <td class="text-center">
-                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action btn-action-edit"><i class="fas fa-edit"></i> Sửa</a>
-                            <a asp-action="Details" asp-route-id="@item.Id" class="btn-action btn-action-detail"><i class="fas fa-eye"></i></a>
-                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn-action btn-action-delete"><i class="fas fa-trash"></i></a>
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action btn-action-edit"><i class="fas fa-edit"></i> Sửa</a>
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn-action btn-action-detail"><i class="fas fa-eye"></i></a>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn-action btn-action-delete"><i class="fas fa-trash"></i></a>
+                            }
+                            else if (User.IsInRole("Doctor"))
+                            {
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action btn-action-edit"><i class="fas fa-edit"></i> Sửa</a>
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn-action btn-action-detail"><i class="fas fa-eye"></i></a>
+                            }
                         </td>
                     </tr>
                 }
