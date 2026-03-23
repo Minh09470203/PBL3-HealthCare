@@ -14,13 +14,12 @@ namespace PBL3_HealthCare.Services
             _context = context;
         }
 
-        // Hàm này tuần sau BE 2 sẽ gọi để bắn thông báo
         public async Task CreateNotification(string userId, string message)
         {
             var notification = new Notification
             {
-                ReceiverId = userId, // Đổi UserId thành ReceiverId
-                Content = message,   // Đổi Message thành Content
+                ReceiverId = userId, 
+                Content = message,   
                 SenderInfo = "Hệ thống", // Điền thêm cho đủ cột của ông
                 Type = "Info",
                 IsRead = false,

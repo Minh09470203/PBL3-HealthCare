@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using PBL3_HealthCare.Data;
 using PBL3_HealthCare.Models;
+using PBL3_HealthCare.Services;
 using PBL3_HealthCare.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -16,10 +17,11 @@ namespace PBL3_HealthCare.Controllers
     public class PrescriptionsController : Controller
     {
         private readonly ApplicationDbContext _context;
-
-        public PrescriptionsController(ApplicationDbContext context)
+        private readonly InvoiceService _invoiceService;
+        public PrescriptionsController(ApplicationDbContext context, InvoiceService invoiceService)
         {
             _context = context;
+            _invoiceService = invoiceService;
         }
 
         // GET: Prescriptions
@@ -78,7 +80,8 @@ namespace PBL3_HealthCare.Controllers
 
             // MỞ TRANSACTION: Đảm bảo "Lưu tất cả hoặc Không lưu gì cả"
             using var transaction = await _context.Database.BeginTransactionAsync();
-
+            // Kích nổ hàm tạo Hóa đơn ngầm của Thịnh
+            
             try
             {
                 // BƯỚC A: LƯU ĐƠN THUỐC CHA LẤY ID
@@ -129,6 +132,7 @@ namespace PBL3_HealthCare.Controllers
 
                 // BƯỚC C: CHỐT GIAO DỊCH
                 await _context.SaveChangesAsync();
+                await _invoiceService.GenerateInvoiceAsync(prescription.Id);
                 await transaction.CommitAsync(); // Xác nhận lưu vĩnh viễn
 
                 TempData["Success"] = "Kê đơn thuốc và xuất kho thành công!";

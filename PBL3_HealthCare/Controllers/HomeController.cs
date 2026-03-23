@@ -1,18 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Identity;
 using PBL3_HealthCare.Data;
 using PBL3_HealthCare.Models;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
+using PBL3_HealthCare.Services;
 using PBL3_HealthCare.ViewModels;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace PBL3_HealthCare.Controllers
 {
@@ -22,16 +23,19 @@ namespace PBL3_HealthCare.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly NotificationService _notificationService;
         public HomeController(
             ILogger<HomeController> logger,
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            IWebHostEnvironment webHostEnvironment)
+            IWebHostEnvironment webHostEnvironment,
+            NotificationService notificationService)
         {
             _logger = logger;
             _context = context;
             _userManager = userManager;
             _webHostEnvironment = webHostEnvironment;
+            _notificationService = notificationService;
         }
 
         public async Task<IActionResult> Index()
@@ -203,6 +207,17 @@ namespace PBL3_HealthCare.Controllers
 
                 _context.Appointments.Add(model);
                 await _context.SaveChangesAsync();
+
+                // Tìm thông tin bác sĩ để lấy cái UserId của ổng
+                var doctorInfo = await _context.Doctors.FindAsync(model.DoctorId);
+                if (doctorInfo != null)
+                {
+                    // Bắn thông báo cho bác sĩ
+                    await _notificationService.CreateNotification(
+                        doctorInfo.UserId,
+                        $"Có bệnh nhân vừa đặt lịch khám với bạn vào lúc {model.TimeSlot} ngày {model.Date:dd/MM/yyyy}."
+                    );
+                }
 
                 TempData["Success"] = "Đặt lịch thành công! Vui lòng chờ phòng khám xác nhận.";
                 return RedirectToAction(nameof(MyHistory));

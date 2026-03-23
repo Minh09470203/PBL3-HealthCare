@@ -194,7 +194,12 @@ namespace PBL3_HealthCare.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateStatus(int id, AppointmentStatus newStatus)
         {
-            var appointment = await _context.Appointments.FindAsync(id);
+            // Tui đổi FindAsync thành FirstOrDefaultAsync + Include để móc được cái tên Bác sĩ ra nhé
+            var appointment = await _context.Appointments
+                .Include(a => a.Doctor)
+                    .ThenInclude(d => d.User)
+                .FirstOrDefaultAsync(a => a.Id == id);
+
             if (appointment == null) return NotFound();
 
             appointment.Status = newStatus;
@@ -202,7 +207,21 @@ namespace PBL3_HealthCare.Controllers
             await _context.SaveChangesAsync();
 
             TempData["Success"] = "Cập nhật trạng thái thành công!";
-            await _notificationService.CreateNotification(appointment.PatientId, $"Lịch hẹn của bạn đã được cập nhật thành: {newStatus}");
+
+            if (newStatus == AppointmentStatus.Confirmed) 
+            {
+                await _notificationService.CreateNotification(
+                    appointment.PatientId,
+                    $"Lịch khám của bạn với BS. {appointment.Doctor.User.FullName} vào lúc {appointment.TimeSlot} ngày {appointment.Date:dd/MM/yyyy} đã được XÁC NHẬN."
+                );
+            }
+            else if (newStatus == AppointmentStatus.Cancelled)
+            {
+                await _notificationService.CreateNotification(
+                    appointment.PatientId,
+                    $"Lịch khám ngày {appointment.Date:dd/MM/yyyy} của bạn đã BỊ HỦY. Vui lòng liên hệ phòng khám để biết thêm chi tiết."
+                );
+            }
 
             return RedirectToAction(nameof(Index));
         }
