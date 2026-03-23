@@ -65,7 +65,7 @@
                 {
                     @foreach (var p in Model.MedicalRecord.Prescriptions)
                     {
-                        @foreach (var d in p.PrescriptionDetails)
+                        @foreach (var d in p.Details)
                         {
                             <tr>
                                 <td>@d.Medicine?.Name</td>

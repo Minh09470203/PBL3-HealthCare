@@ -21,6 +21,5 @@ namespace PBL3_HealthCare.Models
 
         // Danh sách thuốc trong đơn
         public virtual ICollection<PrescriptionDetail> Details { get; set; }
-        public virtual ICollection<PrescriptionDetail> PrescriptionDetails { get; set; }
     }
 }
