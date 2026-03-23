@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace PBL3_HealthCare.Controllers
 {
@@ -94,8 +95,8 @@ namespace PBL3_HealthCare.Controllers
             return View(await query.ToListAsync());
         }
 
-        // 2. LẤY HỒ SƠ CHI TIẾT & BẢNG GIỜ KHÁM
-        public async Task<IActionResult> DoctorProfile(int id)
+        // 2. LẤY THÔNG TIN CHI TIẾT & BẢNG GIỜ KHÁM
+        public async Task<IActionResult> DoctorInfo(int id)
         {
             var doctor = await _context.Doctors
                 .Include(d => d.Specialty)
@@ -332,6 +333,7 @@ namespace PBL3_HealthCare.Controllers
             TempData["Error"] = "Có lỗi xảy ra, không thể cập nhật hồ sơ!";
             return View(user);
         }
+
         // GET: /Home/ChangePassword
         [HttpGet]
         public IActionResult ChangePassword()
@@ -376,6 +378,93 @@ namespace PBL3_HealthCare.Controllers
             }
 
             return View();
+        }
+
+        // ==========================================
+        // HỒ SƠ BÁC SĨ (DOCTOR PROFILE)
+        // ==========================================
+
+        // GET: /Home/DoctorProfile
+        [HttpGet]
+        public async Task<IActionResult> DoctorProfile()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            // Lấy hồ sơ Doctor kèm Specialty và User
+            var doctor = await _context.Doctors
+                .Include(d => d.Specialty)
+                .Include(d => d.User)
+                .FirstOrDefaultAsync(d => d.UserId == user.Id);
+
+            if (doctor == null) return NotFound();
+
+            return View(doctor);
+        }
+
+        // POST: /Home/DoctorProfile
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DoctorProfile(
+            string FullName, string Email, string PhoneNumber, string Address,
+            string Degree, decimal Price, string Bio,
+            IFormFile AvatarFile)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            var doctor = await _context.Doctors
+                .Include(d => d.Specialty)
+                .Include(d => d.User)
+                .FirstOrDefaultAsync(d => d.UserId == user.Id);
+
+            if (doctor == null) return NotFound();
+
+            // Cập nhật thông tin tài khoản (ApplicationUser)
+            user.FullName = FullName;
+            user.Email = Email;
+            user.PhoneNumber = PhoneNumber;
+            user.Address = Address;
+            await _userManager.UpdateAsync(user);
+
+            // Cập nhật thông tin hành nghề (Doctor)
+            doctor.Degree = Degree;
+            doctor.Price = Price;
+            doctor.Bio = Bio;
+
+            // Xử lý upload ảnh đại diện nếu có chọn file mới
+            if (AvatarFile != null && AvatarFile.Length > 0)
+            {
+                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "img", "doctors");
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+
+                string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(AvatarFile.FileName);
+                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await AvatarFile.CopyToAsync(fileStream);
+                }
+
+                // Xóa ảnh cũ nếu tồn tại
+                if (!string.IsNullOrEmpty(doctor.Image))
+                {
+                    string oldPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "doctors", doctor.Image);
+                    if (System.IO.File.Exists(oldPath))
+                        System.IO.File.Delete(oldPath);
+                }
+
+                doctor.Image = uniqueFileName;
+            }
+
+            _context.Update(doctor);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Cập nhật hồ sơ thành công!";
+            return RedirectToAction(nameof(DoctorProfile));
         }
 
         public IActionResult Privacy()

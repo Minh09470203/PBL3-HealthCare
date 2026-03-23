@@ -1,0 +1,192 @@
+/* ============================================================
+   doctor-info.css — Trang hồ sơ & đặt lịch Bác sĩ (public)
+   Tông màu: xanh dương #3d5ee1
+   ============================================================ */
+
+.profile-page {
+    background: #f4f6ff;
+    padding: 6rem 0 4rem;
+    min-height: 100vh;
+}
+
+/* === LEFT PANEL === */
+.profile-left {
+    background: #fff;
+    border: 1px solid #e2e8ff;
+    border-radius: 6px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+}
+.profile-avatar {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: top center;
+    border: 3px solid #c5cef7;
+    margin-bottom: 1.1rem;
+}
+.profile-name {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #1a1a1a;
+    margin-bottom: .25rem;
+}
+.profile-specialty {
+    display: inline-block;
+    background: #3d5ee1;
+    color: #fff;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .5px;
+    padding: .25rem .9rem;
+    border-radius: 20px;
+    margin-bottom: 1rem;
+}
+.profile-bio {
+    font-size: .85rem;
+    color: #5a5a5a;
+    line-height: 1.7;
+    text-align: left;
+    margin-bottom: 1.25rem;
+}
+.profile-meta {
+    text-align: left;
+    border-top: 1px solid #eef0ff;
+    padding-top: 1rem;
+}
+.profile-meta-row {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin-bottom: .65rem;
+    font-size: .83rem;
+    color: #495057;
+}
+.profile-meta-row i {
+    margin-top: .15rem;
+    flex-shrink: 0;
+    width: 14px;
+    text-align: center;
+    color: #3d5ee1;
+}
+.profile-meta-row .meta-label {
+    color: #9fa5b5;
+    font-size: .73rem;
+    display: block;
+    margin-bottom: .05rem;
+}
+.meta-price {
+    font-weight: 700;
+    color: #2b7a3d;
+    font-size: .92rem;
+}
+
+/* === RIGHT PANEL === */
+.schedule-panel {
+    background: #fff;
+    border: 1px solid #e2e8ff;
+    border-radius: 6px;
+    padding: 1.75rem;
+}
+.schedule-heading {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #9fa5b5;
+    margin-bottom: 1.25rem;
+}
+
+/* Day tabs */
+.day-tabs {
+    display: flex;
+    gap: .3rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #eef0ff;
+    padding-bottom: 0;
+}
+.day-tab {
+    padding: .55rem 1.1rem;
+    font-size: .82rem;
+    font-weight: 600;
+    color: #9fa5b5;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: color .15s, border-color .15s;
+    white-space: nowrap;
+    text-decoration: none;
+    border-radius: 3px 3px 0 0;
+}
+.day-tab:hover { color: #3d5ee1; text-decoration: none; }
+.day-tab.active {
+    color: #3d5ee1;
+    border-bottom-color: #3d5ee1;
+    background: #f4f6ff;
+}
+.day-tab .tab-date {
+    display: block;
+    font-size: .7rem;
+    font-weight: 400;
+    opacity: .75;
+    margin-top: .1rem;
+}
+
+/* Time slots */
+.slots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: .5rem;
+    margin-bottom: 1.25rem;
+}
+.slot-btn {
+    padding: .5rem .4rem;
+    font-size: .8rem;
+    font-weight: 600;
+    text-align: center;
+    border-radius: 4px;
+    border: 1.5px solid #c5cef7;
+    background: #fff;
+    color: #3d5ee1;
+    cursor: pointer;
+    transition: background .15s, border-color .15s, color .15s;
+    text-decoration: none;
+    display: block;
+}
+.slot-btn:hover {
+    background: #3d5ee1;
+    border-color: #3d5ee1;
+    color: #fff;
+    text-decoration: none;
+}
+.slot-btn.booked {
+    background: #f8f9fa;
+    border-color: #e9ecef;
+    color: #ced4da;
+    cursor: not-allowed;
+    text-decoration: line-through;
+    font-weight: 400;
+}
+
+/* Hint & legend */
+.slot-hint {
+    font-size: .77rem;
+    color: #adb5bd;
+    border-top: 1px solid #eef0ff;
+    padding-top: .85rem;
+}
+.slot-legend {
+    display: flex;
+    gap: 1.25rem;
+    margin-bottom: .5rem;
+}
+.legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: .3rem;
+    vertical-align: middle;
+}
+.legend-dot.available { background: #3d5ee1; }
+.legend-dot.booked    { background: #dee2e6; }

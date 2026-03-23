@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -6,6 +8,7 @@ using PBL3_HealthCare.Data;
 using PBL3_HealthCare.Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -15,10 +18,12 @@ namespace PBL3_HealthCare.Controllers
     public class SpecialtiesController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _webHostEnvironment; // Thêm
 
-        public SpecialtiesController(ApplicationDbContext context)
+        public SpecialtiesController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
+            _webHostEnvironment = webHostEnvironment; // Tiêm vào
         }
 
         // GET: Specialties
@@ -52,14 +57,30 @@ namespace PBL3_HealthCare.Controllers
         }
 
         // POST: Specialties/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Description,Image")] Specialty specialty)
+        public async Task<IActionResult> Create([Bind("Id,Name,Description,Image")] Specialty specialty, IFormFile SpecialtyImage)
         {
             if (ModelState.IsValid)
             {
+                // Xử lý upload ảnh nếu có chọn file
+                if (SpecialtyImage != null && SpecialtyImage.Length > 0)
+                {
+                    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "img", "specialties");
+                    if (!Directory.Exists(uploadsFolder))
+                        Directory.CreateDirectory(uploadsFolder);
+
+                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(SpecialtyImage.FileName);
+                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await SpecialtyImage.CopyToAsync(fileStream);
+                    }
+
+                    specialty.Image = "specialties/" + uniqueFileName;
+                }
+
                 _context.Add(specialty);
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "Thêm chuyên khoa thành công!";
@@ -85,11 +106,9 @@ namespace PBL3_HealthCare.Controllers
         }
 
         // POST: Specialties/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Image")] Specialty specialty)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Image")] Specialty specialty, IFormFile SpecialtyImage)
         {
             if (id != specialty.Id)
             {
@@ -100,6 +119,33 @@ namespace PBL3_HealthCare.Controllers
             {
                 try
                 {
+                    // Nếu có chọn ảnh mới thì upload và ghi đè
+                    if (SpecialtyImage != null && SpecialtyImage.Length > 0)
+                    {
+                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "img", "specialties");
+                        if (!Directory.Exists(uploadsFolder))
+                            Directory.CreateDirectory(uploadsFolder);
+
+                        string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(SpecialtyImage.FileName);
+                        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await SpecialtyImage.CopyToAsync(fileStream);
+                        }
+
+                        // Xóa ảnh cũ nếu tồn tại
+                        if (!string.IsNullOrEmpty(specialty.Image))
+                        {
+                            string oldPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", specialty.Image);
+                            if (System.IO.File.Exists(oldPath))
+                                System.IO.File.Delete(oldPath);
+                        }
+
+                        specialty.Image = "specialties/" + uniqueFileName;
+                    }
+                    // Không chọn ảnh mới → giữ nguyên Image từ hidden field trong View
+
                     _context.Update(specialty);
                     await _context.SaveChangesAsync();
                 }
@@ -146,6 +192,14 @@ namespace PBL3_HealthCare.Controllers
             var specialty = await _context.Specialties.FindAsync(id);
             if (specialty != null)
             {
+                // Xóa file ảnh khỏi wwwroot nếu có
+                if (!string.IsNullOrEmpty(specialty.Image))
+                {
+                    string imagePath = Path.Combine(_webHostEnvironment.WebRootPath, "img", specialty.Image);
+                    if (System.IO.File.Exists(imagePath))
+                        System.IO.File.Delete(imagePath);
+                }
+
                 _context.Specialties.Remove(specialty);
             }
 

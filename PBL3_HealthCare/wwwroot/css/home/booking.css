@@ -1,0 +1,178 @@
+/* ============================================================
+   booking.css — Trang xác nhận đặt lịch khám
+   ============================================================ */
+
+.booking-page {
+    background: #f4f6ff;
+    min-height: 100vh;
+    padding: 6rem 0 4rem;
+}
+
+/* === CARD === */
+.booking-card {
+    background: #fff;
+    border: 1px solid #e2e8ff;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.09);
+    overflow: hidden;
+}
+
+/* === HEADER === */
+.booking-header {
+    background: #3d5ee1;
+    padding: 1.5rem 2rem;
+    text-align: center;
+}
+.booking-header h4 {
+    color: #fff;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: .5px;
+    margin: 0;
+}
+.booking-header p {
+    color: rgba(255,255,255,.7);
+    font-size: .82rem;
+    margin: .3rem 0 0;
+}
+
+/* === APPOINTMENT SUMMARY === */
+.appt-summary {
+    background: #f4f6ff;
+    border: 1px solid #e2e8ff;
+    border-radius: 4px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.75rem;
+}
+.appt-summary .summary-label {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #3d5ee1;
+    margin-bottom: .9rem;
+}
+.appt-row {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .55rem 0;
+    border-bottom: 1px solid #e8edff;
+    font-size: .88rem;
+}
+.appt-row:last-child { border-bottom: none; }
+.appt-row .appt-icon {
+    width: 30px; height: 30px;
+    background: #e8edff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #3d5ee1; font-size: .78rem;
+    flex-shrink: 0;
+}
+.appt-row .appt-key {
+    color: #868e96;
+    font-size: .8rem;
+    width: 120px;
+    flex-shrink: 0;
+}
+.appt-row .appt-val {
+    color: #1a1a2e;
+    font-weight: 600;
+}
+.timeslot-badge {
+    display: inline-block;
+    background: #3d5ee1;
+    color: #fff;
+    font-size: .8rem;
+    font-weight: 700;
+    padding: .25rem .85rem;
+    border-radius: 3px;
+    letter-spacing: .3px;
+}
+
+/* === SECTION TITLE === */
+.form-section-title {
+    font-size: .78rem;
+    font-weight: 600;
+    color: #868e96;
+    margin-bottom: .9rem;
+    padding-bottom: .5rem;
+    border-bottom: 1px solid #e9ecef;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+/* === FORM CONTROLS === */
+.booking-body { padding: 1.75rem 2rem; }
+.form-floating-custom { margin-bottom: 1.1rem; }
+.form-floating-custom label {
+    font-size: .8rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: .35rem;
+    display: block;
+}
+.form-floating-custom .form-control {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: .55rem .9rem;
+    font-size: .9rem;
+    color: #212529;
+    transition: border-color .15s, box-shadow .15s;
+    background-color: #fff;
+}
+.form-floating-custom .form-control:focus {
+    border-color: #3d5ee1;
+    box-shadow: 0 0 0 2px rgba(61,94,225,.15);
+    outline: none;
+}
+.form-floating-custom .form-control.readonly-field {
+    background: #f8f9fa;
+    color: #6c757d;
+    cursor: not-allowed;
+}
+.form-floating-custom textarea.form-control {
+    resize: vertical;
+    min-height: 110px;
+}
+.form-floating-custom .form-hint {
+    font-size: .75rem;
+    color: #adb5bd;
+    margin-top: .3rem;
+}
+
+/* === SUBMIT BUTTON === */
+.btn-submit {
+    display: block;
+    width: 100%;
+    background: #3d5ee1;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: .75rem 1.5rem;
+    font-weight: 700;
+    font-size: .9rem;
+    letter-spacing: .3px;
+    transition: background .15s;
+    cursor: pointer;
+}
+.btn-submit:hover { background: #2f4fc7; }
+
+.submit-note {
+    text-align: center;
+    font-size: .78rem;
+    color: #adb5bd;
+    margin-top: .75rem;
+}
+.submit-note i { color: #2f9e6b; margin-right: .3rem; }
+
+/* === VALIDATION === */
+.alert-danger {
+    background: #fff5f5;
+    border: 1px solid #ffc9c9;
+    border-radius: 4px;
+    padding: .75rem 1rem;
+    font-size: .83rem;
+    color: #c92a2a;
+    margin-bottom: 1.1rem;
+}
