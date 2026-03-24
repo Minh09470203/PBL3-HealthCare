@@ -1,0 +1,63 @@
+﻿@model IEnumerable<PBL3_HealthCare.Models.Specialty>
+@{
+    ViewData["Title"] = "Danh sách Chuyên khoa";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/home/specialty-list.css" />
+}
+
+<section class="specialties-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <p class="section-eyebrow">Dịch vụ y tế</p>
+            <h2 class="section-heading">Các chuyên khoa <span>Hàng đầu</span></h2>
+        </div>
+
+        @if (Model != null && Model.Any())
+        {
+            <div class="row">
+                @foreach (var item in Model)
+                {
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="specialty-card">
+                            @{
+                                string specImage = item.Image;
+                                string imgSrc = "/img/specialties/default-specialty.jpg";
+                                if (!string.IsNullOrWhiteSpace(specImage))
+                                {
+                                    imgSrc = specImage.StartsWith("/") ? specImage : "/img/specialties/" + specImage;
+                                }
+                            }
+                            <img src="@imgSrc" alt="Khoa @item.Name" class="specialty-card-img"
+                                 onerror="this.onerror=null; this.src='/img/specialties/default-specialty.jpg';" />
+
+                            <div class="specialty-card-body">
+                                <h3 class="specialty-title">Khoa @item.Name</h3>
+                                <p class="specialty-desc">
+                                    @(string.IsNullOrWhiteSpace(item.Description) ? "Đang cập nhật thông tin mô tả cho chuyên khoa này." : item.Description)
+                                </p>
+
+                                <div class="specialty-meta">
+                                    <i class="fas fa-user-md"></i>
+                                    <span>@(item.Doctors != null ? item.Doctors.Count : 0) Bác sĩ chuyên khoa</span>
+                                </div>
+
+                                <a asp-controller="Home" asp-action="DoctorList" asp-route-specialtyId="@item.Id" class="btn-view-doctors">
+                                    Xem đội ngũ bác sĩ &rarr;
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center">
+                <p class="text-muted">Hệ thống đang cập nhật danh sách chuyên khoa.</p>
+            </div>
+        }
+    </div>
+</section>

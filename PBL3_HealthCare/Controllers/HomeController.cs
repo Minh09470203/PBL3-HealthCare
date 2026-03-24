@@ -74,6 +74,18 @@ namespace PBL3_HealthCare.Controllers
         // ==========================================
         // KHU VỰC 1: LUỒNG TÌM KIẾM BÁC SĨ & LỊCH KHÁM
         // ==========================================
+        // GET: /Home/SpecialtyList
+        public async Task<IActionResult> SpecialtyList()
+        {
+            // Lấy toàn bộ danh sách khoa
+            // Mình Include thêm Doctors ở đây để phòng hờ lát nữa ra View, 
+            // bạn muốn hiển thị dòng chữ kiểu "Có 5 bác sĩ" dưới mỗi thẻ khoa cho đẹp.
+            var specialties = await _context.Specialties
+                .Include(s => s.Doctors)
+                .ToListAsync();
+
+            return View(specialties);
+        }
 
         // 1. LẤY DANH SÁCH BÁC SĨ (CÓ LỌC KHOA)
         public async Task<IActionResult> DoctorList(int? specialtyId)
