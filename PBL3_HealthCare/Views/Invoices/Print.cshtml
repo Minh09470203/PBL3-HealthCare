@@ -1,0 +1,112 @@
+﻿@model PBL3_HealthCare.Models.Invoice
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>In Hóa Đơn - @Model.Id</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .invoice-box {
+            max-width: 800px;
+            margin: auto;
+            border: 1px solid #eee;
+            padding: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+            table th {
+                background: #eee;
+                border-bottom: 1px solid #ddd;
+                padding: 10px;
+                text-align: left;
+            }
+
+            table td {
+                padding: 10px;
+                border-bottom: 1px solid #eee;
+            }
+
+        .total {
+            font-weight: bold;
+            text-align: right;
+            margin-top: 20px;
+            font-size: 1.2rem;
+        }
+
+        @@media print {
+            .no-print {
+                display: none;
+            }
+
+            .invoice-box {
+                border: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print" style="margin-bottom: 20px;">
+        <button onclick="window.print()" style="padding: 10px 20px; background: #1cc88a; color: white; border: none; cursor: pointer; border-radius: 5px;">
+            <i class="fas fa-print"></i> Nhấn vào đây để In Hóa Đơn
+        </button>
+        <button onclick="window.history.back()" style="padding: 10px 20px; border-radius: 5px; border: 1px solid #ccc;">Quay lại</button>
+    </div>
+
+    <div class="invoice-box">
+        <div class="header">
+            <h2>BỆNH VIỆN ĐA KHOA HEALTHCARE</h2>
+            <p>Đà Nẵng - Hotline: 1900 xxxx</p>
+            <hr>
+            <h3>BIÊN LAI THU TIỀN</h3>
+            <p>Mã HĐ: <strong>@Model.Id</strong></p>
+        </div>
+
+        <p><strong>Bệnh nhân:</strong> @Model.Id</p>
+        <p><strong>Ngày tạo:</strong> @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Nội dung</th>
+                    <th style="text-align:center">Số lượng</th>
+                    <th style="text-align:right">Đơn giá</th>
+                    <th style="text-align:right">Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody>              
+            </tbody>
+        </table>
+
+        <div class="total">
+            Tổng cộng: @Model.TotalAmount.ToString("N0") VNĐ
+        </div>
+
+        <div style="margin-top: 60px; display: flex; justify-content: space-around; text-align: center;">
+            <div>
+                <p><strong>Người nộp tiền</strong></p>
+                <p style="margin-top: 40px;">(Ký và ghi rõ họ tên)</p>
+            </div>
+            <div>
+                <p><strong>Người thu tiền</strong></p>
+                <p style="margin-top: 40px;">(Ký và ghi rõ họ tên)</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

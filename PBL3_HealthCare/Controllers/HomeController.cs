@@ -35,9 +35,7 @@ namespace PBL3_HealthCare.Controllers
 
         public async Task<IActionResult> Index()
         {
-<<<<<<< HEAD
-=======
-            ViewBag.TopSpecialties = await _context.Specialties.Take(6).ToListAsync();
+    ViewBag.TopSpecialties = await _context.Specialties.Take(6).ToListAsync();
             // Query lấy 4 bác sĩ đầu tiên, Include bảng User và Specialty
             var doctors = await _context.Doctors
                                            .Include(d => d.User)
@@ -347,7 +345,6 @@ namespace PBL3_HealthCare.Controllers
                 return View();
             }
 
->>>>>>> d7c699fd041305f31e7be06a428183c64db9c86a
             return View();
         }
 

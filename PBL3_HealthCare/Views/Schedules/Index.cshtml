@@ -6,190 +6,95 @@
 }
 
 @section Styles {
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
     <link rel="stylesheet" href="~/css/admin/schedules.css" />
+    <style>
+        /* CSS bổ sung cho Task 5 */
+        .view-switcher {
+            background: #f8f9fc;
+            padding: 5px;
+            border-radius: 12px;
+            display: inline-flex;
+            gap: 5px;
+            border: 1px solid #e3e6f0;
+        }
+
+        .btn-view {
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #858796;
+            background: transparent;
+            transition: all 0.2s;
+        }
+
+            .btn-view.active {
+                background: #fff;
+                color: #36b9cc;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            }
+
+        #calendar {
+            background: #fff;
+            padding: 20px;
+            border-radius: 16px;
+        }
+
+        /* Tùy chỉnh màu sắc Event trên lịch */
+        .fc-event {
+            border: none !important;
+            padding: 3px 8px !important;
+            border-radius: 6px !important;
+            font-size: 0.8rem !important;
+        }
+
+        .event-morning {
+            background-color: #36b9cc !important;
+        }
+
+        .event-afternoon {
+            background-color: #4e73df !important;
+        }
+
+        .event-default {
+            background-color: #1cc88a !important;
+        }
+
+        .fc-toolbar-title {
+            font-size: 1.1rem !important;
+            font-weight: 700 !important;
+            color: #4e73df;
+        }
+    </style>
 }
 
-<style>
-    .page-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 1.5rem;
-    }
-
-        .page-header h4 {
-            font-weight: 700;
-            color: #2d3748;
-            margin: 0;
-        }
-
-        .page-header p {
-            color: #9fa5b5;
-            font-size: .85rem;
-            margin: .25rem 0 0;
-        }
-
-    .btn-add {
-        background: linear-gradient(135deg,#36b9cc,#258391);
-        color: #fff;
-        border: none;
-        border-radius: 10px;
-        padding: .6rem 1.4rem;
-        font-weight: 600;
-        font-size: .88rem;
-        box-shadow: 0 4px 12px rgba(54,185,204,.3);
-        transition: transform .15s;
-    }
-
-        .btn-add:hover {
-            transform: translateY(-1px);
-            color: #fff;
-        }
-
-    .data-card {
-        border: none;
-        border-radius: 16px;
-        box-shadow: 0 4px 24px rgba(54,185,204,.08);
-        overflow: hidden;
-    }
-
-        .data-card .card-body {
-            padding: 0;
-        }
-
-    table.dataTable thead th {
-        background: #f0fbfc;
-        color: #5a5c69;
-        font-size: .78rem;
-        text-transform: uppercase;
-        letter-spacing: .8px;
-        font-weight: 700;
-        border-bottom: 2px solid #e0f7fa !important;
-        border-top: none !important;
-        padding: 1rem 1.25rem !important;
-    }
-
-    table.dataTable tbody td {
-        padding: .85rem 1.25rem !important;
-        vertical-align: middle;
-        font-size: .88rem;
-        color: #2d3748;
-        border-bottom: 1px solid #f0f2fa !important;
-    }
-
-    table.dataTable tbody tr:hover td {
-        background: #f0fbfc;
-    }
-
-    table.dataTable tbody tr:last-child td {
-        border-bottom: none !important;
-    }
-
-    .doctor-name {
-        font-weight: 700;
-        color: #2d3748;
-    }
-
-    .date-text {
-        font-weight: 600;
-    }
-
-    .shift-pill {
-        background: #e0f7fa;
-        color: #258391;
-        padding: .25rem .75rem;
-        border-radius: 15px;
-        font-size: .78rem;
-        font-weight: 700;
-        display: inline-block;
-    }
-
-    .avail-badge {
-        display: inline-flex;
-        align-items: center;
-        padding: .3rem .75rem;
-        border-radius: 15px;
-        font-size: .75rem;
-        font-weight: 700;
-    }
-
-    .avail-yes {
-        background: #e8fdf5;
-        color: #0a5f38;
-        border: 1.5px solid #a3e9c6;
-    }
-
-    .avail-no {
-        background: #f0f0f0;
-        color: #6c757d;
-        border: 1.5px solid #dee2e6;
-    }
-
-    .btn-action {
-        border-radius: 8px;
-        padding: .3rem .7rem;
-        font-size: .78rem;
-        font-weight: 600;
-        border: none;
-        transition: transform .1s;
-        display: inline-flex;
-        align-items: center;
-        gap: .3rem;
-    }
-
-        .btn-action:hover {
-            transform: translateY(-1px);
-        }
-
-    .btn-action-edit {
-        background: #fff8e0;
-        color: #b8860b;
-    }
-
-    .btn-action-detail {
-        background: #e0f7fa;
-        color: #258391;
-    }
-
-    .btn-action-delete {
-        background: #fde8e6;
-        color: #e74a3b;
-    }
-
-    .dataTables_wrapper .dataTables_filter input {
-        border: 1.5px solid #e3e6f0;
-        border-radius: 10px;
-        padding: .4rem .9rem;
-        font-size: .85rem;
-    }
-
-    .dataTables_wrapper .dataTables_length select {
-        border: 1.5px solid #e3e6f0;
-        border-radius: 8px;
-        padding: .3rem .6rem;
-        font-size: .85rem;
-    }
-
-    .dataTables_wrapper {
-        padding: 1.25rem;
-    }
-
-    .dataTables_info, .dataTables_paginate {
-        padding: .75rem 0 0 !important;
-    }
-</style>
-
-<div class="page-header">
+<div class="page-header d-flex align-items-center justify-content-between mb-4">
     <div>
-        <h4><i class="fas fa-clock mr-2" style="color:#36b9cc;"></i>Quản lý Ca làm việc</h4>
-        <p>Lịch phân công ca trực của các bác sĩ</p>
+        <h4><i class="fas fa-calendar-alt mr-2" style="color:#36b9cc;"></i>Lịch Trực Bác Sĩ</h4>
+        <p>Phân công và quản lý ca làm việc trực quan</p>
     </div>
-    <a asp-action="Create" class="btn btn-add">
-        <i class="fas fa-plus"></i> Thêm ca làm việc
-    </a>
+
+    <div class="d-flex align-items-center" style="gap: 15px;">
+        <div class="view-switcher">
+            <button class="btn-view active" id="viewCalendar"><i class="fas fa-calendar-day mr-1"></i> Lịch</button>
+            <button class="btn-view" id="viewTable"><i class="fas fa-list mr-1"></i> Bảng</button>
+        </div>
+
+        <a asp-action="Create" class="btn btn-add">
+            <i class="fas fa-plus"></i> Thêm ca làm việc
+        </a>
+    </div>
 </div>
 
-<div class="data-card card mb-4">
+<div id="calendarContainer" class="data-card card mb-4">
+    <div class="card-body" style="padding: 20px;">
+        <div id='calendar'></div>
+    </div>
+</div>
+
+<div id="tableContainer" class="data-card card mb-4" style="display:none;">
     <div class="card-body">
         <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
             <thead>
@@ -214,7 +119,7 @@
                             </div>
                         </td>
                         <td><span class="date-text">@item.Date.ToString("dd/MM/yyyy")</span></td>
-                        <td><span class="shift-pill"><i class="fas fa-sun mr-1"></i>@Html.DisplayFor(m => item.Shift)</span></td>
+                        <td><span class="shift-pill"><i class="fas fa-sun mr-1"></i>@item.Shift</span></td>
                         <td>
                             @if (item.IsAvailable)
                             {
@@ -222,14 +127,12 @@
                             }
                             else
                             {
-
                                 <span class="avail-badge avail-no"><i class="fas fa-times-circle mr-1"></i>Đã kín</span>
                             }
                         </td>
                         <td class="text-center">
-                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action btn-action-edit"><i class="fas fa-edit"></i> Sửa</a>
-                            <a asp-action="Details" asp-route-id="@item.Id" class="btn-action btn-action-detail"><i class="fas fa-eye"></i></a>
-                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn-action btn-action-delete"><i class="fas fa-trash"></i></a>
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action btn-action-edit" title="Sửa"><i class="fas fa-edit"></i></a>
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn-action btn-action-delete" title="Xóa"><i class="fas fa-trash"></i></a>
                         </td>
                     </tr>
                 }
@@ -239,11 +142,61 @@
 </div>
 
 @section Scripts {
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/vi.js'></script>
+
     <script>
         $(document).ready(function () {
-            $('#dataTable').DataTable({
+            // 1. Khởi tạo DataTable (Giữ nguyên của Thái)
+            var table = $('#dataTable').DataTable({
                 "language": { "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Vietnamese.json" },
                 "dom": '<"d-flex justify-content-between align-items-center mb-3"lf>rt<"d-flex justify-content-between align-items-center"ip>'
+            });
+
+            // 2. Khởi tạo FullCalendar (Task 5)
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'vi',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,listMonth'
+                },
+                events: [
+                    @foreach (var item in Model)
+                    {
+                            <text>{
+                                title: '@item.Shift: @(item.Doctor?.User?.FullName)',
+                                start: '@item.Date.ToString("yyyy-MM-dd")',
+                                className: '@(item.Shift.Contains("Sáng") ? "event-morning" : item.Shift.Contains("Chiều") ? "event-afternoon" : "event-default")',
+                                url: '@Url.Action("Edit", new { id = item.Id })'
+                            },</text>
+                    }
+                ],
+                eventClick: function(info) {
+                    if (info.event.url) {
+                        window.location.href = info.event.url;
+                        return false;
+                    }
+                }
+            });
+            calendar.render();
+
+            // 3. Logic chuyển đổi giữa Calendar và Table
+            $('#viewCalendar').click(function() {
+                $(this).addClass('active');
+                $('#viewTable').removeClass('active');
+                $('#calendarContainer').fadeIn();
+                $('#tableContainer').hide();
+                calendar.render(); // Cần render lại để lịch hiển thị đúng size
+            });
+
+            $('#viewTable').click(function() {
+                $(this).addClass('active');
+                $('#viewCalendar').removeClass('active');
+                $('#tableContainer').fadeIn();
+                $('#calendarContainer').hide();
             });
         });
     </script>

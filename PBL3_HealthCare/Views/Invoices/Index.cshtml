@@ -1,0 +1,109 @@
+﻿@model IEnumerable<PBL3_HealthCare.Models.Invoice>
+
+@{
+    ViewData["Title"] = "Quản lý Thu Ngân";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">Danh sách Hóa đơn thanh toán</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="invoiceTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Mã HĐ</th>
+                        <th>Bệnh nhân</th>
+                        <th>Ngày tạo</th>
+                        <th>Tổng tiền</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>HD-@item.Id.ToString("D3")</td>
+                            <td>@item.Appointment?.Patient?.FullName</td>
+                            <td>@item.CreatedAt.ToString("dd/MM/yyyy")</td>
+                            <td>@item.TotalAmount.ToString("N0")đ</td>
+                            <td>
+                                @* SỬA Ở ĐÂY: Dùng Enum thay vì số 0 *@
+                                @if (item.Status == InvoiceStatus.Unpaid)
+                                {
+                                    <span class="badge badge-warning">Chưa thanh toán</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-success">Đã thanh toán</span>
+                                }
+                            </td>
+                            <td>
+                                @* SỬA Ở ĐÂY: Dùng Enum thay vì số 0 *@
+                                @if (item.Status == InvoiceStatus.Unpaid)
+                                {
+                                    <button class="btn btn-sm btn-success btn-collect" data-id="@item.Id">
+                                        <i class="fas fa-money-bill-wave"></i> Xác nhận thu tiền
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-sm btn-secondary disabled"><i class="fas fa-check"></i> Đã thu</button>
+                                }
+                                <a href="/Invoices/Print/@item.Id" class="btn btn-sm btn-info">
+                                    <i class="fas fa-print"></i> In
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#invoiceTable').DataTable({
+                "language": { "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Vietnamese.json" }
+            });
+
+            $('.btn-collect').click(function() {
+                let id = $(this).data('id');
+
+                Swal.fire({
+                    title: 'Xác nhận thu tiền?',
+                    text: "Hóa đơn này sẽ được đánh dấu là Đã thanh toán!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#1cc88a',
+                    cancelButtonColor: '#858796',
+                    confirmButtonText: 'Đồng ý thu tiền',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Gửi lệnh POST lên Controller Thái vừa tạo
+                        $.ajax({
+                            url: '/Invoices/XacNhanThuTien/' + id,
+                            type: 'POST',
+                            success: function (res) {
+                                if (res.success) {
+                                    Swal.fire('Thành công!', res.message, 'success').then(() => {
+                                        location.reload(); // LOAD LẠI TRANG ĐỂ ĐỔI MÀU
+                                    });
+                                } else {
+                                    Swal.fire('Lỗi!', res.message, 'error');
+                                }
+                            }
+                        });
+                    }
+                })
+            });
+        });
+    </script>
+}
