@@ -86,10 +86,19 @@ namespace PBL3_HealthCare.Controllers
             if (specialtyId.HasValue)
             {
                 query = query.Where(d => d.SpecialtyId == specialtyId);
-                ViewBag.SpecialtyName = await _context.Specialties
+
+                // Sửa lại đoạn này: Lấy toàn bộ object Specialty thay vì chỉ lấy Name
+                var specialty = await _context.Specialties
                     .Where(s => s.Id == specialtyId)
-                    .Select(s => s.Name)
                     .FirstOrDefaultAsync();
+
+                if (specialty != null)
+                {
+                    // Truyền tất cả thông tin cần thiết qua ViewBag
+                    ViewBag.SpecialtyName = specialty.Name;
+                    ViewBag.SpecialtyDescription = specialty.Description;
+                    ViewBag.SpecialtyImage = specialty.Image;
+                }
             }
 
             return View(await query.ToListAsync());

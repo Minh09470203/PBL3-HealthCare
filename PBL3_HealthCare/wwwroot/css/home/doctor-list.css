@@ -1,12 +1,13 @@
-/* ============================================================
-   doctor-list.css — Trang danh sách Bác sĩ (public)
-   Tông màu: xanh dương #3d5ee1
-   ============================================================ */
+/* Ép màu nền của toàn bộ thân trang thành xanh nhạt */
+body, main {
+    background-color: #f4f6ff !important;
+}
 
+/* Đảm bảo phần section không bị xung đột màu */
 .doctors-section {
-    background: #f4f6ff;
+    background-color: transparent !important; /* Đổi thành transparent vì body đã lo màu nền rồi */
     min-height: 100vh;
-    padding: 6rem 0 4rem;
+    padding: 4rem 0 4rem; /* Căn chỉnh lại khoảng cách trên/dưới cho vừa vặn */
 }
 .section-eyebrow {
     font-size: .72rem;
@@ -123,3 +124,59 @@
     transition: background .15s; text-decoration: none; display: inline-block;
 }
 .btn-back:hover { background: #2f4fc7; color: #fff; text-decoration: none; }
+
+/* === SPECIALTY HERO BANNER === */
+.specialty-hero {
+    background: #fff;
+    border: 1px solid #e2e8ff;
+    border-radius: 8px; /* Bo góc to hơn card một chút cho sang */
+    overflow: hidden;
+    margin-bottom: 4rem;
+    box-shadow: 0 8px 24px rgba(61, 94, 225, 0.08); /* Đổ bóng cùng tone xanh */
+}
+
+.specialty-hero-text {
+    padding: 3.5rem 4rem;
+}
+
+.specialty-hero-title {
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: #1a1a1a;
+    margin-bottom: 1.2rem;
+    line-height: 1.2;
+}
+
+    .specialty-hero-title span {
+        color: #3d5ee1; /* Nhấn mạnh chữ theo màu chủ đạo */
+    }
+
+.specialty-hero-desc {
+    font-size: 1.05rem;
+    color: #868e96; /* Dùng màu xám chuẩn của trang */
+    line-height: 1.7;
+    margin-bottom: 0;
+}
+
+.specialty-hero-img-wrap {
+    height: 100%;
+    min-height: 380px; /* Chiều cao để ảnh hiển thị to rõ */
+}
+
+    .specialty-hero-img-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+    }
+
+/* Ép size cho màn hình điện thoại */
+@media (max-width: 768px) {
+    .specialty-hero-text {
+        padding: 2rem;
+    }
+
+    .specialty-hero-img-wrap {
+        min-height: 250px;
+    }
+}

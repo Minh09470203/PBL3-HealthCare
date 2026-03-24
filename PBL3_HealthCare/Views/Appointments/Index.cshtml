@@ -221,24 +221,30 @@
                         <td>
                             @if (item.Status == AppointmentStatus.Pending)
                             {
-                                <span class="status-badge status-pending">⏳ Chờ duyệt</span>
+                                <span class="status-badge status-pending">
+                                    <i class="fas fa-hourglass-half mr-1"></i> Chờ duyệt
+                                </span>
                             }
                             else if (item.Status == AppointmentStatus.Confirmed)
                             {
-
-                                <span class="status-badge status-confirmed">✅ Xác nhận</span>
+                                <span class="status-badge status-confirmed">
+                                    <i class="fas fa-check-circle mr-1"></i> Xác nhận
+                                </span>
                             }
                             else if (item.Status == AppointmentStatus.Cancelled)
                             {
-
-                                <span class="status-badge status-cancelled">❌ Đã hủy</span>
+                                <span class="status-badge status-cancelled">
+                                    <i class="fas fa-times-circle mr-1"></i> Đã hủy
+                                </span>
                             }
                             else
                             {
-
-                                <span class="status-badge" style="background:#e8edff;color:#4e73df;">@item.Status</span>
+                                <span class="status-badge" style="background:#e8edff;color:#4e73df;">
+                                    <i class="fas fa-info-circle mr-1"></i> @item.Status
+                                </span>
                             }
                         </td>
+
                         <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="@item.Reason">
                             @(string.IsNullOrEmpty(item.Reason) ? "---" : item.Reason)
                         </td>

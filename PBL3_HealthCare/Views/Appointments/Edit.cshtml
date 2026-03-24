@@ -92,10 +92,17 @@
                     <div class="form-floating-custom">
                         <label>Trạng thái</label>
                         <select asp-for="Status" class="form-control">
-                            <option value="Pending">⏳ Chờ duyệt</option>
-                            <option value="Confirmed">✅ Đã xác nhận</option>
-                            <option value="Cancelled">❌ Đã hủy</option>
+                            <option value="Pending">
+                                <i class="fas fa-hourglass-half text-warning mr-1"></i> Chờ duyệt
+                            </option>
+                            <option value="Confirmed">
+                                <i class="fas fa-check-circle text-success mr-1"></i> Đã xác nhận
+                            </option>
+                            <option value="Cancelled">
+                                <i class="fas fa-times-circle text-danger mr-1"></i> Đã hủy
+                            </option>
                         </select>
+
                         <span asp-validation-for="Status" class="text-danger"></span>
                     </div>
                 </div>
