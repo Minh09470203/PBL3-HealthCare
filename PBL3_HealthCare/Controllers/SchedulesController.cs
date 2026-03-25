@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization; // Nhớ có using này
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +10,8 @@ using System.Threading.Tasks;
 
 namespace PBL3_HealthCare.Controllers
 {
+    // 1. KHÓA CỬA TỔNG: Phải đăng nhập, và phải là Admin hoặc Bác sĩ mới được vào
+    [Authorize(Roles = "Admin, Doctor")]
     public class SchedulesController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -20,12 +23,14 @@ namespace PBL3_HealthCare.Controllers
             _userManager = userManager;
         }
 
+        // ==========================================
+        // KHU VỰC 1: XEM DANH SÁCH (Ai cũng được xem)
+        // ==========================================
+
         // GET: Schedules
         public async Task<IActionResult> Index()
         {
             var currentUser = await _userManager.GetUserAsync(User);
-            if (currentUser == null) return Challenge(); // Nếu chưa login thì đá ra trang login
-
             var isDoctor = await _userManager.IsInRoleAsync(currentUser, "Doctor");
 
             var query = _context.Schedules
@@ -33,6 +38,7 @@ namespace PBL3_HealthCare.Controllers
                     .ThenInclude(d => d.User)
                 .AsQueryable();
 
+            // Nếu là Bác sĩ -> Ép query chỉ lấy lịch của chính mình
             if (isDoctor)
             {
                 var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == currentUser.Id);
@@ -60,29 +66,25 @@ namespace PBL3_HealthCare.Controllers
             return View(schedule);
         }
 
-        // GET: Schedules/Create
+        // ==========================================
+        // KHU VỰC 2: THÊM/SỬA/XÓA (CHỈ DÀNH CHO ADMIN)
+        // ==========================================
+
+        // 2. BÙA CHỐNG HACKER: Đóng chặt cửa, chỉ Admin mới được đi xuống dưới
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             ViewData["DoctorId"] = new SelectList(_context.Doctors.Include(d => d.User), "Id", "User.FullName");
             return View();
         }
 
-        // POST: Schedules/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([Bind("Id,DoctorId,Date,Shift,IsAvailable")] Schedule schedule)
         {
             if (ModelState.IsValid)
             {
-                var currentUser = await _userManager.GetUserAsync(User);
-                var isDoctor = await _userManager.IsInRoleAsync(currentUser, "Doctor");
-
-                if (isDoctor)
-                {
-                    var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == currentUser.Id);
-                    if (doctor != null) schedule.DoctorId = doctor.Id;
-                }
-
                 _context.Add(schedule);
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "Tạo ca làm việc thành công!";
@@ -92,7 +94,7 @@ namespace PBL3_HealthCare.Controllers
             return View(schedule);
         }
 
-        // GET: Schedules/Edit/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -104,9 +106,9 @@ namespace PBL3_HealthCare.Controllers
             return View(schedule);
         }
 
-        // POST: Schedules/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id, [Bind("Id,DoctorId,Date,Shift,IsAvailable")] Schedule schedule)
         {
             if (id != schedule.Id) return NotFound();
@@ -115,13 +117,6 @@ namespace PBL3_HealthCare.Controllers
             {
                 try
                 {
-                    var currentUser = await _userManager.GetUserAsync(User);
-                    if (await _userManager.IsInRoleAsync(currentUser, "Doctor"))
-                    {
-                        var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == currentUser.Id);
-                        if (doctor != null) schedule.DoctorId = doctor.Id;
-                    }
-
                     _context.Update(schedule);
                     await _context.SaveChangesAsync();
                     TempData["Success"] = "Cập nhật thành công!";
@@ -133,10 +128,11 @@ namespace PBL3_HealthCare.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
+            ViewData["DoctorId"] = new SelectList(_context.Doctors.Include(d => d.User), "Id", "User.FullName", schedule.DoctorId);
             return View(schedule);
         }
 
-        // GET: Schedules/Delete/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -152,6 +148,7 @@ namespace PBL3_HealthCare.Controllers
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var schedule = await _context.Schedules.FindAsync(id);

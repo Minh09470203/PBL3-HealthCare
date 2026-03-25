@@ -1,59 +1,60 @@
 ﻿@model IEnumerable<PBL3_HealthCare.Models.Invoice>
 
 @{
-    ViewData["Title"] = "Quản lý Thu Ngân";
+    ViewData["Title"] = "Quản Lý Thu Ngân";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
 <div class="card shadow mb-4">
-    <div class="card-header py-3 d-flex justify-content-between align-items-center">
-        <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-file-invoice-dollar"></i> Danh sách Hóa đơn thanh toán</h6>
+    <div class="card-header py-3 bg-primary text-white">
+        <h5 class="m-0 font-weight-bold">Danh Sách Hóa Đơn</h5>
     </div>
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-bordered table-hover" id="invoiceTable" width="100%" cellspacing="0">
-                <thead class="thead-light">
+            <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+                <thead class="bg-light">
                     <tr>
                         <th>Mã HĐ</th>
-                        <th>Bệnh nhân</th>
                         <th>Ngày tạo</th>
+                        <th>Bệnh nhân</th>
+                        <th>Bác sĩ khám</th>
                         <th>Tổng tiền</th>
                         <th>Trạng thái</th>
-                        <th>Thao tác</th>
+                        <th>Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var item in Model)
                     {
                         <tr>
-                            <td class="font-weight-bold text-dark">HD-@item.Id.ToString("D3")</td>
-                            <td>@(item.Appointment?.Patient?.FullName ?? "N/A")</td>
+                            <td class="font-weight-bold text-primary">#@item.Id</td>
                             <td>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
-                            <td class="text-danger font-weight-bold">@item.TotalAmount.ToString("N0")đ</td>
+                            <td>@(item.Appointment?.Patient?.FullName ?? "N/A")</td>
+                            <td>BS. @(item.Appointment?.Doctor?.User?.FullName ?? "N/A")</td>
+                            <td class="text-danger font-weight-bold">@item.TotalAmount.ToString("N0") VNĐ</td>
                             <td>
-                                @if (item.Status == InvoiceStatus.Unpaid)
+                                @if (item.Status == PBL3_HealthCare.Models.InvoiceStatus.Paid)
                                 {
-                                    <span class="badge badge-warning p-2"><i class="fas fa-clock"></i> Chưa thanh toán</span>
+                                    <span class="badge bg-success text-white"><i class="fa fa-check"></i> Đã thu tiền</span>
                                 }
                                 else
                                 {
-                                    <span class="badge badge-success p-2"><i class="fas fa-check-circle"></i> Đã thanh toán</span>
+                                    <span class="badge bg-warning text-dark"><i class="fa fa-clock-o"></i> Chưa thanh toán</span>
                                 }
                             </td>
                             <td>
-                                @if (item.Status == InvoiceStatus.Unpaid)
-                                {
-                                    <button class="btn btn-sm btn-success btn-collect" data-id="@item.Id">
-                                        <i class="fas fa-money-bill-wave"></i> Thu tiền
-                                    </button>
-                                }
-                                else
-                                {
-                                    <button class="btn btn-sm btn-secondary disabled"><i class="fas fa-check"></i> Đã thu</button>
-                                }
-                                <a href="/Invoices/Print/@item.Id" target="_blank" class="btn btn-sm btn-info">
-                                    <i class="fas fa-print"></i> In
+                                <a asp-action="Print" asp-route-id="@item.Id" class="btn btn-sm btn-info" target="_blank" title="In Hóa Đơn">
+                                    <i class="fa fa-print"></i>
                                 </a>
+
+                                @if (item.Status != PBL3_HealthCare.Models.InvoiceStatus.Paid)
+                                {
+                                    <form asp-action="ConfirmPayment" asp-route-id="@item.Id" method="post" class="d-inline form-confirm">
+                                        <button type="button" class="btn btn-sm btn-success btn-checkout" title="Xác nhận thu tiền">
+                                            <i class="fa fa-money"></i> Chốt
+                                        </button>
+                                    </form>
+                                }
                             </td>
                         </tr>
                     }
@@ -64,46 +65,26 @@
 </div>
 
 @section Scripts {
-    @* Đảm bảo đã có thư viện SweetAlert2 trong Layout, nếu chưa thì thêm dòng dưới *@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <script>
-        $(document).ready(function() {
-            $('#invoiceTable').DataTable({
-                "language": { "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Vietnamese.json" },
-                "order": [[2, "desc"]] // Sắp xếp hóa đơn mới nhất lên đầu
-            });
-
-            $('.btn-collect').click(function() {
-                let id = $(this).data('id');
+        $(document).ready(function () {
+            // Bắt sự kiện khi Thu ngân bấm nút "Chốt"
+            $('.btn-checkout').on('click', function (e) {
+                e.preventDefault();
+                var form = $(this).closest('form');
 
                 Swal.fire({
                     title: 'Xác nhận thu tiền?',
-                    text: "Bạn xác nhận bệnh nhân đã thanh toán hóa đơn này?",
+                    text: "Khách hàng đã thanh toán đủ số tiền hóa đơn này?",
                     icon: 'question',
                     showCancelButton: true,
-                    confirmButtonColor: '#1cc88a',
-                    cancelButtonColor: '#858796',
-                    confirmButtonText: 'Đồng ý thu tiền',
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Đã thu tiền!',
                     cancelButtonText: 'Hủy'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        $.ajax({
-                            url: '/Invoices/XacNhanThuTien/' + id,
-                            type: 'POST',
-                            success: function (res) {
-                                if (res.success) {
-                                    Swal.fire('Thành công!', res.message, 'success').then(() => {
-                                        location.reload();
-                                    });
-                                } else {
-                                    Swal.fire('Lỗi!', res.message, 'error');
-                                }
-                            },
-                            error: function() {
-                                Swal.fire('Lỗi!', 'Không thể kết nối đến máy chủ', 'error');
-                            }
-                        });
+                        form.submit(); // Bấm OK thì Submit Form lên Backend của Thịnh
                     }
                 })
             });
