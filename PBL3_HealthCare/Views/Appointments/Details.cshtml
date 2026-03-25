@@ -97,9 +97,9 @@
         }
     </div>
     <div class="action-bar">
-        <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-edit-action"><i class="fas fa-edit mr-1"></i>Chỉnh sửa</a>
         @if (!User.IsInRole("Doctor"))
         {
+            <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-edit-action"><i class="fas fa-edit mr-1"></i>Chỉnh sửa</a>
             <a asp-action="Delete" asp-route-id="@Model?.Id" class="btn btn-delete-action"><i class="fas fa-trash mr-1"></i>Xóa</a>
         }
         <a asp-action="Index" class="btn btn-back-action ml-auto"><i class="fas fa-list mr-1"></i>Danh sách</a>
