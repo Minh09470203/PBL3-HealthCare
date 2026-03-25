@@ -1,0 +1,52 @@
+﻿@model PBL3_HealthCare.Models.MedicalRecord
+@{
+ ViewData["Title"] = "Chi Tiết Bệnh Án";
+ Layout = "~/Views/Shared/_PatientLayout.cshtml";
+}
+<div class="container mt-4">
+ <div class="card shadow-lg border-0 rounded-lg">
+ <div class="card-header bg-info text-white text-center py-3">
+ <h4 class="mb-0"><i class="fas fa-file-medical-alt"></i> HỒ SƠ BỆNH ÁN CHI TIẾT</h4>
+ </div>
+ <div class="card-body p-5">
+ <div class="row mb-4">
+ <div class="col-sm-6">
+ <h6 class="text-muted">Bác sĩ phụ trách</h6>
+ <h5 class="font-weight-bold text-dark">BS.
+@Model.Appointment?.Doctor?.User?.FullName</h5>
+ </div>
+ <div class="col-sm-6 text-end">
+ <h6 class="text-muted">Ngày khám</h6>
+ <h5 class="font-weight-bold text-dark">@Model.CreatedAt.ToString("dd/MM/yyyyHH:mm")</h5>
+ </div>
+ </div>
+ <hr />
+ <div class="mb-4">
+ <h5 class="text-primary border-bottom pb-2"><i class="fas fa-search"></i> Chẩn Đoán
+Của Bác Sĩ</h5>
+ <p class="fs-5 mt-3 text-dark">@Model.Diagnosis</p>
+ </div>
+ <div class="mb-4">
+ <h5 class="text-success border-bottom pb-2"><i class="fas fa-heartbeat"></i> Hướng
+Điều Trị & Lời Dặn</h5>
+ <div class="bg-light p-3 rounded text-dark">
+ @(string.IsNullOrEmpty(Model.Treatment) ? "Không có lời dặn thêm." :
+Model.Treatment)
+ </div>
+ </div>
+ @if (Model.ReExaminationDate.HasValue)
+ {
+ <div class="alert alert-warning text-center">
+ <i class="fas fa-calendar-check fa-lg"></i>
+ <strong>Lịch tái khám:</strong> Vui lòng quay lại phòng khám vào ngày
+<strong>@Model.ReExaminationDate.Value.ToString("dd/MM/yyyy")</strong>.
+ </div>
+ }
+ <div class="text-center mt-5">
+ <a asp-action="MyMedicalRecords" class="btn btn-outline-secondary px-5 roundedpill">Quay Về Danh Sách</a>
+ </div>
+ </div>
+ </div>
+</div>
+
+
