@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 
 namespace PBL3_HealthCare.Controllers
 {
+    // Bùa bảo vệ: Chỉ Admin mới được vào xem bảng lương, doanh thu!
     [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
@@ -24,19 +25,21 @@ namespace PBL3_HealthCare.Controllers
         }
 
         // ========================================================
-        // 1. HÀM INDEX: HIỂN THỊ DASHBOARD
+        // 1. HÀM INDEX: LOAD GIAO DIỆN & CÁC CON SỐ TỔNG QUAN
         // ========================================================
         public async Task<IActionResult> Index()
         {
+            // 1. Đếm tổng số Bệnh nhân (Quét qua hệ thống Identity)
             var patients = await _userManager.GetUsersInRoleAsync("Patient");
             ViewBag.TotalPatients = patients.Count;
 
+            // 2. Đếm tổng số Bác sĩ
             ViewBag.TotalDoctors = await _context.Doctors.CountAsync();
 
+            // 3. Tính doanh thu THÁNG NÀY (Chỉ tính Hóa đơn đã thu tiền - Paid)
             var currentMonth = DateTime.Now.Month;
             var currentYear = DateTime.Now.Year;
 
-            // Tính doanh thu tháng hiện tại
             ViewBag.MonthlyRevenue = await _context.Invoices
                 .Where(i => i.Status == InvoiceStatus.Paid
                             && i.CreatedAt.Month == currentMonth
@@ -47,28 +50,33 @@ namespace PBL3_HealthCare.Controllers
         }
 
         // ========================================================
-        // 2. HÀM PRINT: LẤY DỮ LIỆU THỰC TẾ ĐỂ IN
+        // 2. HÀM PRINT: LẤY DỮ LIỆU THẬT ĐỂ IN HÓA ĐƠN
         // ========================================================
         public IActionResult Print(int id)
         {
+            // Lấy hóa đơn kèm thông tin Bệnh nhân (qua Appointment) và Chi tiết thuốc (Details)
             var invoice = _context.Invoices
                 .Include(i => i.Appointment)
                     .ThenInclude(a => a.Patient)
-                .Include(i => i.Details)
+                .Include(i => i.Details) // Đã sửa theo tên "Details" trong Model của Thái
                 .FirstOrDefault(i => i.Id == id);
 
-            if (invoice == null) return NotFound();
+            if (invoice == null)
+            {
+                return NotFound();
+            }
 
+            // Chỉ định rõ đường dẫn file Print.cshtml trong folder Invoices
             return View("~/Views/Invoices/Print.cshtml", invoice);
         }
 
         // ========================================================
-        // 3. API TRẢ VỀ JSON: ĐÃ FIX LỖI SQL GHÉP CHUỖI "/"
+        // 3. API TRẢ VỀ JSON: DÀNH CHO THÁI VẼ CHART.JS
         // ========================================================
         [HttpGet]
         public async Task<IActionResult> GetChartData()
         {
-            // A. Biểu đồ tròn: Thống kê chuyên khoa
+            // A. BIỂU ĐỒ TRÒN: Tỷ lệ bệnh nhân theo Chuyên khoa
             var specialtyStats = await _context.Appointments
                 .Include(a => a.Doctor)
                     .ThenInclude(d => d.Specialty)
@@ -81,11 +89,11 @@ namespace PBL3_HealthCare.Controllers
                 })
                 .ToListAsync();
 
-            // B. Biểu đồ cột: Doanh thu 6 tháng (Fix lỗi Incorrect syntax)
+            // B. BIỂU ĐỒ CỘT: Doanh thu 6 tháng gần nhất (ĐÃ FIX LỖI SQL)
             var sixMonthsAgo = DateTime.Now.AddMonths(-5);
 
-            // Bước 1: Lấy dữ liệu thô từ SQL (Chỉ lấy số, không ghép chuỗi)
-            var revenueDataRaw = await _context.Invoices
+            // Bước 1: Lấy dữ liệu thô từ Database (Không ghép chuỗi ở đây)
+            var rawData = await _context.Invoices
                 .Where(i => i.Status == InvoiceStatus.Paid
                             && i.CreatedAt >= new DateTime(sixMonthsAgo.Year, sixMonthsAgo.Month, 1))
                 .GroupBy(i => new { i.CreatedAt.Year, i.CreatedAt.Month })
@@ -97,15 +105,12 @@ namespace PBL3_HealthCare.Controllers
                 })
                 .ToListAsync();
 
-            // Bước 2: Định dạng chuỗi "Tháng/Năm" bằng C# (Xử lý trên RAM nên không lỗi SQL)
-            var revenueStats = revenueDataRaw
-                .Select(r => new
-                {
-                    Month = r.Month + "/" + r.Year,
-                    Total = r.Total
-                })
-                .OrderBy(r => r.Month)
-                .ToList();
+            // Bước 2: Định dạng lại chuỗi hiển thị bằng C# trên bộ nhớ RAM
+            var revenueStats = rawData.Select(r => new
+            {
+                Month = r.Month + "/" + r.Year,
+                Total = r.Total
+            }).ToList();
 
             return Json(new
             {
