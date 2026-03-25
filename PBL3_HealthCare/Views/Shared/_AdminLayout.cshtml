@@ -14,12 +14,13 @@
 
     <link href="~/css/sb-admin-2.min.css" rel="stylesheet">
     <link href="~/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 
 <body id="page-top">
     <div id="wrapper">
         <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
-            <a class="sidebar-brand d-flex align-items-center justify-content-center" asp-controller="Home" asp-action="Index">
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" asp-controller="Admin" asp-action="Index">
                 <div class="sidebar-brand-icon rotate-n-15">
                     <i class="fas fa-hospital"></i>
                 </div>
@@ -29,13 +30,13 @@
             <hr class="sidebar-divider my-0">
 
             <li class="nav-item">
-                <a class="nav-link" asp-controller="Home" asp-action="Index">
+                <a class="nav-link" asp-controller="Admin" asp-action="Index">
                     <i class="fas fa-fw fa-tachometer-alt"></i>
                     <span>Tổng quan (Dashboard)</span>
                 </a>
             </li>
-            <hr class="sidebar-divider">
 
+            <hr class="sidebar-divider">
             <div class="sidebar-heading">Nghiệp vụ</div>
 
             <li class="nav-item">
@@ -45,10 +46,17 @@
                 </a>
             </li>
 
-            <li class="nav-item">
+            <li class="nav-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Schedules" ? "active" : "")">
                 <a class="nav-link" asp-controller="Schedules" asp-action="Index">
                     <i class="fas fa-fw fa-clock"></i>
                     <span>Quản lý Ca làm việc</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="Invoices" asp-action="Index">
+                    <i class="fas fa-fw fa-file-invoice-dollar"></i>
+                    <span>Quản lý Thu Ngân</span>
                 </a>
             </li>
 
@@ -126,17 +134,10 @@
                                 </div>
                             </li>
                         }
-                        else
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-gray-600 small" asp-area="Identity" asp-page="/Account/Login">Đăng nhập</a>
-                            </li>
-                        }
                     </ul>
                 </nav>
 
                 <div class="container-fluid">
-                    <h1 class="h3 mb-4 text-gray-800">@ViewData["Title"]</h1>
                     @RenderBody()
                 </div>
             </div>
@@ -166,39 +167,26 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function () {
-            // Lấy thông điệp từ TempData (do Backend gửi qua)
-            var successMsg = '@TempData["Success"]';
-            var errorMsg = '@TempData["Error"]';
+            // Sử dụng HttpUtility để tránh lỗi parse kí tự lạ nếu có
+            var successMsg = '@(TempData["Success"])';
+            var errorMsg = '@(TempData["Error"])';
 
-            // Cấu hình Toast (thông báo nhỏ ở góc màn hình)
             const Toast = Swal.mixin({
                 toast: true,
-                position: 'top-end', // Góc phải màn hình
+                position: 'top-end',
                 showConfirmButton: false,
                 timer: 3000,
                 timerProgressBar: true
             });
 
-            // Nếu có tin nhắn thành công
             if (successMsg) {
-                Toast.fire({
-                    icon: 'success',
-                    title: successMsg
-                });
+                Toast.fire({ icon: 'success', title: successMsg });
             }
-
-            // Nếu có tin nhắn lỗi
             if (errorMsg) {
-                Toast.fire({
-                    icon: 'error',
-                    title: errorMsg
-                });
+                Toast.fire({ icon: 'error', title: errorMsg });
             }
         });
     </script>
-
     @await RenderSectionAsync("Scripts", required: false)
-    @await RenderSectionAsync("Styles", required: false)
-
 </body>
 </html>

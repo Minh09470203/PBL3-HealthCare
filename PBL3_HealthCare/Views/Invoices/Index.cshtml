@@ -1,0 +1,93 @@
+﻿@model IEnumerable<PBL3_HealthCare.Models.Invoice>
+
+@{
+    ViewData["Title"] = "Quản Lý Thu Ngân";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3 bg-primary text-white">
+        <h5 class="m-0 font-weight-bold">Danh Sách Hóa Đơn</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+                <thead class="bg-light">
+                    <tr>
+                        <th>Mã HĐ</th>
+                        <th>Ngày tạo</th>
+                        <th>Bệnh nhân</th>
+                        <th>Bác sĩ khám</th>
+                        <th>Tổng tiền</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="font-weight-bold text-primary">#@item.Id</td>
+                            <td>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@(item.Appointment?.Patient?.FullName ?? "N/A")</td>
+                            <td>BS. @(item.Appointment?.Doctor?.User?.FullName ?? "N/A")</td>
+                            <td class="text-danger font-weight-bold">@item.TotalAmount.ToString("N0") VNĐ</td>
+                            <td>
+                                @if (item.Status == PBL3_HealthCare.Models.InvoiceStatus.Paid)
+                                {
+                                    <span class="badge bg-success text-white"><i class="fa fa-check"></i> Đã thu tiền</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark"><i class="fa fa-clock-o"></i> Chưa thanh toán</span>
+                                }
+                            </td>
+                            <td>
+                                <a asp-action="Print" asp-route-id="@item.Id" class="btn btn-sm btn-info" target="_blank" title="In Hóa Đơn">
+                                    <i class="fa fa-print"></i>
+                                </a>
+
+                                @if (item.Status != PBL3_HealthCare.Models.InvoiceStatus.Paid)
+                                {
+                                    <form asp-action="ConfirmPayment" asp-route-id="@item.Id" method="post" class="d-inline form-confirm">
+                                        <button type="button" class="btn btn-sm btn-success btn-checkout" title="Xác nhận thu tiền">
+                                            <i class="fa fa-money"></i> Chốt
+                                        </button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function () {
+            // Bắt sự kiện khi Thu ngân bấm nút "Chốt"
+            $('.btn-checkout').on('click', function (e) {
+                e.preventDefault();
+                var form = $(this).closest('form');
+
+                Swal.fire({
+                    title: 'Xác nhận thu tiền?',
+                    text: "Khách hàng đã thanh toán đủ số tiền hóa đơn này?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Đã thu tiền!',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit(); // Bấm OK thì Submit Form lên Backend của Thịnh
+                    }
+                })
+            });
+        });
+    </script>
+}

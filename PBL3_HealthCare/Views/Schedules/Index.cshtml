@@ -2,7 +2,15 @@
 
 @{
     ViewData["Title"] = "Quản lý Ca làm việc";
-    Layout = "_AdminLayout";
+    // 1. TỰ ĐỘNG CHUYỂN LAYOUT THEO ROLE
+    if (User.IsInRole("Doctor"))
+    {
+        Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    }
 }
 
 @section Styles {
@@ -10,6 +18,7 @@
 }
 
 <style>
+    /* ... (Giữ nguyên toàn bộ phần CSS cực xịn của sếp) ... */
     .page-header {
         display: flex;
         align-items: center;
@@ -184,9 +193,13 @@
         <h4><i class="fas fa-clock mr-2" style="color:#36b9cc;"></i>Quản lý Ca làm việc</h4>
         <p>Lịch phân công ca trực của các bác sĩ</p>
     </div>
-    <a asp-action="Create" class="btn btn-add">
-        <i class="fas fa-plus"></i> Thêm ca làm việc
-    </a>
+
+    @if (User.IsInRole("Admin"))
+    {
+        <a asp-action="Create" class="btn btn-add">
+            <i class="fas fa-plus"></i> Thêm ca làm việc
+        </a>
+    }
 </div>
 
 <div class="data-card card mb-4">
@@ -222,14 +235,21 @@
                             }
                             else
                             {
-
                                 <span class="avail-badge avail-no"><i class="fas fa-times-circle mr-1"></i>Đã kín</span>
                             }
                         </td>
                         <td class="text-center">
-                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action btn-action-edit"><i class="fas fa-edit"></i> Sửa</a>
-                            <a asp-action="Details" asp-route-id="@item.Id" class="btn-action btn-action-detail"><i class="fas fa-eye"></i></a>
-                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn-action btn-action-delete"><i class="fas fa-trash"></i></a>
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action btn-action-edit" title="Sửa"><i class="fas fa-edit"></i></a>
+                            }
+
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn-action btn-action-detail" title="Chi tiết"><i class="fas fa-eye"></i></a>
+
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn-action btn-action-delete" title="Xóa"><i class="fas fa-trash"></i></a>
+                            }
                         </td>
                     </tr>
                 }

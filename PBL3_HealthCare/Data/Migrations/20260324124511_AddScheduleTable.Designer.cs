@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PBL3_HealthCare.Data;
 
@@ -11,9 +12,11 @@ using PBL3_HealthCare.Data;
 namespace PBL3_HealthCare.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260324124511_AddScheduleTable")]
+    partial class AddScheduleTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -336,12 +339,6 @@ namespace PBL3_HealthCare.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("MedicalRecordId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Note")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -353,8 +350,6 @@ namespace PBL3_HealthCare.Data.Migrations
 
                     b.HasIndex("AppointmentId")
                         .IsUnique();
-
-                    b.HasIndex("MedicalRecordId");
 
                     b.ToTable("Invoices");
                 });
@@ -399,9 +394,6 @@ namespace PBL3_HealthCare.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ApplicationUserId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<int>("AppointmentId")
                         .HasColumnType("int");
 
@@ -412,9 +404,6 @@ namespace PBL3_HealthCare.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("DoctorId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("ReExaminationDate")
                         .HasColumnType("datetime2");
 
@@ -423,12 +412,8 @@ namespace PBL3_HealthCare.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ApplicationUserId");
-
                     b.HasIndex("AppointmentId")
                         .IsUnique();
-
-                    b.HasIndex("DoctorId");
 
                     b.ToTable("MedicalRecords");
                 });
@@ -513,18 +498,15 @@ namespace PBL3_HealthCare.Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Note")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("PrescriptionDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MedicalRecordId");
+                    b.HasIndex("MedicalRecordId")
+                        .IsUnique();
 
                     b.ToTable("Prescriptions");
                 });
@@ -536,10 +518,6 @@ namespace PBL3_HealthCare.Data.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Instruction")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("MedicineId")
                         .HasColumnType("int");
@@ -553,6 +531,10 @@ namespace PBL3_HealthCare.Data.Migrations
                     b.Property<decimal>("UnitPrice")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Usage")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -708,18 +690,10 @@ namespace PBL3_HealthCare.Data.Migrations
                     b.HasOne("PBL3_HealthCare.Models.Appointment", "Appointment")
                         .WithOne("Invoice")
                         .HasForeignKey("PBL3_HealthCare.Models.Invoice", "AppointmentId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("PBL3_HealthCare.Models.MedicalRecord", "MedicalRecord")
-                        .WithMany()
-                        .HasForeignKey("MedicalRecordId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Appointment");
-
-                    b.Navigation("MedicalRecord");
                 });
 
             modelBuilder.Entity("PBL3_HealthCare.Models.InvoiceDetail", b =>
@@ -735,27 +709,13 @@ namespace PBL3_HealthCare.Data.Migrations
 
             modelBuilder.Entity("PBL3_HealthCare.Models.MedicalRecord", b =>
                 {
-                    b.HasOne("PBL3_HealthCare.Models.ApplicationUser", "ApplicationUser")
-                        .WithMany()
-                        .HasForeignKey("ApplicationUserId");
-
                     b.HasOne("PBL3_HealthCare.Models.Appointment", "Appointment")
                         .WithOne("MedicalRecord")
                         .HasForeignKey("PBL3_HealthCare.Models.MedicalRecord", "AppointmentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PBL3_HealthCare.Models.Doctor", "Doctor")
-                        .WithMany()
-                        .HasForeignKey("DoctorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ApplicationUser");
-
                     b.Navigation("Appointment");
-
-                    b.Navigation("Doctor");
                 });
 
             modelBuilder.Entity("PBL3_HealthCare.Models.Notification", b =>
@@ -772,8 +732,8 @@ namespace PBL3_HealthCare.Data.Migrations
             modelBuilder.Entity("PBL3_HealthCare.Models.Prescription", b =>
                 {
                     b.HasOne("PBL3_HealthCare.Models.MedicalRecord", "MedicalRecord")
-                        .WithMany("Prescriptions")
-                        .HasForeignKey("MedicalRecordId")
+                        .WithOne("Prescription")
+                        .HasForeignKey("PBL3_HealthCare.Models.Prescription", "MedicalRecordId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -831,7 +791,7 @@ namespace PBL3_HealthCare.Data.Migrations
 
             modelBuilder.Entity("PBL3_HealthCare.Models.MedicalRecord", b =>
                 {
-                    b.Navigation("Prescriptions");
+                    b.Navigation("Prescription");
                 });
 
             modelBuilder.Entity("PBL3_HealthCare.Models.Prescription", b =>

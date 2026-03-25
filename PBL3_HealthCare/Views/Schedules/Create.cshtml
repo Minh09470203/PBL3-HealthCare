@@ -5,67 +5,202 @@
     Layout = "_AdminLayout";
 }
 
-@section Styles {
-    <link rel="stylesheet" href="~/css/admin/schedules.css" />
-}
+<style>
+    /* CSS bổ trợ để giao diện đồng bộ với trang Index của Thái */
+    .form-card.create {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 24px rgba(54,185,204,.08);
+        overflow: hidden;
+        margin: 0 auto;
+    }
 
-<a asp-action="Index" class="btn btn-light btn-sm mb-3" style="border-radius:8px;"><i class="fas fa-arrow-left mr-1"></i>Quay lại</a>
+    .form-card .card-header {
+        background: #f0fbfc;
+        border-bottom: 1px solid #e0f7fa;
+        padding: 1.25rem 1.5rem;
+    }
 
-<div class="form-card create card mb-4" style="max-width:680px;">
-    <div class="card-header">
-        <h5><i class="fas fa-calendar-plus mr-2"></i>Tạo Ca làm việc mới</h5>
-        <p>Phân công ca trực cho bác sĩ</p>
-    </div>
-    <div class="card-body">
-        <form asp-action="Create" autocomplete="off">
-            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3" style="border-radius:10px;font-size:.85rem;"></div>
+        .form-card .card-header h5 {
+            color: #258391;
+            font-weight: 700;
+            margin: 0;
+        }
 
-            <p class="form-section-title teal"><i class="fas fa-user-md mr-1"></i>Thông tin ca làm</p>
+        .form-card .card-header p {
+            color: #9fa5b5;
+            font-size: .85rem;
+            margin: .25rem 0 0;
+        }
 
-            <div class="form-floating-custom">
-                <label>Bác sĩ phụ trách</label>
-                <select asp-for="DoctorId" class="form-control" asp-items="ViewBag.DoctorId">
-                    <option value="">-- Chọn bác sĩ --</option>
-                </select>
-            </div>
+    .form-section-title {
+        font-size: .8rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 800;
+        margin-bottom: 1.25rem;
+        display: block;
+    }
 
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-floating-custom">
-                        <label>Ngày làm việc</label>
-                        <div class="input-icon-wrap">
-                            <i class="input-icon fas fa-calendar"></i>
-                            <input asp-for="Date" class="form-control" type="date" />
+        .form-section-title.teal {
+            color: #36b9cc;
+        }
+
+    .form-floating-custom {
+        margin-bottom: 1.25rem;
+    }
+
+        .form-floating-custom label {
+            display: block;
+            font-size: .85rem;
+            font-weight: 700;
+            color: #4e73df;
+            margin-bottom: .4rem;
+        }
+
+    .input-icon-wrap {
+        position: relative;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #36b9cc;
+    }
+
+    .form-control {
+        border-radius: 10px;
+        border: 1.5px solid #e3e6f0;
+        padding: .6rem .75rem .6rem 2.5rem;
+        font-size: .9rem;
+        transition: all .2s;
+    }
+
+        .form-control:focus {
+            border-color: #36b9cc;
+            box-shadow: 0 0 0 0.2rem rgba(54, 185, 204, 0.1);
+        }
+
+    select.form-control {
+        padding-left: 1rem; /* Select không cần icon wrap quá sát */
+    }
+
+    .availability-toggle {
+        background: #f8f9fc;
+        padding: 1rem;
+        border-radius: 12px;
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-top: 0.5rem;
+    }
+
+    .toggle-label {
+        font-weight: 700;
+        color: #2d3748;
+        font-size: .9rem;
+    }
+
+    .toggle-desc {
+        font-size: .75rem;
+        color: #858796;
+    }
+
+    .btn-save-teal {
+        background: linear-gradient(135deg,#36b9cc,#258391);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: .6rem 1.5rem;
+        font-weight: 600;
+        transition: all .2s;
+    }
+
+        .btn-save-teal:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(54,185,204,.3);
+            color: white;
+        }
+
+    .btn-cancel-soft {
+        background: #f8f9fc;
+        color: #858796;
+        border-radius: 10px;
+        padding: .6rem 1.5rem;
+        font-weight: 600;
+        border: 1px solid #e3e6f0;
+    }
+</style>
+
+<div class="container-fluid">
+    <a asp-action="Index" class="btn btn-light btn-sm mb-3" style="border-radius:8px;">
+        <i class="fas fa-arrow-left mr-1"></i>Quay lại danh sách
+    </a>
+
+    <div class="form-card create card mb-4" style="max-width:680px;">
+        <div class="card-header">
+            <h5><i class="fas fa-calendar-plus mr-2"></i>Tạo Ca làm việc mới</h5>
+            <p>Phân công ca trực trực quan cho đội ngũ y bác sĩ</p>
+        </div>
+        <div class="card-body" style="padding: 1.5rem 2rem;">
+            <form asp-action="Create" autocomplete="off">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3" style="font-size:.85rem;"></div>
+
+                <span class="form-section-title teal"><i class="fas fa-user-md mr-1"></i>Thông tin cơ bản</span>
+
+                <div class="form-floating-custom">
+                    <label>Bác sĩ phụ trách</label>
+                    <select asp-for="DoctorId" class="form-control" asp-items="ViewBag.DoctorId">
+                        <option value="">-- Chọn bác sĩ từ danh sách --</option>
+                    </select>
+                    <span asp-validation-for="DoctorId" class="text-danger small"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-floating-custom">
+                            <label>Ngày trực</label>
+                            <div class="input-icon-wrap">
+                                <i class="input-icon fas fa-calendar-alt"></i>
+                                <input asp-for="Date" class="form-control" type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                            </div>
+                            <span asp-validation-for="Date" class="text-danger small"></span>
                         </div>
-                        <span asp-validation-for="Date" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating-custom">
+                            <label>Ca làm việc</label>
+                            <div class="input-icon-wrap">
+                                <i class="input-icon fas fa-sun"></i>
+                                <input asp-for="Shift" class="form-control" placeholder="Ví dụ: Sáng (07:00 - 11:30)" />
+                            </div>
+                            <span asp-validation-for="Shift" class="text-danger small"></span>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="form-floating-custom">
-                        <label>Ca làm việc</label>
-                        <div class="input-icon-wrap">
-                            <i class="input-icon fas fa-sun"></i>
-                            <input asp-for="Shift" class="form-control" placeholder="VD: Sáng, Chiều, Tối..." />
-                        </div>
-                        <span asp-validation-for="Shift" class="text-danger"></span>
+
+                <div class="availability-toggle">
+                    <div style="padding-top: 2px;">
+                        <input class="form-check-input" type="checkbox" asp-for="IsAvailable" style="width: 18px; height: 18px; cursor:pointer;" />
+                    </div>
+                    <div>
+                        <label asp-for="IsAvailable" class="toggle-label" style="cursor:pointer;margin:0;">Trạng thái sẵn sàng</label>
+                        <div class="toggle-desc">Cho phép bệnh nhân nhìn thấy và đặt lịch hẹn vào ca này</div>
                     </div>
                 </div>
-            </div>
 
-            <div class="availability-toggle">
-                <input class="form-check-input" type="checkbox" asp-for="IsAvailable" />
-                <div>
-                    <label asp-for="IsAvailable" class="toggle-label" style="cursor:pointer;margin:0;">Còn chỗ nhận lịch</label>
-                    <div class="toggle-desc">Bật nếu bác sĩ có thể nhận thêm bệnh nhân trong ca này</div>
+                <hr style="border-color:#e0f7fa; margin: 1.5rem 0;">
+
+                <div class="d-flex align-items-center" style="gap:.75rem">
+                    <button type="submit" class="btn btn-save-teal">
+                        <i class="fas fa-check-circle mr-1"></i>Xác nhận lưu
+                    </button>
+                    <a asp-action="Index" class="btn btn-cancel-soft">Hủy bỏ</a>
                 </div>
-            </div>
-
-            <hr style="border-color:#e0f7fa;margin:1.5rem 0;">
-            <div class="d-flex" style="gap:.75rem">
-                <button type="submit" class="btn btn-save-teal"><i class="fas fa-check mr-1"></i>Tạo ca làm việc</button>
-                <a asp-action="Index" class="btn btn-cancel-soft"><i class="fas fa-times mr-1"></i>Hủy bỏ</a>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
 

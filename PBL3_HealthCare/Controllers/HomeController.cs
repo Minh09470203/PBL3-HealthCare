@@ -41,6 +41,7 @@ namespace PBL3_HealthCare.Controllers
 
         public async Task<IActionResult> Index()
         {
+    ViewBag.TopSpecialties = await _context.Specialties.Take(6).ToListAsync();
             if (User.Identity.IsAuthenticated)
             {
                 // Kiểm tra xem ông này là Admin hay Bác sĩ

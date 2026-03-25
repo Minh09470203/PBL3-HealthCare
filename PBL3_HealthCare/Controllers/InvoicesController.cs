@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PBL3_HealthCare.Data;
 using PBL3_HealthCare.Models;
+using Microsoft.AspNetCore.Authorization;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -27,7 +27,7 @@ namespace PBL3_HealthCare.Controllers
             // Lấy toàn bộ Hóa đơn, móc qua Lịch khám để lấy tên Bệnh nhân và tên Bác sĩ
             var invoices = await _context.Invoices
                 .Include(i => i.Appointment)
-                    .ThenInclude(a => a.Patient) // Nhớ đảm bảo trong Appointment có public virtual ApplicationUser Patient
+                    .ThenInclude(a => a.Patient)
                 .Include(i => i.Appointment)
                     .ThenInclude(a => a.Doctor)
                         .ThenInclude(d => d.User)
@@ -72,49 +72,44 @@ namespace PBL3_HealthCare.Controllers
             }
 
             // Nếu lỡ tay bấm đúp hoặc đã thanh toán rồi thì chặn lại
-            if (invoice.Status == InvoiceStatus.Paid) // Đảm bảo Enum của ông có chữ Paid (hoặc Completed)
+            if (invoice.Status == InvoiceStatus.Paid)
             {
                 TempData["Warning"] = "Hóa đơn này đã được thanh toán trước đó!";
                 return RedirectToAction(nameof(Index));
             }
 
-            // BÙM! Đổi trạng thái sang Đã Thu Tiền
+            // Đổi trạng thái sang Đã Thu Tiền
             invoice.Status = InvoiceStatus.Paid;
-
-            // LƯU Ý CHO SẾP: Trong bảng Invoice của ông chưa có cột PaymentDate (Ngày thanh toán).
-            // Nếu muốn quản lý chặt (Biết khách trả tiền lúc mấy giờ), ông nên cấy thêm 
-            // public DateTime? PaymentDate { get; set; } vào Model Invoice, rồi mở comment dòng dưới:
-            // invoice.PaymentDate = DateTime.Now;
 
             _context.Update(invoice);
             await _context.SaveChangesAsync();
 
             TempData["Success"] = "Đã thu tiền thành công!";
 
-            // Xong xuôi thì đá thu ngân về lại danh sách hóa đơn
+            // Xong xuôi thì đá về lại danh sách hóa đơn
             return RedirectToAction(nameof(Index));
         }
 
+        // ========================================================
+        // 4. HÀM IN HÓA ĐƠN
+        // ========================================================
         [HttpGet]
         public async Task<IActionResult> Print(int? id)
         {
             if (id == null) return NotFound();
 
-            // Viết câu query "All-in-one" móc sạch sành sanh data liên quan
             var invoice = await _context.Invoices
                 .Include(i => i.Appointment)
-                    .ThenInclude(a => a.Patient) // Lấy tên Khách hàng
+                    .ThenInclude(a => a.Patient)
                 .Include(i => i.Appointment)
                     .ThenInclude(a => a.Doctor)
-                        .ThenInclude(d => d.User) // Lấy tên Bác sĩ
-                .Include(i => i.Details) // Lấy danh sách các món tiền (Khám + Thuốc)
+                        .ThenInclude(d => d.User)
+                .Include(i => i.Details)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (invoice == null) return NotFound();
 
-            // Trả về một View đặc biệt (Thường View này sẽ không dùng Layout chung của hệ thống)
             return View(invoice);
         }
-
     }
 }
