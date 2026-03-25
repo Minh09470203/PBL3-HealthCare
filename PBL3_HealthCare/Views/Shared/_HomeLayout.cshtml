@@ -1,4 +1,10 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@using PBL3_HealthCare.Models
+@using PBL3_HealthCare.Data
+@using Microsoft.EntityFrameworkCore
+@inject UserManager<ApplicationUser> UserManager
+@inject ApplicationDbContext _context
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
@@ -34,7 +40,55 @@
                 <div class="col-md-5 d-flex justify-content-end align-items-center">
                     @if (User.Identity.IsAuthenticated)
                     {
-                        <partial name="_NotificationBell" />
+                        var userId = UserManager.GetUserId(User);
+                        var unreadCount = await _context.Notifications.CountAsync(n => n.ReceiverId == userId && !n.IsRead);
+                        var latestNotifications = await _context.Notifications
+                        .Where(n => n.ReceiverId == userId && !n.IsRead)
+                        .OrderByDescending(n => n.CreatedAt)
+                        .Take(5)
+                        .ToListAsync();
+
+                        <div class="dropdown mr-4" style="display:inline-block;">
+                            <a href="#" class="dropdown-toggle d-flex align-items-center" id="patientAlertsDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="color: rgba(255,255,255,0.8); text-decoration: none;">
+                                <span class="icon-bell" style="font-size: 1.2rem; position: relative;">
+                                    @if (unreadCount > 0)
+                                    {
+                                        <span class="badge badge-danger" style="position: absolute; top: -6px; right: -8px; border-radius: 50%; font-size: 0.6rem; padding: 0.2rem 0.35rem; font-family: sans-serif;">
+                                            @(unreadCount > 9 ? "9+" : unreadCount.ToString())
+                                        </span>
+                                    }
+                                </span>
+                            </a>
+
+                            <div class="dropdown-menu shadow-lg border-0" aria-labelledby="patientAlertsDropdown" style="width: 320px; padding: 0; border-radius: 8px; overflow: hidden; margin-top: 10px; right: 0; left: auto;">
+                                <div class="dropdown-header text-white p-3" style="background: #3d5ee1; font-size: 0.95rem; font-weight: 600;">
+                                    Thông báo của bạn (@unreadCount)
+                                </div>
+                                <div style="max-height: 320px; overflow-y: auto;">
+                                    @if (latestNotifications.Any())
+                                    {
+                                        foreach (var notif in latestNotifications)
+                                        {
+                                            <a class="dropdown-item p-3" href="#" style="white-space: normal; border-bottom: 1px solid #f0f0f0;">
+                                                <div class="small text-muted mb-1" style="font-size: 0.75rem;">
+                                                    <span class="icon-calendar mr-1"></span> @notif.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                                </div>
+                                                <div style="font-size: 0.85rem; color: #333; line-height: 1.4;">@notif.Content</div>
+                                            </a>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <div class="p-4 text-center text-muted" style="font-size: 0.85rem;">
+                                            Không có thông báo nào mới.
+                                        </div>
+                                    }
+                                </div>
+                                <a href="#" class="dropdown-item text-center p-2" style="font-size: 0.85rem; font-weight: 600; color: #3d5ee1; background: #f8f9fa;">
+                                    Xem tất cả thông báo
+                                </a>
+                            </div>
+                        </div>
                         <a asp-controller="Home" asp-action="Profile" class="mr-3">
                             Xin chào, @User.Identity.Name
                         </a>
