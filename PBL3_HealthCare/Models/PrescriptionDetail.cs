@@ -20,7 +20,7 @@ namespace PBL3_HealthCare.Models
 
         public int Quantity { get; set; }
 
-        public string Usage { get; set; } // Cách dùng: Sáng 1 viên, Tối 1 viên
+        public string Instruction { get; set; } // Cách dùng: Sáng 1 viên, Tối 1 viên
 
         // QUAN TRỌNG: Lưu giá tại thời điểm kê đơn 
         // (đề phòng sau này giá trong kho Medicine thay đổi thì đơn cũ không bị sai tiền)

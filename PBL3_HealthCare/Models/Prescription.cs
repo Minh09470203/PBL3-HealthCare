@@ -12,8 +12,8 @@ namespace PBL3_HealthCare.Models
         public int MedicalRecordId { get; set; }
         [ForeignKey("MedicalRecordId")]
         public virtual MedicalRecord MedicalRecord { get; set; }
-
-        public string? Note { get; set; } // Lời dặn chung của dược sĩ (nếu có)
+        public string Note { get; set; } // Lời dặn
+        public DateTime PrescriptionDate { get; set; } // Ngày kê đơn
 
         public PrescriptionStatus Status { get; set; } = PrescriptionStatus.New;
 

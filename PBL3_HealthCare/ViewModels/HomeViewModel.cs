@@ -1,4 +1,7 @@
-﻿namespace PBL3_HealthCare.Models
+﻿using System.Collections.Generic;   // Cấp phép cho xài chữ List
+using PBL3_HealthCare.Models;
+
+namespace PBL3_HealthCare.ViewModels
 {
     public class HomeViewModel
     {

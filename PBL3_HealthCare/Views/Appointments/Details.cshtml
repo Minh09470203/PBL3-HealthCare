@@ -2,7 +2,14 @@
 
 @{
     ViewData["Title"] = "Chi tiết Lịch khám";
-    Layout = "_AdminLayout";
+    if (User.IsInRole("Admin"))
+    {
+        Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    }
+    else if (User.IsInRole("Doctor"))
+    {
+        Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    }
 }
 
 @section Styles {
@@ -45,21 +52,30 @@
                 <div class="info-value">
                     @if (Model?.Status == AppointmentStatus.Pending)
                     {
-                        <span class="status-badge status-pending">⏳ Chờ duyệt</span>
+                        <span class="status-badge status-pending">
+                            <i class="fas fa-hourglass-half mr-1"></i> Chờ duyệt
+                        </span>
                     }
                     else if (Model?.Status == AppointmentStatus.Confirmed)
                     {
-                        <span class="status-badge status-confirmed">✅ Đã xác nhận</span>
+                        <span class="status-badge status-confirmed">
+                            <i class="fas fa-check-circle mr-1"></i> Đã xác nhận
+                        </span>
                     }
                     else if (Model?.Status == AppointmentStatus.Cancelled)
                     {
-                        <span class="status-badge status-cancelled">❌ Đã hủy</span>
+                        <span class="status-badge status-cancelled">
+                            <i class="fas fa-times-circle mr-1"></i> Đã hủy
+                        </span>
                     }
                     else
                     {
-                        <span class="status-badge" style="background:#e8edff;color:#4e73df;">@Model?.Status</span>
+                        <span class="status-badge" style="background:#e8edff;color:#4e73df;">
+                            <i class="fas fa-info-circle mr-1"></i> @Model?.Status
+                        </span>
                     }
                 </div>
+
             </div>
         </div>
 
@@ -82,7 +98,10 @@
     </div>
     <div class="action-bar">
         <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-edit-action"><i class="fas fa-edit mr-1"></i>Chỉnh sửa</a>
-        <a asp-action="Delete" asp-route-id="@Model?.Id" class="btn btn-delete-action"><i class="fas fa-trash mr-1"></i>Xóa</a>
+        @if (!User.IsInRole("Doctor"))
+        {
+            <a asp-action="Delete" asp-route-id="@Model?.Id" class="btn btn-delete-action"><i class="fas fa-trash mr-1"></i>Xóa</a>
+        }
         <a asp-action="Index" class="btn btn-back-action ml-auto"><i class="fas fa-list mr-1"></i>Danh sách</a>
     </div>
 </div>

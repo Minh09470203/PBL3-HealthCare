@@ -1,0 +1,182 @@
+/* Ép màu nền của toàn bộ thân trang thành xanh nhạt */
+body, main {
+    background-color: #f4f6ff !important;
+}
+
+/* Đảm bảo phần section không bị xung đột màu */
+.doctors-section {
+    background-color: transparent !important; /* Đổi thành transparent vì body đã lo màu nền rồi */
+    min-height: 100vh;
+    padding: 4rem 0 4rem; /* Căn chỉnh lại khoảng cách trên/dưới cho vừa vặn */
+}
+.section-eyebrow {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #3d5ee1;
+    margin-bottom: .6rem;
+}
+.section-heading {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1a1a1a;
+    line-height: 1.2;
+    margin-bottom: 2.5rem;
+}
+.section-heading span { color: #3d5ee1; }
+
+/* === CARD === */
+.doctor-card {
+    background: #fff;
+    border: 1px solid #e2e8ff;
+    border-radius: 4px;
+    overflow: hidden;
+    transition: box-shadow .2s, transform .2s;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.doctor-card:hover {
+    box-shadow: 0 8px 24px rgba(61,94,225,.12);
+    transform: translateY(-3px);
+}
+.doctor-card .photo-wrap {
+    position: relative;
+    height: 240px;
+    overflow: hidden;
+    background: #dde3ff;
+}
+.doctor-card .photo-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    transition: transform .4s ease;
+}
+.doctor-card:hover .photo-wrap img { transform: scale(1.04); }
+
+.doctor-card .specialty-tag {
+    position: absolute;
+    bottom: 0; left: 0;
+    background: #3d5ee1;
+    color: #fff;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .5px;
+    padding: .3rem .75rem;
+}
+.doctor-card .card-content {
+    padding: 1.1rem 1.25rem 1.25rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+.doctor-card .doctor-name {
+    font-size: .95rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: .2rem;
+}
+.doctor-card .doctor-degree {
+    font-size: .78rem;
+    color: #868e96;
+    margin-bottom: .9rem;
+}
+.doctor-card .price-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: .75rem;
+    border-top: 1px solid #eef0ff;
+    margin-top: auto;
+}
+.doctor-card .price-label { font-size: .75rem; color: #868e96; }
+.doctor-card .price-value { font-size: .88rem; font-weight: 700; color: #2b7a3d; }
+
+.btn-book {
+    display: block;
+    background: #3d5ee1;
+    color: #fff;
+    text-align: center;
+    font-size: .82rem;
+    font-weight: 600;
+    padding: .65rem 1rem;
+    border: none;
+    border-radius: 3px;
+    margin-top: .85rem;
+    transition: background .15s;
+    text-decoration: none;
+}
+.btn-book:hover {
+    background: #2f4fc7;
+    color: #fff;
+    text-decoration: none;
+}
+
+/* === EMPTY STATE === */
+.empty-state { text-align: center; padding: 4rem 1rem; }
+.empty-state .empty-icon { font-size: 3rem; color: #c5cef7; margin-bottom: 1rem; }
+.empty-state p { color: #868e96; font-size: .95rem; margin-bottom: 1.25rem; }
+.btn-back {
+    background: #3d5ee1; color: #fff; border: none; border-radius: 3px;
+    padding: .55rem 1.5rem; font-size: .85rem; font-weight: 600;
+    transition: background .15s; text-decoration: none; display: inline-block;
+}
+.btn-back:hover { background: #2f4fc7; color: #fff; text-decoration: none; }
+
+/* === SPECIALTY HERO BANNER === */
+.specialty-hero {
+    background: #fff;
+    border: 1px solid #e2e8ff;
+    border-radius: 8px; /* Bo góc to hơn card một chút cho sang */
+    overflow: hidden;
+    margin-bottom: 4rem;
+    box-shadow: 0 8px 24px rgba(61, 94, 225, 0.08); /* Đổ bóng cùng tone xanh */
+}
+
+.specialty-hero-text {
+    padding: 3.5rem 4rem;
+}
+
+.specialty-hero-title {
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: #1a1a1a;
+    margin-bottom: 1.2rem;
+    line-height: 1.2;
+}
+
+    .specialty-hero-title span {
+        color: #3d5ee1; /* Nhấn mạnh chữ theo màu chủ đạo */
+    }
+
+.specialty-hero-desc {
+    font-size: 1.05rem;
+    color: #868e96; /* Dùng màu xám chuẩn của trang */
+    line-height: 1.7;
+    margin-bottom: 0;
+}
+
+.specialty-hero-img-wrap {
+    height: 100%;
+    min-height: 380px; /* Chiều cao để ảnh hiển thị to rõ */
+}
+
+    .specialty-hero-img-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+    }
+
+/* Ép size cho màn hình điện thoại */
+@media (max-width: 768px) {
+    .specialty-hero-text {
+        padding: 2rem;
+    }
+
+    .specialty-hero-img-wrap {
+        min-height: 250px;
+    }
+}

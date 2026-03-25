@@ -1,424 +1,458 @@
-﻿﻿@{
+﻿@{
     ViewData["Title"] = "SS Medical Center";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 @using Microsoft.AspNetCore.Identity
 @using PBL3_HealthCare.Models
 @using System.Security.Claims
-@* @inject SignInManager<ApplicationUser> SignInManager
-@inject UserManager<ApplicationUser> UserManager *@
-@model PBL3_HealthCare.Models.HomeViewModel
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>SuperStar Medical Center - Hệ thống phòng khám chuẩn siêu sao</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+@model PBL3_HealthCare.ViewModels.HomeViewModel
 
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+@section Styles {
+    <link rel="stylesheet" href="~/css/home/home.css" />
+}
 
-    <link rel="stylesheet" href="css/open-iconic-bootstrap.min.css">
-    <link rel="stylesheet" href="css/animate.css">
+<!-- TOP BAR -->
+<div class="topbar">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md d-flex align-items-center">
+                <div class="icon mr-2"><span class="icon-phone2"></span></div>
+                <span class="text">+ 1235 2355 98</span>
+            </div>
+            <div class="col-md d-flex align-items-center">
+                <div class="icon mr-2"><span class="icon-paper-plane"></span></div>
+                <span class="text">youremail@email.com</span>
+            </div>
+            <div class="col-md-5 d-flex justify-content-end align-items-center">
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <a asp-controller="Home" asp-action="Profile" class="mr-3">
+                        Xin chào, @User.Identity.Name
+                    </a>
+                    <form asp-area="Identity" asp-page="/Account/Logout"
+                          asp-route-returnUrl="@Url.Action("Index","Home",new{area=""})"
+                          method="post" class="d-inline m-0">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn-logout">Đăng xuất</button>
+                    </form>
+                }
+                else
+                {
+                    <a href="/Identity/Account/Register" class="mr-3">Đăng ký</a>
+                    <a href="/Identity/Account/Login">Đăng nhập</a>
+                }
+            </div>
+        </div>
+    </div>
+</div>
 
-    <link rel="stylesheet" href="css/owl.carousel.min.css">
-    <link rel="stylesheet" href="css/owl.theme.default.min.css">
-    <link rel="stylesheet" href="css/magnific-popup.css">
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg ftco_navbar ftco-navbar-light site-navbar-target sticky-top" id="ftco-navbar">
+    <div class="container">
+        <a class="navbar-brand" asp-controller="Home" asp-action="Index">SUPERSTAR</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#ftco-nav"
+                aria-controls="ftco-nav" aria-expanded="false">
+            <span class="oi oi-menu"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="ftco-nav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item"><a href="#home-section" class="nav-link">Trang chủ</a></li>
+                <li class="nav-item"><a href="#about-section" class="nav-link">Giới thiệu</a></li>
+                <li class="nav-item"><a href="#department-section" class="nav-link">Khoa</a></li>
+                <li class="nav-item"><a href="#doctor-section" class="nav-link">Bác sĩ</a></li>
+                <li class="nav-item"><a href="#contact-section" class="nav-link">Liên hệ</a></li>
+                <li class="nav-item cta mr-md-2">
+                    <a asp-controller="Home" asp-action="BookAppointment" class="nav-link">Đặt lịch khám</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
 
-    <link rel="stylesheet" href="css/aos.css">
-
-    <link rel="stylesheet" href="css/ionicons.min.css">
-
-    <link rel="stylesheet" href="css/flaticon.css">
-    <link rel="stylesheet" href="css/icomoon.css">
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-    <div class="py-1 bg-black top">
-        <div class="container">
-            <div class="row no-gutters d-flex align-items-start align-items-center px-md-0">
-                <div class="col-lg-12 d-block">
-                    <div class="row d-flex">
-                        <div class="col-md pr-4 d-flex topper align-items-center">
-                            <div class="icon mr-2 d-flex justify-content-center align-items-center"><span class="icon-phone2"></span></div>
-                            <span class="text">+ 1235 2355 98</span>
-                        </div>
-                        <div class="col-md pr-4 d-flex topper align-items-center">
-                            <div class="icon mr-2 d-flex justify-content-center align-items-center"><span class="icon-paper-plane"></span></div>
-                            <span class="text">youremail@email.com</span>
-                        </div>
-                        <div class="col-md-5 pr-4 d-flex topper align-items-center text-lg-right justify-content-end">
-                            <div class="mb-0 register-link d-flex align-items-center">
-                                @if (User.Identity.IsAuthenticated)
-                                {
-                                    var userName = User.FindFirstValue(ClaimTypes.Name) ?? User.Identity.Name;
-                                    <a asp-controller="Home" asp-action="Profile" class="mr-3 text-white text-decoration-none">
-                                        Xin chào @User.Identity.Name
-                                    </a>
-                                    <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post" class="d-inline">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-link text-white p-0 border-0">Đăng xuất</button>
-                                    </form>
-                                }
-                                else
-                                {
-                                    <a href="/Identity/Account/Register" class="mr-3 text-white">Đăng ký</a>
-                                    <a href="/Identity/Account/Login" class="text-white">Đăng nhập</a>
-                                }
-                                
-                            </div>
-                        </div>
-                    </div>
+<!-- HERO -->
+<section class="hero-wrap js-fullheight"
+         style="background-image:url('/img/bg_3.jpg');"
+         data-section="home" data-stellar-background-ratio="0.5"
+         id="home-section">
+    <div class="overlay"></div>
+    <div class="container h-100">
+        <div class="row slider-text js-fullheight align-items-center">
+            <div class="col-md-6 pt-5">
+                <div class="mt-5 fade-up">
+                    <span class="subheading">Chào mừng đến với SuperStar Medical Center</span>
+                    <h1 class="mb-4">Chúng tôi luôn ở đây<br>để chăm sóc<br>sức khỏe của bạn</h1>
+                    <p class="mb-4">Đội ngũ y bác sĩ chuyên nghiệp, trang thiết bị hiện đại và dịch vụ tận tâm — chúng tôi cam kết mang đến trải nghiệm khám chữa bệnh tốt nhất.</p>
+                    <a asp-controller="Home" asp-action="BookAppointment" class="btn btn-primary py-3 px-4">Đặt lịch khám ngay →</a>
                 </div>
             </div>
         </div>
     </div>
-    <nav class="navbar navbar-expand-lg navbar-dark ftco_navbar bg-dark ftco-navbar-light site-navbar-target" id="ftco-navbar">
-        <div class="container">
-            <a class="navbar-brand" href="index.html">SUPERSTAR</a>
-            <button class="navbar-toggler js-fh5co-nav-toggle fh5co-nav-toggle" type="button" data-toggle="collapse" data-target="#ftco-nav" aria-controls="ftco-nav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="oi oi-menu"></span> Menu
-            </button>
+</section>
 
-            <div class="collapse navbar-collapse" id="ftco-nav">
-                <ul class="navbar-nav nav ml-auto">
-                    <li class="nav-item"><a href="#home-section" class="nav-link"><span>Trang chủ</span></a></li>
-                    <li class="nav-item"><a href="#about-section" class="nav-link"><span>Giới thiệu</span></a></li>
-                    <li class="nav-item"><a href="#department-section" class="nav-link"><span>Khoa</span></a></li>
-                    <li class="nav-item"><a href="#doctor-section" class="nav-link"><span>Bác sĩ</span></a></li>
-                    <li class="nav-item"><a href="#contact-section" class="nav-link"><span>Liên hệ</span></a></li>
-                    <li class="nav-item cta mr-md-2"><a asp-controller="Home" asp-action="BookAppointment" class="nav-link">Đặt lịch khám</a></li>
-                </ul>
+<!-- STATS STRIP -->
+<div class="stats-strip">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-6 col-md-3 stat-item fade-up">
+                <div class="stat-number">50+</div>
+                <div class="stat-label">Bác sĩ chuyên khoa</div>
+            </div>
+            <div class="col-6 col-md-3 stat-item stat-divider fade-up delay-1">
+                <div class="stat-number">12</div>
+                <div class="stat-label">Chuyên khoa</div>
+            </div>
+            <div class="col-6 col-md-3 stat-item stat-divider fade-up delay-2">
+                <div class="stat-number">10K+</div>
+                <div class="stat-label">Bệnh nhân tin tưởng</div>
+            </div>
+            <div class="col-6 col-md-3 stat-item stat-divider fade-up delay-3">
+                <div class="stat-number">24/7</div>
+                <div class="stat-label">Hỗ trợ liên tục</div>
             </div>
         </div>
-    </nav>
+    </div>
+</div>
 
-    <section class="hero-wrap js-fullheight" style="background-image: url('/img/bg_3.jpg');" data-section="home" data-stellar-background-ratio="0.5">
-        <div class="overlay"></div>
-        <div class="container">
-            <div class="row no-gutters slider-text js-fullheight align-items-center justify-content-start" data-scrollax-parent="true">
-                <div class="col-md-6 pt-5 ftco-animate">
-                    <div class="mt-5">
-                        <span class="subheading">Chào mừng đến với SuperStar Medical Center</span>
-                        <h1 class="mb-4">Chúng tôi luôn ở đây <br>để chăm sóc sức khỏe của bạn</h1>
-                        <p class="mb-4">Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts. Separated they live in Bookmarksgrove.</p>
-                        <p><a asp-controller="Home" asp-action="BookAppointment" class="btn btn-primary py-3 px-4">Đặt lịch khám</a></p>
+<!-- ABOUT -->
+<section class="section-pad" id="about-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-5 mb-5 mb-md-0 fade-up">
+                <div class="about-img-wrap" style="height:420px;">
+                    <img src="/img/about.jpg" alt="Về chúng tôi" style="width:100%;height:100%;object-fit:cover;" />
+                    <div class="about-badge">
+                        <div class="badge-number">15+</div>
+                        <div class="badge-text">Năm kinh nghiệm</div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
-
-    <section class="ftco-counter img ftco-section ftco-no-pt ftco-no-pb" id="about-section">
-        <div class="container">
-            <div class="row d-flex">
-                <div class="col-md-6 col-lg-5 d-flex">
-                    <div class="img d-flex align-self-stretch align-items-center" style="background-image: url('/img/about.jpg');">
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-7 pl-lg-5 py-md-5">
-                    <div class="py-md-5">
-                        <div class="row justify-content-start pb-3">
-                            <div class="col-md-12 heading-section ftco-animate p-4 p-lg-5">
-                                <h2 class="mb-4">Chúng tôi là <span>Mediplus</span> siêu sao</h2>
-                                <p>Hãy tự tin đến khám tại phòng của chúng tôi.</p>
-                                <p><a href="#about-section" class="btn btn-primary py-3 px-4">Đặt lịch khám</a> <a href="#" class="btn btn-secondary py-3 px-4">Contact us</a></p>
-                            </div>
-                        </div>
-                    </div>
+            <div class="col-md-6 offset-md-1 about-content fade-up delay-1">
+                <p class="section-eyebrow">Về chúng tôi</p>
+                <h2 class="mb-3">Chúng tôi là <span>SuperStar</span><br>Medical Center</h2>
+                <div class="divider-line"></div>
+                <p class="mb-3">SuperStar Medical Center là phòng khám đa khoa hiện đại, quy tụ đội ngũ bác sĩ giàu kinh nghiệm từ các bệnh viện lớn. Chúng tôi ứng dụng công nghệ y tế tiên tiến nhất để chăm sóc sức khỏe toàn diện cho mỗi bệnh nhân.</p>
+                <p class="mb-4">Với phương châm <strong>"Tận tâm — Chuyên nghiệp — Hiệu quả"</strong>, chúng tôi cam kết mang lại dịch vụ khám chữa bệnh chất lượng cao và an toàn nhất.</p>
+                <div class="d-flex flex-wrap" style="gap:.75rem">
+                    <a asp-controller="Home" asp-action="BookAppointment" class="btn btn-primary py-2 px-4" style="background:#3d5ee1;border:none;border-radius:4px;font-weight:600;">Đặt lịch khám</a>
+                    <a href="#contact-section" class="btn-outline-primary-custom">Liên hệ chúng tôi</a>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <section class="ftco-section ftco-no-pt ftco-no-pb ftco-services-2 bg-light">
-        <div class="container">
-            <div class="row d-flex">
-                <div class="col-md-7 py-5">
-                    <div class="py-lg-5">
-                        <div class="row justify-content-center pb-5">
-                            <div class="col-md-12 heading-section ftco-animate">
-                                <h2 class="mb-3">Dịch vụ của chúng tôi</h2>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 d-flex align-self-stretch ftco-animate">
-                                <div class="media block-6 services d-flex">
-                                    <div class="icon justify-content-center align-items-center d-flex"><span class="flaticon-ambulance"></span></div>
-                                    <div class="media-body pl-md-4">
-                                        <h3 class="heading mb-3">Dịch vụ cấp cứu</h3>
-                                        <p>Luôn sẵn sàng hỗ trợ trong mọi tình huống khẩn cấp 24/7.</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6 d-flex align-self-stretch ftco-animate">
-                                <div class="media block-6 services d-flex">
-                                    <div class="icon justify-content-center align-items-center d-flex"><span class="flaticon-doctor"></span></div>
-                                    <div class="media-body pl-md-4">
-                                        <h3 class="heading mb-3">Bác sĩ chuyên môn cao</h3>
-                                        <p>Đội ngũ y bác sĩ giàu kinh nghiệm, tận tâm với bệnh nhân.</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6 d-flex align-self-stretch ftco-animate">
-                                <div class="media block-6 services d-flex">
-                                    <div class="icon justify-content-center align-items-center d-flex"><span class="flaticon-stethoscope"></span></div>
-                                    <div class="media-body pl-md-4">
-                                        <h3 class="heading mb-3">Khám bệnh ngoại trú</h3>
-                                        <p>Quy trình khám chữa bệnh nhanh chóng, hiệu quả.</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6 d-flex align-self-stretch ftco-animate">
-                                <div class="media block-6 services d-flex">
-                                    <div class="icon justify-content-center align-items-center d-flex"><span class="flaticon-24-hours"></span></div>
-                                    <div class="media-body pl-md-4">
-                                        <h3 class="heading mb-3">Dịch vụ 24 giờ</h3>
-                                        <p>Hệ thống hỗ trợ trực tuyến và trực tiếp mọi lúc mọi nơi.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+<!-- SERVICES -->
+<section class="section-pad services-section">
+    <div class="container">
+        <div class="row justify-content-center mb-5">
+            <div class="col-md-7 text-center fade-up">
+                <p class="section-eyebrow">Dịch vụ</p>
+                <h2>Dịch vụ của chúng tôi</h2>
+                <div class="divider-line mx-auto"></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 col-lg-3 mb-4 fade-up">
+                <div class="service-card">
+                    <div class="svc-icon"><span class="flaticon-ambulance"></span></div>
+                    <h3>Dịch vụ cấp cứu</h3>
+                    <p>Luôn sẵn sàng hỗ trợ trong mọi tình huống khẩn cấp 24/7.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3 mb-4 fade-up delay-1">
+                <div class="service-card">
+                    <div class="svc-icon"><span class="flaticon-doctor"></span></div>
+                    <h3>Bác sĩ chuyên môn cao</h3>
+                    <p>Đội ngũ y bác sĩ giàu kinh nghiệm, tận tâm với bệnh nhân.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3 mb-4 fade-up delay-2">
+                <div class="service-card">
+                    <div class="svc-icon"><span class="flaticon-stethoscope"></span></div>
+                    <h3>Khám bệnh ngoại trú</h3>
+                    <p>Quy trình khám chữa bệnh nhanh chóng, hiệu quả.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3 mb-4 fade-up delay-3">
+                <div class="service-card">
+                    <div class="svc-icon"><span class="flaticon-24-hours"></span></div>
+                    <h3>Dịch vụ 24 giờ</h3>
+                    <p>Hệ thống hỗ trợ trực tuyến và trực tiếp mọi lúc mọi nơi.</p>
                 </div>
             </div>
         </div>
-    </section>
-    
-    <section class="ftco-section ftco-no-pt ftco-no-pb" id="department-section">
-        <div class="container-fluid px-0">
-            <div class="row no-gutters">
-                <div class="col-md-4 d-flex">
-                    <div class="img img-dept align-self-stretch" style="background-image: url('/img/dept-1.jpg');"></div>
-                </div>
+    </div>
+</section>
 
-                <div class="col-md-8">
-                    <div class="row no-gutters">
-                        @if (ViewBag.TopSpecialties != null)
-                        {
-                            foreach (var khoa in ViewBag.TopSpecialties)
-                            {
-                                <div class="col-md-4 d-flex">
-                                    <div class="department-wrap p-4 ftco-animate align-self-stretch w-100">
-                                        <div class="text p-2 text-center">
-                                            <div class="icon">
-                                                <span class="flaticon-stethoscope"></span>
-                                            </div>
-                                            <h3><a asp-controller="Home" asp-action="DoctorList" asp-route-specialtyId="@khoa.Id">@khoa.Name</a></h3>
-                                            <p>Khám và điều trị chuyên sâu các bệnh lý thuộc chuyên khoa @khoa.Name.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            }
-                        }
-                        else
-                        {
-                            <div class="col-12 p-5 text-center">
-                                <p class="text-muted">Đang cập nhật danh sách chuyên khoa...</p>
-                            </div>
-                        }
-                    </div>
-                </div>
+<!-- DEPARTMENTS -->
+<section class="section-pad dept-section" id="department-section">
+    <div class="container">
+        <div class="row align-items-center mb-5">
+            <div class="col-md-6 fade-up">
+                <p class="section-eyebrow">Chuyên khoa</p>
+                <h2>Các khoa điều trị</h2>
+                <div class="divider-line"></div>
+                <p style="color:#6b7280;font-size:.88rem;">Hệ thống các chuyên khoa hiện đại với đội ngũ bác sĩ giàu kinh nghiệm, sẵn sàng chăm sóc sức khỏe toàn diện cho bạn.</p>
+            </div>
+            <div class="col-md-4 offset-md-2 text-md-right fade-up delay-1">
+                <a asp-controller="Home" asp-action="DoctorList" style="font-size:.83rem;font-weight:600;color:#3d5ee1;text-decoration:none;">Xem tất cả bác sĩ →</a>
             </div>
         </div>
-    </section>
-
-    <section class="ftco-section" id="doctor-section">
-        <div class="container-fluid px-5">
-            <div class="row justify-content-center mb-5 pb-2">
-                <div class="col-md-8 text-center heading-section ftco-animate">
-                    <h2 class="mb-4">Những bác sĩ hàng đầu của chúng tôi</h2>
-                    <p>Đội ngũ bác sĩ giàu kinh nghiệm, chuyên môn cao và luôn tận tâm trong việc chăm sóc sức khỏe cho bệnh nhân. Chúng tôi cam kết mang đến dịch vụ khám chữa bệnh chất lượng và an toàn.</p>
+        <div class="row">
+            <div class="col-md-4 mb-4 fade-up">
+                <div class="dept-img-col" style="height:100%;min-height:280px;">
+                    <img src="/img/dept-1.jpg" alt="Chuyên khoa" style="width:100%;height:100%;min-height:280px;object-fit:cover;" />
                 </div>
             </div>
-            <div class="row">
-                @if (Model?.TopDoctors != null && Model.TopDoctors.Any())
-                {
-                    foreach (var doctor in Model.TopDoctors)
+            <div class="col-md-8">
+                <div class="row">
+                    @if (ViewBag.TopSpecialties != null)
                     {
-                        <div class="col-md-6 col-lg-3 ftco-animate">
-                            <div class="staff">
-                                <div class="img-wrap d-flex align-items-stretch">
-                                    @* Sử dụng ảnh từ database, nếu không có thì dùng ảnh mặc định *@
-                                    <div class="img align-self-stretch" style="background-image: url(/images/doctors/@(doctor.Image ?? "default.jpg"));"></div>
-                                </div>
-                                <div class="text pt-3 text-center">
-                                    <h3 class="mb-2">@(doctor.User?.FullName ?? "Bác sĩ")</h3>
-                                    <span class="position mb-2">@(doctor.Specialty?.Name ?? "Chuyên khoa")</span>
-                                    <div class="faded">
-                                        <p>Tận tâm - Chuyên nghiệp - Chất lượng cao.</p>
-                                        <ul class="ftco-social text-center">
-                                            <li class="ftco-animate"><a href="#"><span class="icon-twitter"></span></a></li>
-                                            <li class="ftco-animate"><a href="#"><span class="icon-facebook"></span></a></li>
-                                            <li class="ftco-animate"><a href="#"><span class="icon-google-plus"></span></a></li>
-                                            <li class="ftco-animate"><a href="#"><span class="icon-instagram"></span></a></li>
-                                        </ul>
-                                        <p><a asp-controller="Home" asp-action="DoctorProfile" asp-route-id="@doctor.Id" class="btn btn-primary">Đặt lịch ngay</a></p>
-                                    </div>
-                                </div>
+                        int dIdx = 0;
+                        foreach (var khoa in ViewBag.TopSpecialties)
+                        {
+                            string delay = dIdx == 0 ? "" : dIdx == 1 ? "delay-1" : dIdx == 2 ? "delay-2" : "delay-3";
+                            <div class="col-md-4 mb-4 fade-up @delay">
+                                <a asp-controller="Home" asp-action="DoctorList"
+                                   asp-route-specialtyId="@khoa.Id"
+                                   class="dept-card">
+                                    <div class="dept-icon"><span class="flaticon-stethoscope"></span></div>
+                                    <h3>@khoa.Name</h3>
+                                    <p>Khám và điều trị chuyên sâu các bệnh lý thuộc chuyên khoa @khoa.Name.</p>
+                                </a>
                             </div>
+                            dIdx++;
+                        }
+                    }
+                    else
+                    {
+                        <div class="col-12 py-4 text-center">
+                            <p style="color:#6b7280;">Đang cập nhật danh sách chuyên khoa...</p>
                         </div>
                     }
-                }
-                else
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- DOCTORS -->
+<section class="section-pad doctors-section" id="doctor-section">
+    <div class="container">
+        <div class="row justify-content-center mb-5">
+            <div class="col-md-7 text-center fade-up">
+                <p class="section-eyebrow">Đội ngũ y tế</p>
+                <h2>Những bác sĩ hàng đầu</h2>
+                <div class="divider-line mx-auto"></div>
+                <p style="color:#6b7280;font-size:.88rem;margin-top:.5rem;">Đội ngũ bác sĩ giàu kinh nghiệm, chuyên môn cao và luôn tận tâm trong việc chăm sóc sức khỏe bệnh nhân.</p>
+            </div>
+        </div>
+        <div class="row">
+            @if (Model?.TopDoctors != null && Model.TopDoctors.Any())
+            {
+                int docIdx = 0;
+                foreach (var doctor in Model.TopDoctors)
                 {
-                    <div class="col-md-12 text-center">
-                        <p>Hiện đang cập nhật danh sách bác sĩ tiêu biểu...</p>
+                    string delay = docIdx == 0 ? "" : docIdx == 1 ? "delay-1" : docIdx == 2 ? "delay-2" : "delay-3";
+                    <div class="col-md-6 col-lg-3 mb-4 fade-up @delay">
+                        <div class="doctor-card-home">
+                            <div class="photo" style="background-image:url('/img/doctors/@(doctor.Image ?? "default.jpg")');">
+                                <div class="photo-overlay">
+                                    <div class="social-links">
+                                        <a href="#"><span class="icon-facebook"></span></a>
+                                        <a href="#"><span class="icon-twitter"></span></a>
+                                        <a href="#"><span class="icon-instagram"></span></a>
+                                    </div>
+                                    <a asp-controller="Home" asp-action="DoctorInfo"
+                                       asp-route-id="@doctor.Id"
+                                       class="btn-book-home">Đặt lịch ngay</a>
+                                </div>
+                            </div>
+                            <div class="card-info">
+                                <h3>@(doctor.User?.FullName ?? "Bác sĩ")</h3>
+                                <div class="specialty">@(doctor.Specialty?.Name ?? "Chuyên khoa")</div>
+                            </div>
+                        </div>
                     </div>
+                    docIdx++;
                 }
+            }
+            else
+            {
+                <div class="col-12 text-center py-4">
+                    <p style="color:#6b7280;">Đang cập nhật danh sách bác sĩ tiêu biểu...</p>
+                </div>
+            }
+        </div>
+        <div class="text-center mt-3 fade-up">
+            <a asp-controller="Home" asp-action="DoctorList" style="font-size:.85rem;font-weight:600;color:#3d5ee1;text-decoration:none;">Xem tất cả bác sĩ →</a>
+        </div>
+    </div>
+</section>
+
+<!-- CONTACT -->
+<section class="section-pad contact-section" id="contact-section">
+    <div class="container">
+        <div class="row justify-content-center mb-5">
+            <div class="col-md-7 text-center fade-up">
+                <p class="section-eyebrow">Liên hệ</p>
+                <h2>Liên hệ với chúng tôi</h2>
+                <div class="divider-line mx-auto"></div>
+                <p style="color:#6b7280;font-size:.88rem;margin-top:.5rem;">Đội ngũ của chúng tôi luôn sẵn sàng hỗ trợ và tư vấn cho bạn.</p>
             </div>
         </div>
-    </section>
-    
-
-    <section class="ftco-section contact-section" id="contact-section">
-        <div class="container">
-            <div class="row justify-content-center mb-5 pb-3">
-                <div class="col-md-7 heading-section text-center ftco-animate">
-                    <h2 class="mb-4">Liên hệ với chúng tôi</h2>
-                    <p>Nếu bạn có bất kỳ thắc mắc nào về dịch vụ y tế hoặc muốn đặt lịch khám, vui lòng liên hệ với chúng tôi. Đội ngũ của chúng tôi luôn sẵn sàng hỗ trợ và tư vấn cho bạn.</p>
+        <div class="row">
+            <div class="col-md-6 col-lg-3 mb-4 fade-up">
+                <div class="contact-box">
+                    <div class="contact-icon"><span class="icon-map-signs"></span></div>
+                    <h3>Địa chỉ</h3>
+                    <p>120 Yên Lãng, Hà Nội</p>
                 </div>
             </div>
-            <div class="row d-flex contact-info mb-5">
-                <div class="col-md-6 col-lg-3 d-flex ftco-animate">
-                    <div class="align-self-stretch box p-4 text-center bg-light">
-                        <div class="icon d-flex align-items-center justify-content-center">
-                            <span class="icon-map-signs"></span>
-                        </div>
-                        <h3 class="mb-4">Địa chỉ</h3>
-                        <p>120 Yên Lãng</p>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-3 d-flex ftco-animate">
-                    <div class="align-self-stretch box p-4 text-center bg-light">
-                        <div class="icon d-flex align-items-center justify-content-center">
-                            <span class="icon-phone2"></span>
-                        </div>
-                        <h3 class="mb-4">Số điện thoại</h3>
-                        <p><a href="tel://1234567920">+ 1235 2355 98</a></p>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-3 d-flex ftco-animate">
-                    <div class="align-self-stretch box p-4 text-center bg-light">
-                        <div class="icon d-flex align-items-center justify-content-center">
-                            <span class="icon-paper-plane"></span>
-                        </div>
-                        <h3 class="mb-4">Địa chỉ email</h3>
-                        <p><a href="mailto:info@yoursite.com">info@yoursite.com</a></p>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-3 d-flex ftco-animate">
-                    <div class="align-self-stretch box p-4 text-center bg-light">
-                        <div class="icon d-flex align-items-center justify-content-center">
-                            <span class="icon-globe"></span>
-                        </div>
-                        <h3 class="mb-4">Website</h3>
-                        <p><a href="#">yoursite.com</a></p>
-                    </div>
+            <div class="col-md-6 col-lg-3 mb-4 fade-up delay-1">
+                <div class="contact-box">
+                    <div class="contact-icon"><span class="icon-phone2"></span></div>
+                    <h3>Số điện thoại</h3>
+                    <a href="tel:+12352355 98">+ 1235 2355 98</a>
                 </div>
             </div>
-        </div>
-    </section>
-
-    <footer class="ftco-footer ftco-section img" style="background-image: url('/img/footer-bg.jpg');">
-        <div class="overlay"></div>
-        <div class="container-fluid px-md-5">
-            <div class="row mb-5">
-                <div class="col-md">
-                    <div class="ftco-footer-widget mb-4">
-                        <h2 class="ftco-heading-2">SuperStar</h2>
-                        <p>Tôn trọng, cổ điển.</p>
-                        <ul class="ftco-footer-social list-unstyled mt-5">
-                            <li class="ftco-animate"><a href="#"><span class="icon-twitter"></span></a></li>
-                            <li class="ftco-animate"><a href="#"><span class="icon-facebook"></span></a></li>
-                            <li class="ftco-animate"><a href="#"><span class="icon-instagram"></span></a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-md">
-                    <div class="ftco-footer-widget mb-4 ml-md-4">
-                        <h2 class="ftco-heading-2">Khoa</h2>
-                        <ul class="list-unstyled">
-                            <li><span class="icon-long-arrow-right mr-2"></span>Thần kinh</a></li>
-                            <li><span class="icon-long-arrow-right mr-2"></span>Nha khoa</a></li>
-                            <li><<span class="icon-long-arrow-right mr-2"></span>Chụp MRI</></li>
-                            <li><span class="icon-long-arrow-right mr-2"></span>Ngoại khoa</a></li>
-                            <li><span class="icon-long-arrow-right mr-2"></span>Tim mạch</a></li>
-                            <li><span class="icon-long-arrow-right mr-2"></span>Nha khoa</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-md">
-                    <div class="ftco-footer-widget mb-4 ml-md-4">
-                        <h2 class="ftco-heading-2">Links</h2>
-                        <ul class="list-unstyled">
-                            <li><span class="icon-long-arrow-right mr-2"></span>Trang chủ</a></li>
-                            <li><span class="icon-long-arrow-right mr-2"></span>Giới thiệu</a></li>
-                            <li><span class="icon-long-arrow-right mr-2"></span>Khoa</a></li>
-                            <li><span class="icon-long-arrow-right mr-2"></span>Bác sĩ</a></li>
-                            <li><span class="icon-long-arrow-right mr-2"></span>Liên hệ</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-md">
-                    <div class="ftco-footer-widget mb-4">
-                        <h2 class="ftco-heading-2">Dịch vụ</h2>
-                        <ul class="list-unstyled">
-                            <li><span class="icon-long-arrow-right mr-2"></span>Dịch vụ cấp cứu</a></li>
-                            <li><span class="icon-long-arrow-right mr-2"></span>Bác sĩ chuyên môn cao</a></li>
-                            <li><<span class="icon-long-arrow-right mr-2"></span>Khám bệnh ngoại trú</></li>
-                            <li><<span class="icon-long-arrow-right mr-2"></span>Dịch vụ 24 giờ</></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-md">
-                    <div class="ftco-footer-widget mb-4">
-                        <h2 class="ftco-heading-2">Thắc mắc?</h2>
-                        <div class="block-23 mb-3">
-                            <ul>
-                                <li><span class="icon icon-map-marker"></span><span class="text">120 An Liễng</span></li>
-                                <li><span class="icon icon-phone"></span><span class="text">+2 392 3929 210</span></a></li>
-                                <li><<span class="icon icon-envelope pr-4"></span><span class="text">info@yourdomain.com</span></></li>
-                            </ul>
-                        </div>
-                    </div>
+            <div class="col-md-6 col-lg-3 mb-4 fade-up delay-2">
+                <div class="contact-box">
+                    <div class="contact-icon"><span class="icon-paper-plane"></span></div>
+                    <h3>Email</h3>
+                    <a href="mailto:info@yoursite.com">info@yoursite.com</a>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-md-12 text-center">
-
-                    <p>
-                        <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-                        Copyright &copy;<script>document.write(new Date().getFullYear());</script> All rights reserved | PBL3 Health Care <i class="icon-heart color-danger" aria-hidden="true"></i> by 4thangdaucac</a>
-                        <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-                    </p>
+            <div class="col-md-6 col-lg-3 mb-4 fade-up delay-3">
+                <div class="contact-box">
+                    <div class="contact-icon"><span class="icon-globe"></span></div>
+                    <h3>Website</h3>
+                    <a href="#">superstarmedical.vn</a>
                 </div>
             </div>
         </div>
-    </footer>
+    </div>
+</section>
 
+<!-- ══════════════════════════════════════
+     FOOTER — dùng inline style để tránh bị style.css mediplus override
+══════════════════════════════════════ -->
+<footer class="ftco-footer ftco-section img" style="background-image:url('/img/footer-bg.jpg');">
+    <div class="overlay" style="background:rgba(10,14,30,.88);"></div>
+    <div style="position:relative;z-index:2;" class="container-fluid px-md-5">
+        <div class="row mb-5 pt-5">
 
+            <!-- SuperStar -->
+            <div class="col-md">
+                <div class="ftco-footer-widget mb-4">
+                    <h2 style="font-size:.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:1.1rem;">SuperStar</h2>
+                    <p style="color:rgba(255,255,255,.6);font-size:.83rem;line-height:1.75;">Phòng khám đa khoa hàng đầu — tận tâm, chuyên nghiệp, hiệu quả.</p>
+                    <div class="d-flex mt-3" style="gap:.4rem;">
+                        <a href="https://www.google.com/search?q=%C4%90%E1%BB%99+mixi&sxsrf=ANbL-n6QUMfmPBGUycro3LiJ-9-_tl7etw%3A1774278685439" style="width:34px;height:34px;background:rgba(255,255,255,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.75);text-decoration:none;transition:background .15s;" onmouseover="this.style.background='#3d5ee1'" onmouseout="this.style.background='rgba(255,255,255,.1)'"><span class="icon-google"></span></a>
+                        <a href="https://www.facebook.com/MixiGaming" style="width:34px;height:34px;background:rgba(255,255,255,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.75);text-decoration:none;" onmouseover="this.style.background='#3d5ee1'" onmouseout="this.style.background='rgba(255,255,255,.1)'"><span class="icon-facebook"></span></a>
+                        <a href="https://www.youtube.com/@@MixiGaming3con" style="width:34px;height:34px;background:rgba(255,255,255,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.75);text-decoration:none;" onmouseover="this.style.background='#3d5ee1'" onmouseout="this.style.background='rgba(255,255,255,.1)'"><span class="icon-youtube"></span></a>
+                    </div>
+                </div>
+            </div>
 
-    <!-- loader -->
-    <div id="ftco-loader" class="show fullscreen"><svg class="circular" width="48px" height="48px"><circle class="path-bg" cx="24" cy="24" r="22" fill="none" stroke-width="4" stroke="#eeeeee" /><circle class="path" cx="24" cy="24" r="22" fill="none" stroke-width="4" stroke-miterlimit="10" stroke="#F96D00" /></svg></div>
+            <!-- Chuyên khoa -->
+            <div class="col-md">
+                <div class="ftco-footer-widget mb-4">
+                    <h2 style="font-size:.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:1.1rem;">Chuyên khoa</h2>
+                    <ul class="list-unstyled" style="margin:0;padding:0;">
+                        <li style="margin-bottom:.45rem;"><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><span style="color:rgba(255,255,255,.65);font-size:.83rem;">Thần kinh</span></li>
+                        <li style="margin-bottom:.45rem;"><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><span style="color:rgba(255,255,255,.65);font-size:.83rem;">Nha khoa</span></li>
+                        <li style="margin-bottom:.45rem;"><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><span style="color:rgba(255,255,255,.65);font-size:.83rem;">Chụp MRI</span></li>
+                        <li style="margin-bottom:.45rem;"><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><span style="color:rgba(255,255,255,.65);font-size:.83rem;">Ngoại khoa</span></li>
+                        <li><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><span style="color:rgba(255,255,255,.65);font-size:.83rem;">Tim mạch</span></li>
+                    </ul>
+                </div>
+            </div>
 
+            <!-- Liên kết -->
+            <div class="col-md">
+                <div class="ftco-footer-widget mb-4">
+                    <h2 style="font-size:.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:1.1rem;">Liên kết</h2>
+                    <ul class="list-unstyled" style="margin:0;padding:0;">
+                        <li style="margin-bottom:.45rem;"><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><a href="#home-section" style="color:rgba(255,255,255,.65);font-size:.83rem;text-decoration:none;">Trang chủ</a></li>
+                        <li style="margin-bottom:.45rem;"><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><a href="#about-section" style="color:rgba(255,255,255,.65);font-size:.83rem;text-decoration:none;">Giới thiệu</a></li>
+                        <li style="margin-bottom:.45rem;"><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><a href="#department-section" style="color:rgba(255,255,255,.65);font-size:.83rem;text-decoration:none;">Khoa</a></li>
+                        <li style="margin-bottom:.45rem;"><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><a href="#doctor-section" style="color:rgba(255,255,255,.65);font-size:.83rem;text-decoration:none;">Bác sĩ</a></li>
+                        <li><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><a href="#contact-section" style="color:rgba(255,255,255,.65);font-size:.83rem;text-decoration:none;">Liên hệ</a></li>
+                    </ul>
+                </div>
+            </div>
 
-    <script src="js/jquery.min.js"></script>
-    <script src="js/jquery-migrate-3.0.1.min.js"></script>
-    <script src="js/popper.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-    <script src="js/jquery.easing.1.3.js"></script>
-    <script src="js/jquery.waypoints.min.js"></script>
-    <script src="js/jquery.stellar.min.js"></script>
-    <script src="js/owl.carousel.min.js"></script>
-    <script src="js/jquery.magnific-popup.min.js"></script>
-    <script src="js/aos.js"></script>
-    <script src="js/jquery.animateNumber.min.js"></script>
-    <script src="js/scrollax.min.js"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBVWaKrjvy3MaE7SQ74_uJiULgl1JY0H2s&sensor=false"></script>
-    <script src="js/google-map.js"></script>
+            <!-- Dịch vụ -->
+            <div class="col-md">
+                <div class="ftco-footer-widget mb-4">
+                    <h2 style="font-size:.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:1.1rem;">Dịch vụ</h2>
+                    <ul class="list-unstyled" style="margin:0;padding:0;">
+                        <li style="margin-bottom:.45rem;"><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><span style="color:rgba(255,255,255,.65);font-size:.83rem;">Dịch vụ cấp cứu</span></li>
+                        <li style="margin-bottom:.45rem;"><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><span style="color:rgba(255,255,255,.65);font-size:.83rem;">Bác sĩ chuyên môn cao</span></li>
+                        <li style="margin-bottom:.45rem;"><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><span style="color:rgba(255,255,255,.65);font-size:.83rem;">Khám bệnh ngoại trú</span></li>
+                        <li><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><span style="color:rgba(255,255,255,.65);font-size:.83rem;">Dịch vụ 24 giờ</span></li>
+                    </ul>
+                </div>
+            </div>
 
-    <script src="js/main.js"></script>
+            <!-- Liên hệ -->
+            <div class="col-md">
+                <div class="ftco-footer-widget mb-4">
+                    <h2 style="font-size:.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:1.1rem;">Liên hệ</h2>
+                    <ul class="list-unstyled" style="margin:0;padding:0;">
+                        <li style="margin-bottom:.6rem;display:flex;align-items:flex-start;gap:.5rem;">
+                            <span class="icon-map-marker" style="color:rgba(255,255,255,.35);margin-top:.15rem;"></span>
+                            <span style="color:rgba(255,255,255,.65);font-size:.83rem;">120 Yên Lãng, Hà Nội</span>
+                        </li>
+                        <li style="margin-bottom:.6rem;display:flex;align-items:flex-start;gap:.5rem;">
+                            <span class="icon-phone" style="color:rgba(255,255,255,.35);margin-top:.15rem;"></span>
+                            <span style="color:rgba(255,255,255,.65);font-size:.83rem;">+1235 2355 98</span>
+                        </li>
+                        <li style="display:flex;align-items:flex-start;gap:.5rem;">
+                            <span class="icon-envelope" style="color:rgba(255,255,255,.35);margin-top:.15rem;"></span>
+                            <span style="color:rgba(255,255,255,.65);font-size:.83rem;">info@yourdomain.com</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
 
-   
-</body>
-</html>
+        </div>
+
+        <!-- Copyright -->
+        <div class="row pb-4" style="border-top:1px solid rgba(255,255,255,.08);padding-top:1.25rem;">
+            <div class="col-md-12 text-center">
+                <p style="color:rgba(255,255,255,.35);font-size:.8rem;margin:0;">
+                    Copyright &copy; <script>document.write(new Date().getFullYear());</script> PBL3 Health Care — by 4thangdaucac
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- Loader -->
+<div id="ftco-loader" class="show fullscreen">
+    <svg class="circular" width="48px" height="48px">
+        <circle class="path-bg" cx="24" cy="24" r="22" fill="none" stroke-width="4" stroke="#eeeeee" />
+        <circle class="path" cx="24" cy="24" r="22" fill="none" stroke-width="4" stroke-miterlimit="10" stroke="#3d5ee1" />
+    </svg>
+</div>
+
+@section Scripts {
+    <script>
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.classList.add('visible');
+                    observer.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.12 });
+        document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('ftco-navbar');
+            if (nav) nav.classList.toggle('scrolled', window.scrollY > 40);
+        });
+    </script>
+}

@@ -1,17 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Identity;
 using PBL3_HealthCare.Data;
 using PBL3_HealthCare.Models;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
+using PBL3_HealthCare.Services;
+using PBL3_HealthCare.ViewModels;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
+using System.IO;
 
 namespace PBL3_HealthCare.Controllers
 {
@@ -21,21 +24,39 @@ namespace PBL3_HealthCare.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly NotificationService _notificationService;
         public HomeController(
             ILogger<HomeController> logger,
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            IWebHostEnvironment webHostEnvironment)
+            IWebHostEnvironment webHostEnvironment,
+            NotificationService notificationService)
         {
             _logger = logger;
             _context = context;
             _userManager = userManager;
             _webHostEnvironment = webHostEnvironment;
+            _notificationService = notificationService;
         }
 
         public async Task<IActionResult> Index()
         {
     ViewBag.TopSpecialties = await _context.Specialties.Take(6).ToListAsync();
+            if (User.Identity.IsAuthenticated)
+            {
+                // Kiểm tra xem ông này là Admin hay Bác sĩ
+                if (User.IsInRole("Admin"))
+                {
+                    // Admin thì đá bay về trang quản lý chuyên khoa/dashboard
+                    return RedirectToAction("Index", "Specialties");
+                }
+                else if (User.IsInRole("Doctor"))
+                {
+                    // Bác sĩ thì đá về trang lịch hẹn/lịch làm việc
+                    return RedirectToAction("Index", "Appointments");
+                }
+            }
+            ViewBag.TopSpecialties = await _context.Specialties.Take(6).ToListAsync();
             // Query lấy 4 bác sĩ đầu tiên, Include bảng User và Specialty
             var doctors = await _context.Doctors
                                            .Include(d => d.User)
@@ -66,17 +87,26 @@ namespace PBL3_HealthCare.Controllers
             if (specialtyId.HasValue)
             {
                 query = query.Where(d => d.SpecialtyId == specialtyId);
-                ViewBag.SpecialtyName = await _context.Specialties
+
+                // Sửa lại đoạn này: Lấy toàn bộ object Specialty thay vì chỉ lấy Name
+                var specialty = await _context.Specialties
                     .Where(s => s.Id == specialtyId)
-                    .Select(s => s.Name)
                     .FirstOrDefaultAsync();
+
+                if (specialty != null)
+                {
+                    // Truyền tất cả thông tin cần thiết qua ViewBag
+                    ViewBag.SpecialtyName = specialty.Name;
+                    ViewBag.SpecialtyDescription = specialty.Description;
+                    ViewBag.SpecialtyImage = specialty.Image;
+                }
             }
 
             return View(await query.ToListAsync());
         }
 
-        // 2. LẤY HỒ SƠ CHI TIẾT & BẢNG GIỜ KHÁM
-        public async Task<IActionResult> DoctorProfile(int id)
+        // 2. LẤY THÔNG TIN CHI TIẾT & BẢNG GIỜ KHÁM
+        public async Task<IActionResult> DoctorInfo(int id)
         {
             var doctor = await _context.Doctors
                 .Include(d => d.Specialty)
@@ -188,6 +218,17 @@ namespace PBL3_HealthCare.Controllers
 
                 _context.Appointments.Add(model);
                 await _context.SaveChangesAsync();
+
+                // Tìm thông tin bác sĩ để lấy cái UserId của ổng
+                var doctorInfo = await _context.Doctors.FindAsync(model.DoctorId);
+                if (doctorInfo != null)
+                {
+                    // Bắn thông báo cho bác sĩ
+                    await _notificationService.CreateNotification(
+                        doctorInfo.UserId,
+                        $"Có bệnh nhân vừa đặt lịch khám với bạn vào lúc {model.TimeSlot} ngày {model.Date:dd/MM/yyyy}."
+                    );
+                }
 
                 TempData["Success"] = "Đặt lịch thành công! Vui lòng chờ phòng khám xác nhận.";
                 return RedirectToAction(nameof(MyHistory));
@@ -302,6 +343,7 @@ namespace PBL3_HealthCare.Controllers
             TempData["Error"] = "Có lỗi xảy ra, không thể cập nhật hồ sơ!";
             return View(user);
         }
+
         // GET: /Home/ChangePassword
         [HttpGet]
         public IActionResult ChangePassword()
@@ -348,6 +390,93 @@ namespace PBL3_HealthCare.Controllers
             return View();
         }
 
+        // ==========================================
+        // HỒ SƠ BÁC SĨ (DOCTOR PROFILE)
+        // ==========================================
+
+        // GET: /Home/DoctorProfile
+        [HttpGet]
+        public async Task<IActionResult> DoctorProfile()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            // Lấy hồ sơ Doctor kèm Specialty và User
+            var doctor = await _context.Doctors
+                .Include(d => d.Specialty)
+                .Include(d => d.User)
+                .FirstOrDefaultAsync(d => d.UserId == user.Id);
+
+            if (doctor == null) return NotFound();
+
+            return View(doctor);
+        }
+
+        // POST: /Home/DoctorProfile
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DoctorProfile(
+            string FullName, string Email, string PhoneNumber, string Address,
+            string Degree, decimal Price, string Bio,
+            IFormFile AvatarFile)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            var doctor = await _context.Doctors
+                .Include(d => d.Specialty)
+                .Include(d => d.User)
+                .FirstOrDefaultAsync(d => d.UserId == user.Id);
+
+            if (doctor == null) return NotFound();
+
+            // Cập nhật thông tin tài khoản (ApplicationUser)
+            user.FullName = FullName;
+            user.Email = Email;
+            user.PhoneNumber = PhoneNumber;
+            user.Address = Address;
+            await _userManager.UpdateAsync(user);
+
+            // Cập nhật thông tin hành nghề (Doctor)
+            doctor.Degree = Degree;
+            doctor.Price = Price;
+            doctor.Bio = Bio;
+
+            // Xử lý upload ảnh đại diện nếu có chọn file mới
+            if (AvatarFile != null && AvatarFile.Length > 0)
+            {
+                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "img", "doctors");
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+
+                string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(AvatarFile.FileName);
+                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await AvatarFile.CopyToAsync(fileStream);
+                }
+
+                // Xóa ảnh cũ nếu tồn tại
+                if (!string.IsNullOrEmpty(doctor.Image))
+                {
+                    string oldPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "doctors", doctor.Image);
+                    if (System.IO.File.Exists(oldPath))
+                        System.IO.File.Delete(oldPath);
+                }
+
+                doctor.Image = uniqueFileName;
+            }
+
+            _context.Update(doctor);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Cập nhật hồ sơ thành công!";
+            return RedirectToAction(nameof(DoctorProfile));
+        }
+
         public IActionResult Privacy()
         {
             return View();
@@ -360,6 +489,62 @@ namespace PBL3_HealthCare.Controllers
             {
                 RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
             });
+        }
+        // ==========================================
+        // CỔNG THÔNG TIN BỆNH NHÂN (PORTAL)
+        // ==========================================
+
+        // 1. Xem danh sách Bệnh án của tôi
+        public async Task<IActionResult> MyMedicalRecords()
+        {
+            var userId = _userManager.GetUserId(User);
+            if (userId == null) return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            // Bảo mật: Chỉ lấy bệnh án có PatientId trùng với người đang đăng nhập
+            var records = await _context.MedicalRecords
+                .Include(m => m.Doctor)
+                    .ThenInclude(d => d.User)
+                .Where(m => m.Appointment.PatientId == userId) // <--- Rào chắn bảo mật quan trọng
+                .OrderByDescending(m => m.CreatedAt)
+                .ToListAsync();
+
+            return View(records);
+        }
+
+        // 2. Xem danh sách Đơn thuốc của tôi
+        public async Task<IActionResult> MyPrescriptions()
+        {
+            var userId = _userManager.GetUserId(User);
+            if (userId == null) return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            // Bảo mật: Lấy đơn thuốc thông qua Bệnh án của đúng bệnh nhân đó
+            var prescriptions = await _context.Prescriptions
+                .Include(p => p.MedicalRecord)
+                    .ThenInclude(m => m.Doctor)
+                        .ThenInclude(d => d.User)
+                .Where(p => p.MedicalRecord.Appointment.PatientId == userId) // <--- Rào chắn bảo mật quan trọng
+                .OrderByDescending(p => p.CreatedDate)
+                .ToListAsync();
+
+            return View(prescriptions);
+        }
+
+        // 3. Xem danh sách Hóa đơn của tôi
+        public async Task<IActionResult> MyInvoices()
+        {
+            var userId = _userManager.GetUserId(User);
+            if (userId == null) return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            // Bảo mật: Lấy hóa đơn từ bệnh án của chính bệnh nhân
+            var invoices = await _context.Invoices
+                .Include(i => i.MedicalRecord)
+                    .ThenInclude(m => m.Doctor)
+                        .ThenInclude(d => d.User)
+                .Where(i => i.MedicalRecord.Appointment.PatientId == userId) // <--- Rào chắn bảo mật quan trọng
+                .OrderByDescending(i => i.CreatedAt)
+                .ToListAsync();
+
+            return View(invoices);
         }
     }
 }
