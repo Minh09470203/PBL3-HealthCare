@@ -47,14 +47,14 @@
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <input type="hidden" asp-for="AppointmentId" value="@appointment?.Id" />
                     <div class="form-group mb-3">
-                        <label class="font-weight-bold text-dark">Chẩn Đoán Bệnh (Diagnosis) <span class="text-danger">*</span>
+                        <label class="font-weight-bold text-dark">Chẩn Đoán Bệnh<span class="text-danger">*</span>
                         </label>
                         <textarea asp-for="Diagnosis" class="form-control" rows="3" placeholder="Nhập kết luận bệnh lý..." required></textarea>
                         <span asp-validation-for="Diagnosis" class="text-danger"></span>
                     </div>
                     <div class="form-group mb-3">
                         <label class="font-weight-bold text-dark">
-                            Hướng Điều Trị / Lời Dặn
+                            Hướng Điều Trị
                             (Treatment)
                         </label>
                         <textarea asp-for="Treatment" class="form-control" rows="3" placeholder="Ghi chú thêm cho bệnh nhân..."></textarea>

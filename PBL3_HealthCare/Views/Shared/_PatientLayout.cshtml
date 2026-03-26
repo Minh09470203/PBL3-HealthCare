@@ -35,6 +35,13 @@
                 </a>
             </li>
 
+            <li class="nav-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "MyMedicalRecords" ? "active" : "")">
+                <a class="nav-link" asp-controller="Home" asp-action="MyMedicalRecords">
+                    <i class="fas fa-fw fa-file-medical-alt"></i>
+                    <span>Hồ sơ bệnh án</span>
+                </a>
+            </li>
+
             <hr class="sidebar-divider d-none d-md-block">
             <div class="text-center d-none d-md-inline">
                 <button class="rounded-circle border-0" id="sidebarToggle"></button>

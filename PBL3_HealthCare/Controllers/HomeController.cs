@@ -523,6 +523,34 @@ namespace PBL3_HealthCare.Controllers
             return View(records);
         }
 
+        // GET: /Home/RecordDetails/5
+        public async Task<IActionResult> RecordDetails(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var userId = _userManager.GetUserId(User);
+            if (userId == null) return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            // BẢO MẬT: Chỉ lấy bệnh án đúng ID và bắt buộc thuộc về user đang đăng nhập
+            var record = await _context.MedicalRecords
+                .Include(m => m.Appointment)
+                    .ThenInclude(a => a.Patient)
+                .Include(m => m.Doctor)
+                    .ThenInclude(d => d.User)
+                // Lấy kèm đơn thuốc và chi tiết thuốc để hiển thị cho bệnh nhân xem
+                .Include(m => m.Prescriptions)
+                    .ThenInclude(p => p.Details)
+                        .ThenInclude(pd => pd.Medicine)
+                .FirstOrDefaultAsync(m => m.Id == id && m.Appointment.PatientId == userId);
+
+            if (record == null)
+            {
+                return NotFound("Không tìm thấy bệnh án hoặc bạn không có quyền xem dữ liệu này.");
+            }
+
+            return View(record);
+        }
+
         // 2. Xem danh sách Đơn thuốc của tôi
         public async Task<IActionResult> MyPrescriptions()
         {

@@ -41,7 +41,11 @@
                                     {
                                         <span class="badge badge-success p-2">Đã xác nhận</span>
                                     }
-                                    else
+                                    else if (item.Status == AppointmentStatus.Completed)
+                                    {
+                                        <span class="badge badge-success p-2">Đã khám</span>
+                                    }
+                                    else if (item.Status == AppointmentStatus.Cancelled)
                                     {
                                         <span class="badge badge-danger p-2">Đã hủy</span>
                                     }

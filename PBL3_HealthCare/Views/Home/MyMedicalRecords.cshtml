@@ -1,0 +1,69 @@
+﻿@model IEnumerable<PBL3_HealthCare.Models.MedicalRecord>
+@{
+    ViewData["Title"] = "Hồ sơ bệnh án của tôi";
+    Layout = "~/Views/Shared/_PatientLayout.cshtml";
+}
+
+<div class="container-fluid mt-4">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-info">
+            <h6 class="m-0 font-weight-bold text-white"><i class="fas fa-file-medical-alt mr-2"></i>Lịch sử Khám bệnh & Bệnh án</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+                    <thead class="bg-light text-dark">
+                        <tr>
+                            <th>Ngày khám</th>
+                            <th>Bác sĩ</th>
+                            <th>Chẩn đoán bệnh</th>
+                            <th>Ngày tái khám</th>
+                            <th class="text-center">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td class="align-middle font-weight-bold">@item.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                    <td class="align-middle">BS. @(item.Doctor?.User?.FullName ?? "N/A")</td>
+                                    <td class="align-middle text-danger font-weight-bold">@item.Diagnosis</td>
+                                    <td class="align-middle">
+                                        @(item.ReExaminationDate.HasValue? item.ReExaminationDate.Value.ToString("dd/MM/yyyy") : "---")
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        <a asp-controller="Home" asp-action="RecordDetails" asp-route-id="@item.Id" class="btn btn-info btn-sm shadow-sm">
+                                            <i class="fas fa-eye"></i> Xem
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    <i class="fas fa-folder-open fa-3x mb-3 text-gray-300 d-block"></i>
+                                    Bạn chưa có hồ sơ bệnh án nào.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#dataTable').DataTable({
+                "language": { "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Vietnamese.json" },
+                "order": [[0, "desc"]] // Tự động sắp xếp ngày mới nhất lên đầu
+            });
+        });
+    </script>
+}

@@ -308,9 +308,19 @@
                                 // 3. NẾU TRẠNG THÁI LÀ COMPLETED (Khám & Kê thuốc xong hết rồi)
                                 else if (item.Status == AppointmentStatus.Completed)
                                 {
-                                    <a asp-controller="MedicalRecords" asp-action="Details" asp-route-appointmentId="@item.Id" class="btn-action bg-info text-white ms-1" title="Xem bệnh án">
-                                        <i class="fas fa-file-medical"></i> Xem Bệnh Án
-                                    </a>
+                                    @if (item.MedicalRecord != null)
+                                    {
+                                        <a asp-controller="MedicalRecords" asp-action="Details" asp-route-id="@item.MedicalRecord.Id" class="btn-action bg-info text-white ms-1" title="Xem bệnh án">
+                                            <i class="fas fa-file-medical"></i> Xem Bệnh Án
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        // NẾU RỖNG: Hiển thị dòng cảnh báo chữ nhỏ thay vì làm sập cả hệ thống
+                                        <span class="badge badge-danger ms-1" title="Lỗi dữ liệu: Không tìm thấy bệnh án đính kèm">
+                                            <i class="fas fa-exclamation-triangle"></i> Lỗi B.Án
+                                        </span>
+                                    }
                                 }
                             }
                         </td>

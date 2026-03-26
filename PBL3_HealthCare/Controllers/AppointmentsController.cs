@@ -53,6 +53,7 @@ namespace PBL3_HealthCare.Controllers
             var query = _context.Appointments
                 .Include(a => a.Patient)
                 .Include(a => a.Doctor).ThenInclude(d => d.User)
+                .Include(a => a.MedicalRecord)
                 .AsQueryable();
 
             if (isDoctor)
