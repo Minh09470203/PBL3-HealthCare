@@ -184,6 +184,17 @@
     .dataTables_info, .dataTables_paginate {
         padding: .75rem 0 0 !important;
     }
+
+    .btn-action-examine {
+        background: #1cc88a; /* Màu xanh lá nổi bật */
+        color: #fff;
+        box-shadow: 0 2px 5px rgba(28,200,138,.3);
+    }
+
+        .btn-action-examine:hover {
+            background: #13855c;
+            color: #fff;
+        }
 </style>
 
 <div class="page-header">
@@ -275,7 +286,32 @@
                             }
                             else if (User.IsInRole("Doctor"))
                             {
-                                <a asp-action="Details" asp-route-id="@item.Id" class="btn-action btn-action-detail"><i class="fas fa-eye"></i></a>
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn-action btn-action-detail" title="Chi tiết"><i class="fas fa-eye"></i></a>
+
+                                @if (item.Status == AppointmentStatus.Confirmed)
+                                {
+                                    // 1. CHƯA CÓ BỆNH ÁN -> HIỆN NÚT "KHÁM BỆNH"
+                                    if (item.MedicalRecord == null)
+                                    {
+                                        <a asp-controller="MedicalRecords" asp-action="Create" asp-route-appointmentId="@item.Id" class="btn-action btn-action-examine ms-1" title="Tiến hành khám bệnh">
+                                            <i class="fas fa-stethoscope mr-1"></i> Khám Bệnh
+                                        </a>
+                                    }
+                                    // 2. ĐÃ CÓ BỆNH ÁN NHƯNG CHƯA CÓ ĐƠN THUỐC -> HIỆN NÚT "KÊ ĐƠN"
+                                    else if (item.MedicalRecord.Prescriptions == null || !item.MedicalRecord.Prescriptions.Any())
+                                    {
+                                        <a asp-controller="Prescriptions" asp-action="Create" asp-route-medicalRecordId="@item.MedicalRecord.Id" class="btn-action bg-warning text-dark ms-1" title="Tiếp tục kê đơn thuốc">
+                                            <i class="fas fa-pills mr-1"></i> Kê Đơn Thuốc
+                                        </a>
+                                    }
+                                }
+                                // 3. NẾU TRẠNG THÁI LÀ COMPLETED (Khám & Kê thuốc xong hết rồi)
+                                else if (item.Status == AppointmentStatus.Completed)
+                                {
+                                    <a asp-controller="MedicalRecords" asp-action="Details" asp-route-appointmentId="@item.Id" class="btn-action bg-info text-white ms-1" title="Xem bệnh án">
+                                        <i class="fas fa-file-medical"></i> Xem Bệnh Án
+                                    </a>
+                                }
                             }
                         </td>
                     </tr>

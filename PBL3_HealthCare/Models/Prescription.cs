@@ -13,13 +13,12 @@ namespace PBL3_HealthCare.Models
         [ForeignKey("MedicalRecordId")]
         public virtual MedicalRecord MedicalRecord { get; set; }
         public string Note { get; set; } // Lời dặn
-        public DateTime PrescriptionDate { get; set; } // Ngày kê đơn
 
         public PrescriptionStatus Status { get; set; } = PrescriptionStatus.New;
 
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
         // Danh sách thuốc trong đơn
-        public virtual ICollection<PrescriptionDetail> Details { get; set; }
+        public virtual ICollection<PrescriptionDetail> Details { get; set; } = new List<PrescriptionDetail>();
     }
 }

@@ -68,84 +68,127 @@ namespace PBL3_HealthCare.Controllers
         // ==========================================
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Doctor")]
         public async Task<IActionResult> Create(CreatePrescriptionVM model)
         {
-            // Nạp lại list thuốc nếu có lỗi xảy ra để form không bị crash
             ViewBag.Medicines = new SelectList(_context.Medicines.Where(m => m.StockQuantity > 0), "Id", "Name");
+            if (!ModelState.IsValid) return View(model);
 
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
+            var strategy = _context.Database.CreateExecutionStrategy();
+            bool isSuccess = false;
 
-            // MỞ TRANSACTION: Đảm bảo "Lưu tất cả hoặc Không lưu gì cả"
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            // Kích nổ hàm tạo Hóa đơn ngầm của Thịnh
-            
+            // Khai báo 2 biến này ở ngoài để lát nữa tạo Hóa đơn
+            int? savedPrescriptionId = null;
+            int? appointmentIdForInvoice = null;
+
             try
             {
-                // BƯỚC A: LƯU ĐƠN THUỐC CHA LẤY ID
-                var prescription = new Prescription
+                await strategy.ExecuteAsync(async () =>
                 {
-                    MedicalRecordId = model.MedicalRecordId,
-                    Note = model.DoctorNote,
-                    PrescriptionDate = DateTime.Now
-                };
-
-                _context.Prescriptions.Add(prescription);
-                await _context.SaveChangesAsync(); // Chạy Save để EF Core đẻ ra cái prescription.Id
-
-                // BƯỚC B: QUÉT DANH SÁCH THUỐC CON (TRỪ KHO)
-                if (model.Details != null && model.Details.Any())
-                {
-                    foreach (var item in model.Details)
+                    using var transaction = await _context.Database.BeginTransactionAsync();
+                    try
                     {
-                        var medicine = await _context.Medicines.FindAsync(item.MedicineId);
-
-                        if (medicine == null) continue;
-
-                        // ---- TASK 3: KIỂM TRA TỒN KHO ----
-                        if (medicine.StockQuantity < item.Quantity)
+                        // BƯỚC A: LƯU ĐƠN THUỐC CHA
+                        var prescription = new Prescription
                         {
-                            ModelState.AddModelError("", $"Thuốc '{medicine.Name}' chỉ còn {medicine.StockQuantity} viên trong kho, không đủ để kê!");
+                            MedicalRecordId = model.MedicalRecordId,
+                            Note = model.DoctorNote,
+                            CreatedDate = DateTime.Now
+                        };
 
-                            await transaction.RollbackAsync(); // HỦY KÈO, TRẢ LẠI DB NHƯ CŨ
-                            return View(model);
+                        _context.Prescriptions.Add(prescription);
+                        await _context.SaveChangesAsync();
+
+                        savedPrescriptionId = prescription.Id; // Lấy ID Đơn thuốc ra ngoài
+
+                        // BƯỚC B: TRỪ KHO VÀ LƯU CHI TIẾT THUỐC
+                        if (model.Details != null && model.Details.Any())
+                        {
+                            foreach (var item in model.Details)
+                            {
+                                var medicine = await _context.Medicines.FindAsync(item.MedicineId);
+                                if (medicine == null) continue;
+
+                                if (medicine.StockQuantity < item.Quantity)
+                                {
+                                    ModelState.AddModelError("", $"Thuốc '{medicine.Name}' chỉ còn {medicine.StockQuantity} viên!");
+                                    throw new InvalidOperationException("OUT_OF_STOCK");
+                                }
+
+                                medicine.StockQuantity -= item.Quantity;
+                                _context.Medicines.Update(medicine);
+
+                                var detail = new PrescriptionDetail
+                                {
+                                    PrescriptionId = prescription.Id,
+                                    MedicineId = item.MedicineId,
+                                    Quantity = item.Quantity,
+                                    Instruction = item.Instruction,
+                                    UnitPrice = medicine.Price
+                                };
+                                _context.PrescriptionDetails.Add(detail);
+                            }
                         }
 
-                        // Trừ kho
-                        medicine.StockQuantity -= item.Quantity;
-                        _context.Medicines.Update(medicine);
-
-                        // Tạo dòng chi tiết đơn thuốc
-                        var detail = new PrescriptionDetail
+                        // BƯỚC C: CHỐT LỊCH KHÁM COMPLETED
+                        var medicalRecord = await _context.MedicalRecords.FindAsync(model.MedicalRecordId);
+                        if (medicalRecord != null)
                         {
-                            PrescriptionId = prescription.Id,
-                            MedicineId = item.MedicineId,
-                            Quantity = item.Quantity,
-                            Instruction = item.Instruction,
-                            UnitPrice = medicine.Price // Chốt giá thuốc ngay tại thời điểm bán
-                        };
-                        _context.PrescriptionDetails.Add(detail);
+                            var appointment = await _context.Appointments.FindAsync(medicalRecord.AppointmentId);
+                            if (appointment != null)
+                            {
+                                appointment.Status = AppointmentStatus.Completed;
+                                _context.Update(appointment);
+                                appointmentIdForInvoice = appointment.Id; // Lấy ID Lịch khám ra ngoài
+                            }
+                        }
+
+                        // LƯU TOÀN BỘ VÀO DB VÀ ĐÓNG GIAO DỊCH LẠI
+                        await _context.SaveChangesAsync();
+                        await transaction.CommitAsync();
+
+                        isSuccess = true;
                     }
+                    catch (Exception)
+                    {
+                        await transaction.RollbackAsync();
+                        throw;
+                    }
+                });
+
+                // =========================================================================
+                // BƯỚC D: TẠO HÓA ĐƠN Ở ĐÂY (Khi DB đã lưu xong xuôi hết)
+                // =========================================================================
+                if (isSuccess && savedPrescriptionId.HasValue)
+                {
+                    // 1. Gọi hàm tạo Hóa đơn (Truyền ID Đơn thuốc)
+                    await _invoiceService.GenerateInvoiceAsync(savedPrescriptionId.Value);
+
+                    // 2. Đi móc cái Hóa đơn vừa tạo ra để lấy ID nhảy trang
+                    var newInvoice = await _context.Invoices
+                        .FirstOrDefaultAsync(i => i.AppointmentId == appointmentIdForInvoice);
+
+                    TempData["Success"] = "Kê đơn thuốc và xuất hóa đơn thành công!";
+
+                    if (newInvoice != null)
+                    {
+                        return RedirectToAction("Print", "Invoices", new { id = newInvoice.Id });
+                    }
+
+                    return RedirectToAction("Index", "Appointments");
                 }
-
-                // BƯỚC C: CHỐT GIAO DỊCH
-                await _context.SaveChangesAsync();
-                await _invoiceService.GenerateInvoiceAsync(prescription.Id);
-                await transaction.CommitAsync(); // Xác nhận lưu vĩnh viễn
-
-                TempData["Success"] = "Kê đơn thuốc và xuất kho thành công!";
-
-                // Kê xong thì đá về trang quản lý lịch khám hoặc chuyển qua cho BE 2 tạo Hóa đơn
-                return RedirectToAction("Index", "Appointments");
+            }
+            catch (InvalidOperationException ex) when (ex.Message == "OUT_OF_STOCK")
+            {
+                return View(model);
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
-                ModelState.AddModelError("", "Lỗi hệ thống khi kê đơn: " + ex.Message);
-                return View(model);
+                string realError = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                ModelState.AddModelError("", "Lỗi DB thực sự là: " + realError);
             }
+
+            return View(model);
         }
 
         // GET: Prescriptions/Edit/5

@@ -48,45 +48,79 @@ namespace PBL3_HealthCare.Controllers
         }
 
         // GET: MedicalRecords/Create
-        public IActionResult Create()
+        [Authorize(Roles = "Doctor")]
+        public async Task<IActionResult> Create(int? appointmentId)
         {
-            ViewData["AppointmentId"] = new SelectList(_context.Appointments, "Id", "Id");
-            return View();
+            // Chốt chặn 1: Không có ID lịch khám thì báo lỗi 404
+            if (appointmentId == null) return NotFound();
+
+            // Chốt chặn 2: Tìm Lịch khám kèm theo thông tin Bệnh nhân để hiển thị ở Cột Trái
+            var appointment = await _context.Appointments
+                .Include(a => a.Patient)
+                .Include(a => a.Doctor)
+                .FirstOrDefaultAsync(a => a.Id == appointmentId);
+
+            if (appointment == null) return NotFound();
+
+            // Nhét data Lịch khám vào ViewBag để View đọc và in ra Cột Trái
+            ViewBag.Appointment = appointment;
+
+            // Trả về View kèm theo 1 Model rỗng đã được mớm sẵn AppointmentId để gài vào Form ẩn (Cột Phải)
+            return View(new MedicalRecord { AppointmentId = appointment.Id });
         }
 
         // POST: MedicalRecords/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,AppointmentId,Symptoms,Diagnosis,Notes")] MedicalRecord medicalRecord)
+        [Authorize(Roles = "Doctor")]
+        public async Task<IActionResult> Create([Bind("AppointmentId,Diagnosis,Treatment,ReExaminationDate")] MedicalRecord medicalRecord)
         {
+            // Gỡ validate khóa ngoại để ModelState không báo lỗi ảo
+            ModelState.Remove("Doctor");
+            ModelState.Remove("ApplicationUser");
+            ModelState.Remove("Appointment");
+            ModelState.Remove("Prescriptions");
+
             if (ModelState.IsValid)
             {
-                // 1. LƯU BỆNH ÁN VÀO DB
-                _context.Add(medicalRecord);
+                // 1. TÌM LỊCH KHÁM (Móc luôn cả Bác sĩ và Bệnh nhân ra)
+                var appointment = await _context.Appointments
+                    .Include(a => a.Doctor)
+                    .Include(a => a.Patient)
+                    .FirstOrDefaultAsync(a => a.Id == medicalRecord.AppointmentId);
 
-                // 2. TÌM LỊCH KHÁM TƯƠNG ỨNG ĐỂ CHỐT ĐƠN
-                var appointment = await _context.Appointments.FindAsync(medicalRecord.AppointmentId);
                 if (appointment != null)
                 {
-                    // Đổi trạng thái sang "Đã khám xong" (Tùy ông đặt Enum là gì, có thể là Completed hoặc số 2)
-                    appointment.Status = AppointmentStatus.Completed;
+                    // ========================================================
+                    // 2. VÁ LỖI SQL Ở ĐÂY: Gán Bác sĩ và Bệnh nhân vào Bệnh án
+                    // ========================================================
+                    medicalRecord.Doctor = appointment.Doctor;
+                    medicalRecord.ApplicationUser = appointment.Patient;
+
+                    // Cập nhật ngày tạo
+                    medicalRecord.CreatedAt = DateTime.Now;
+
+                    // 3. BỎ BỆNH ÁN VÀO HÀNG ĐỢI LƯU DB
+                    _context.Add(medicalRecord);
                     _context.Update(appointment);
+
+                    // 4. THỰC THI LƯU TẤT CẢ VÀO DATABASE (SQL XANH MƯỢT!)
+                    await _context.SaveChangesAsync();
+
+                    // 5. Bắn thông báo và đá sang trang Kê Đơn Thuốc
+                    TempData["Success"] = "Lưu bệnh án thành công! Vui lòng kê đơn thuốc.";
+                    return RedirectToAction("Create", "Prescriptions", new { medicalRecordId = medicalRecord.Id });
                 }
-
-                // 3. LƯU TẤT CẢ VÀO DATABASE CÙNG LÚC
-                await _context.SaveChangesAsync();
-
-                // 4. Bắn thông báo xanh mượt (Để FE hứng SweetAlert2)
-                TempData["Success"] = "Lưu bệnh án thành công! Vui lòng kê đơn thuốc.";
-
-                // 5. Đá thẳng bác sĩ sang trang Kê đơn thuốc luôn (Mang theo AppointmentId)
-                return RedirectToAction("Create", "Prescriptions", new { medicalRecordId = medicalRecord.Id });
             }
 
-            // Nếu có lỗi (chưa nhập đủ thông tin) thì load lại trang
-            ViewData["AppointmentId"] = new SelectList(_context.Appointments, "Id", "Id", medicalRecord.AppointmentId);
+            // NẾU CODE CHẠY XUỐNG ĐÂY (Lỗi form): Phải lấy lại data Lịch khám để cột trái không bị chết
+            var appointmentData = await _context.Appointments
+                .Include(a => a.Patient)
+                .Include(a => a.Doctor)
+                .FirstOrDefaultAsync(a => a.Id == medicalRecord.AppointmentId);
+
+            ViewBag.Appointment = appointmentData;
+
             return View(medicalRecord);
         }
 

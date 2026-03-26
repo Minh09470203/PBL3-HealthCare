@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace PBL3_HealthCare.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin, Doctor")]
     public class InvoicesController : Controller
     {
         private readonly ApplicationDbContext _context;

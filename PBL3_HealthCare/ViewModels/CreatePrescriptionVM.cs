@@ -8,10 +8,6 @@ namespace PBL3_HealthCare.ViewModels
     {
         [Required]
         public int MedicalRecordId { get; set; }
-
-        [Required(ErrorMessage = "Vui lòng nhập chẩn đoán")]
-        public string Diagnosis { get; set; } // Chẩn đoán bệnh
-
         public string DoctorNote { get; set; } // Lời dặn của bác sĩ (Tái khám, kiêng ăn...)
 
         // MẢNG CHỨA DANH SÁCH THUỐC (FE 1 sẽ dùng Javascript đẻ ra cái này)

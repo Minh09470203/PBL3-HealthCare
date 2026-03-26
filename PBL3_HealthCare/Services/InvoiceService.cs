@@ -11,16 +11,18 @@ namespace PBL3_HealthCare.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly NotificationService _notificationService;
-        public InvoiceService(ApplicationDbContext context)
+        public InvoiceService(ApplicationDbContext context, NotificationService notificationService)
         {
             _context = context;
+            _notificationService = notificationService;
         }
 
         // Hàm này sẽ chạy ngầm để đẻ ra Hóa đơn
         public async Task GenerateInvoiceAsync(int prescriptionId)
         {
-            // 1. KÉO DATA: Lấy Đơn thuốc, Bệnh án, Lịch khám, Bác sĩ và Thuốc
+            // 1. KÉO DATA: ÉP BUỘC CHỌC XUỐNG DB (AsNoTracking) ĐỂ TRÁNH LỖI RAM CACHE
             var prescription = await _context.Prescriptions
+                .AsNoTracking() // 🪄 BÙA CHỐNG LỖI LÀ CHỮ NÀY ĐÂY SẾP!
                 .Include(p => p.MedicalRecord)
                     .ThenInclude(m => m.Appointment)
                         .ThenInclude(a => a.Doctor)
@@ -28,56 +30,65 @@ namespace PBL3_HealthCare.Services
                     .ThenInclude(d => d.Medicine)
                 .FirstOrDefaultAsync(p => p.Id == prescriptionId);
 
-            if (prescription == null) return; // Nếu không có đơn thuốc thì dội ngược
+            // 2. RÀ MÌN TỪNG BƯỚC (Để nếu lỗi nó báo rõ ràng, không báo Null giấu giếm nữa)
+            if (prescription == null) throw new Exception("Hóa đơn: Không tìm thấy đơn thuốc!");
+            if (prescription.MedicalRecord == null) throw new Exception("Hóa đơn: Đơn thuốc chưa có Bệnh án!");
+            if (prescription.MedicalRecord.Appointment == null) throw new Exception("Hóa đơn: Bệnh án chưa có Lịch khám!");
+            if (prescription.MedicalRecord.Appointment.Doctor == null) throw new Exception("Hóa đơn: Lịch khám chưa có thông tin Bác sĩ (Kiểm tra lại DB)!");
 
             var appointment = prescription.MedicalRecord.Appointment;
             var doctor = appointment.Doctor;
 
-            // 2. TÍNH TIỀN: Tiền khám + Tiền thuốc
+            // 3. TÍNH TIỀN: Tiền khám + Tiền thuốc
             decimal consultationFee = doctor.Price; // Lấy giá khám của bác sĩ
-            decimal medicinesFee = prescription.Details.Sum(d => d.Quantity * d.UnitPrice);
+            decimal medicinesFee = prescription.Details != null ? prescription.Details.Sum(d => d.Quantity * d.UnitPrice) : 0;
             decimal totalAmount = consultationFee + medicinesFee;
 
-            // 3. TẠO HÓA ĐƠN CHA (Nối với Lịch khám)
+            // 4. TẠO HÓA ĐƠN CHA (Nối với Lịch khám)
             var invoice = new Invoice
             {
                 AppointmentId = appointment.Id,
                 TotalAmount = totalAmount,
-                Status = InvoiceStatus.Unpaid, // Trạng thái chưa thanh toán
+                MedicalRecordId = appointment.MedicalRecord.Id,
+                Status = InvoiceStatus.Unpaid,
                 CreatedAt = DateTime.Now
             };
 
             _context.Invoices.Add(invoice);
-            await _context.SaveChangesAsync(); // Lưu để EF Core đẻ ra cái invoice.Id
+            await _context.SaveChangesAsync(); // Lưu để đẻ ra cái invoice.Id
 
-            // 4. TẠO CHI TIẾT 1: PHÍ KHÁM BỆNH (DỊCH VỤ)
+            // 5. TẠO CHI TIẾT 1: PHÍ KHÁM BỆNH
             var feeDetail = new InvoiceDetail
             {
                 InvoiceId = invoice.Id,
-                Content = "Phí khám bệnh",   // Đã đổi từ ItemName sang Content
+                Content = "Phí khám bệnh",
                 Quantity = 1,
                 UnitPrice = consultationFee,
-                Type = (InvoiceDetailType)0  // 0: Dịch vụ (Ép kiểu theo đúng Enum sếp note)
+                Type = (InvoiceDetailType)0
             };
             _context.InvoiceDetails.Add(feeDetail);
 
-            // 5. TẠO CHI TIẾT 2: QUÉT MẢNG THUỐC (THUỐC)
-            foreach (var item in prescription.Details)
+            // 6. TẠO CHI TIẾT 2: QUÉT MẢNG THUỐC
+            if (prescription.Details != null)
             {
-                var medDetail = new InvoiceDetail
+                foreach (var item in prescription.Details)
                 {
-                    InvoiceId = invoice.Id,
-                    Content = "Thuốc: " + item.Medicine.Name, // Đã đổi từ ItemName sang Content
-                    Quantity = item.Quantity,
-                    UnitPrice = item.UnitPrice,
-                    Type = (InvoiceDetailType)1  // 1: Thuốc (Ép kiểu theo đúng Enum sếp note)
-                };
-                _context.InvoiceDetails.Add(medDetail);
+                    var medDetail = new InvoiceDetail
+                    {
+                        InvoiceId = invoice.Id,
+                        Content = "Thuốc: " + item.Medicine?.Name,
+                        Quantity = item.Quantity,
+                        UnitPrice = item.UnitPrice,
+                        Type = (InvoiceDetailType)1
+                    };
+                    _context.InvoiceDetails.Add(medDetail);
+                }
             }
 
-            // 6. CHỐT LƯU TẤT CẢ XUỐNG DATABASE
+            // 7. CHỐT LƯU TẤT CẢ
             await _context.SaveChangesAsync();
-            // Nhắc bệnh nhân ra quầy đóng tiền (Dùng hàm của Quest 2)
+
+            // Nhắc bệnh nhân ra quầy
             await _notificationService.CreateNotification(
                 appointment.PatientId,
                 $"Hệ thống vừa tạo một hóa đơn mới trị giá {totalAmount:N0} VNĐ. Vui lòng đến quầy thu ngân để thanh toán."
