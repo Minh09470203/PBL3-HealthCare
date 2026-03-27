@@ -71,7 +71,7 @@
                             <a class="day-tab @(i == 0 ? "active" : "")"
                                href="#"
                                onclick="switchDay(@i, this); return false;">
-                                @(i == 0 ? "Hôm nay" : next3Days[i].DayOfWeek switch {
+                                @(next3Days[i].Date == DateTime.Today ? "Hôm nay" : next3Days[i].DayOfWeek switch {
                                     DayOfWeek.Monday    => "Thứ Hai",
                                     DayOfWeek.Tuesday   => "Thứ Ba",
                                     DayOfWeek.Wednesday => "Thứ Tư",

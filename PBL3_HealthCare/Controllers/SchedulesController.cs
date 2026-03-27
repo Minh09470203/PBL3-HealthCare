@@ -85,11 +85,30 @@ namespace PBL3_HealthCare.Controllers
         {
             if (ModelState.IsValid)
             {
+                // 🔥 THUẬT TOÁN CHỐNG TRÙNG LẶP: Kiểm tra xem ca này đã tồn tại chưa
+                bool isDuplicate = await _context.Schedules.AnyAsync(s =>
+                    s.DoctorId == schedule.DoctorId &&
+                    s.Date.Date == schedule.Date.Date &&
+                    s.Shift == schedule.Shift);
+
+                if (isDuplicate)
+                {
+                    // Nếu trùng, ném lỗi về màn hình và dừng việc lưu lại
+                    ModelState.AddModelError("", "Lỗi: Bác sĩ này đã được phân công trực vào ca này trong cùng ngày! Vui lòng chọn ca hoặc ngày khác.");
+
+                    // Nạp lại danh sách dropdown bác sĩ để View không bị lỗi
+                    ViewData["DoctorId"] = new SelectList(_context.Doctors.Include(d => d.User), "Id", "User.FullName", schedule.DoctorId);
+                    return View(schedule);
+                }
+
+                // Nếu không trùng thì tiến hành lưu vào Database
                 _context.Add(schedule);
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "Tạo ca làm việc thành công!";
                 return RedirectToAction(nameof(Index));
             }
+
+            // Nếu form không hợp lệ
             ViewData["DoctorId"] = new SelectList(_context.Doctors.Include(d => d.User), "Id", "User.FullName", schedule.DoctorId);
             return View(schedule);
         }

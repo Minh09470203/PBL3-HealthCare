@@ -1,4 +1,9 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@using PBL3_HealthCare.Models
+@using PBL3_HealthCare.Data
+@inject UserManager<ApplicationUser> UserManager
+@inject ApplicationDbContext Context
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
@@ -36,9 +41,9 @@
             </li>
 
             <li class="nav-item">
-                <a class="nav-link" href="#">
-                    <i class="fas fa-fw fa-procedures"></i>
-                    <span>Hồ sơ Bệnh nhân (Sắp có)</span>
+                <a class="nav-link" asp-controller="Appointments" asp-action="MySchedule">
+                    <i class="fas fa-fw fa-calendar-alt"></i>
+                    <span>Lịch làm việc của tôi</span>
                 </a>
             </li>
 
@@ -71,7 +76,16 @@
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="mr-2 d-none d-lg-inline text-gray-600 small">BS. @(User.Identity.Name)</span>
-                                <img class="img-profile rounded-circle" src="~/img/undraw_profile.svg">
+                                @{
+                                    // Lấy ID của tài khoản đang đăng nhập
+                                    var userId = UserManager.GetUserId(User);
+                                    // Chui vào bảng Doctor tìm đúng ông bác sĩ đó
+                                    var doctor = Context.Doctors.FirstOrDefault(d => d.UserId == userId);
+                                    // Lấy tên file ảnh (nếu chưa có ảnh thì dùng ảnh mặc định)
+                                    var imageName = (doctor != null && !string.IsNullOrEmpty(doctor.Image)) ? doctor.Image : "undraw_profile.svg";
+                                }
+
+                                <img class="img-profile rounded-circle" style="object-fit: cover;" src="~/img/doctors/@imageName">
                             </a>
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
                                 <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/" method="post">

@@ -37,8 +37,18 @@ namespace PBL3_HealthCare.Controllers
             }
 
             var medicalRecord = await _context.MedicalRecords
-                .Include(m => m.Appointment)
-                .FirstOrDefaultAsync(m => m.Id == id);
+        // 1. Móc Bác sĩ từ Bệnh án (Chuẩn)
+        .Include(m => m.Doctor)
+            .ThenInclude(d => d.User)
+        // 2. Móc Bác sĩ từ Lịch hẹn (Để phòng hờ cho các bệnh án cũ bị lỗi)
+        .Include(m => m.Appointment)
+            .ThenInclude(a => a.Doctor)
+                .ThenInclude(d => d.User)
+        // 3. Móc luôn đơn thuốc (để lát nữa in ra nếu bạn cần)
+        .Include(m => m.Prescriptions)
+            .ThenInclude(p => p.Details)
+                .ThenInclude(pd => pd.Medicine)
+        .FirstOrDefaultAsync(m => m.Id == id);
             if (medicalRecord == null)
             {
                 return NotFound();

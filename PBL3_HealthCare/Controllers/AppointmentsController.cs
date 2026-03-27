@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -281,6 +282,28 @@ namespace PBL3_HealthCare.Controllers
         private bool AppointmentExists(int id)
         {
             return _context.Appointments.Any(e => e.Id == id);
+        }
+
+        [Authorize(Roles = "Doctor")]
+        public async Task<IActionResult> MySchedule()
+        {
+            // 1. Lấy thông tin bác sĩ đang đăng nhập
+            var currentUser = await _userManager.GetUserAsync(User);
+            var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == currentUser.Id);
+
+            if (doctor == null) return NotFound("Không tìm thấy thông tin bác sĩ.");
+
+            // 2. Lấy danh sách lịch khám ĐÃ XÁC NHẬN từ hôm nay trở đi
+            var mySchedule = await _context.Appointments
+                .Include(a => a.Patient)
+                .Where(a => a.DoctorId == doctor.Id
+                         && a.Status == AppointmentStatus.Confirmed
+                         && a.Date.Date >= DateTime.Today)
+                .OrderBy(a => a.Date)         // Sắp xếp ngày gần nhất lên đầu
+                .ThenBy(a => a.TimeSlot)      // Trong 1 ngày thì xếp theo giờ từ sáng đến chiều
+                .ToListAsync();
+
+            return View(mySchedule);
         }
     }
 }

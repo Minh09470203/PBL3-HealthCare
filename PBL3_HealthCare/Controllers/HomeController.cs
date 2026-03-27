@@ -117,7 +117,7 @@ namespace PBL3_HealthCare.Controllers
             return View(await query.ToListAsync());
         }
 
-        // 2. LẤY THÔNG TIN CHI TIẾT & BẢNG GIỜ KHÁM
+        // 2. LẤY THÔNG TIN CHI TIẾT & BẢNG GIỜ KHÁM (Dựa vào Schedule)
         public async Task<IActionResult> DoctorInfo(int id)
         {
             var doctor = await _context.Doctors
@@ -127,20 +127,53 @@ namespace PBL3_HealthCare.Controllers
 
             if (doctor == null) return NotFound();
 
-            // Khởi tạo danh sách giờ và 3 ngày tới
-            var timeSlots = new List<string> { "08:00", "09:00", "10:00", "14:00", "15:00", "16:00" };
-            var next3Days = new List<DateTime> { DateTime.Now.Date, DateTime.Now.Date.AddDays(1), DateTime.Now.Date.AddDays(2) };
+            // 1. LẤY DANH SÁCH CA LÀM VIỆC TỪ BẢNG SCHEDULE
+            // Lấy từ hôm nay trở đi và chỉ lấy những ca đang Mở (IsAvailable == true)
+            var availableSchedules = await _context.Schedules
+                .Where(s => s.DoctorId == id && s.Date >= DateTime.Today && s.IsAvailable)
+                .OrderBy(s => s.Date)
+                .ToListAsync();
 
-            // Lấy danh sách lịch ĐÃ CÓ NGƯỜI ĐẶT
+            // Trích xuất ra danh sách các NGÀY để in ra màn hình cho bệnh nhân chọn
+            // Dùng Distinct() để lỡ 1 ngày bác sĩ trực 2 ca thì màn hình vẫn chỉ hiện 1 nút chọn ngày
+            var availableDates = availableSchedules.Select(s => s.Date.Date).Distinct().Take(3).ToList();
+
+            // 2. TẠO TỪ ĐIỂN KHUNG GIỜ RIÊNG BIỆT CHO TỪNG NGÀY
+            var timeSlotsByDate = new Dictionary<DateTime, List<string>>();
+
+            foreach (var date in availableDates)
+            {
+                var slotsForToday = new List<string>();
+
+                // Chỉ lấy các ca làm việc của đúng cái ngày đang xét
+                var schedulesForToday = availableSchedules.Where(s => s.Date.Date == date).ToList();
+
+                foreach (var schedule in schedulesForToday)
+                {
+                    if (schedule.Shift.Contains("Sáng") || schedule.Shift.Contains("Cả ngày"))
+                        slotsForToday.AddRange(new[] { "08:00", "09:00", "10:00", "11:00" });
+
+                    if (schedule.Shift.Contains("Chiều") || schedule.Shift.Contains("Cả ngày"))
+                        slotsForToday.AddRange(new[] { "14:00", "15:00", "16:00" });
+
+                    if (schedule.Shift.Contains("Tối"))
+                        slotsForToday.AddRange(new[] { "18:00", "19:00", "20:00" });
+                }
+
+                // Lọc trùng, sắp xếp và cất vào "ngăn kéo" của ngày đó
+                timeSlotsByDate[date] = slotsForToday.Distinct().OrderBy(t => t).ToList();
+            }
+
+            // 3. TÌM NHỮNG GIỜ ĐÃ BỊ ĐẶT MẤT ĐỂ LÀM MỜ NÚT BẤM
             var bookedAppointments = await _context.Appointments
                 .Where(a => a.DoctorId == id &&
-                            a.Date >= DateTime.Now.Date &&
-                            a.Date <= DateTime.Now.Date.AddDays(2) &&
+                            a.Date >= DateTime.Today &&
                             a.Status != AppointmentStatus.Cancelled)
                 .ToListAsync();
 
-            ViewBag.Next3Days = next3Days;
-            ViewBag.TimeSlots = timeSlots;
+            // Truyền dữ liệu ra View
+            ViewBag.Next3Days = availableDates;
+            ViewBag.TimeSlotsByDate = timeSlotsByDate; // Gửi cả cái Từ điển ra ngoài
             ViewBag.BookedAppointments = bookedAppointments;
 
             return View(doctor);
