@@ -4,7 +4,8 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 
     var next3Days = ViewBag.Next3Days as List<DateTime>;
-    var timeSlots = ViewBag.TimeSlots as List<string>;
+    // Bắt buộc phải là biến này, xóa cái var timeSlots cũ đi:
+    var timeSlotsByDate = ViewBag.TimeSlotsByDate as Dictionary<DateTime, List<string>>; 
     var bookedAppointments = ViewBag.BookedAppointments as List<PBL3_HealthCare.Models.Appointment>;
 }
 
@@ -90,10 +91,20 @@
                     {
                         <div class="day-panel @(i == 0 ? "" : "d-none")" id="panel-@i">
                             <div class="slots-grid">
-                                @foreach (var slot in timeSlots)
+                                
+                                @{
+                                    // 1. Móc đúng "ngăn kéo" chứa giờ của ngày hôm nay
+                                    var currentDate = next3Days[i].Date;
+                                    var daySlots = timeSlotsByDate != null && timeSlotsByDate.ContainsKey(currentDate) 
+                                                    ? timeSlotsByDate[currentDate] 
+                                                    : new List<string>();
+                                }
+
+                                @* 2. Vòng lặp bây giờ phải chạy trên daySlots, KHÔNG DÙNG timeSlots NỮA *@
+                                @foreach (var slot in daySlots)
                                 {
                                     bool isBooked = bookedAppointments.Any(a =>
-                                        a.Date.Date == next3Days[i].Date &&
+                                        a.Date.Date == currentDate && 
                                         a.TimeSlot == TimeSpan.Parse(slot));
 
                                     if (isBooked)
@@ -104,11 +115,12 @@
                                     {
                                         <a asp-controller="Home" asp-action="BookAppointment"
                                            asp-route-doctorId="@Model.Id"
-                                           asp-route-date="@next3Days[i].ToString("yyyy-MM-dd")"
+                                           asp-route-date="@currentDate.ToString("yyyy-MM-dd")"
                                            asp-route-timeSlot="@slot"
                                            class="slot-btn">@slot</a>
                                     }
                                 }
+                                
                             </div>
 
                             <div class="slot-hint">
