@@ -1,0 +1,273 @@
+/* ============================================================
+   vaccines.css — Trang danh mục Tiêm Chủng
+   ============================================================ */
+
+.vaccines-page {
+    background: #f4f6ff;
+    min-height: 100vh;
+    padding: 6rem 0 4rem;
+}
+
+.vaccines-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+.vaccines-header .eyebrow {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #3d5ee1;
+    margin-bottom: .5rem;
+}
+.vaccines-header h2 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1a1a2e;
+    margin-bottom: .75rem;
+}
+.vaccines-header p {
+    color: #6b7280;
+    font-size: .92rem;
+    max-width: 460px;
+    margin: 0 auto;
+}
+.header-divider {
+    width: 40px; height: 3px;
+    background: #3d5ee1;
+    border-radius: 2px;
+    margin: .9rem auto 0;
+}
+
+/* === VACCINE CARD === */
+.vac-card {
+    background: #fff;
+    border: 1px solid #e2e8ff;
+    border-radius: 6px;
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow .2s, transform .2s;
+}
+.vac-card:hover {
+    box-shadow: 0 6px 20px rgba(61,94,225,.12);
+    transform: translateY(-3px);
+}
+
+/* Top accent strip */
+.vac-card .vac-strip {
+    height: 4px;
+    background: #3d5ee1;
+}
+
+/* Body */
+.vac-card .vac-body {
+    padding: 1.25rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+.vac-card .vac-icon-row {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin-bottom: .85rem;
+}
+.vac-card .vac-icon-wrap {
+    width: 42px; height: 42px;
+    background: #e8edff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; color: #3d5ee1;
+    flex-shrink: 0;
+}
+.vac-card .vac-name {
+    font-size: .95rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    line-height: 1.35;
+}
+
+/* Info rows */
+.vac-info { margin-bottom: .85rem; }
+.vac-info-row {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    padding: .45rem 0;
+    border-bottom: 1px solid #f4f6ff;
+    font-size: .82rem;
+}
+.vac-info-row:last-child { border-bottom: none; }
+.vac-info-row i {
+    color: #3d5ee1;
+    font-size: .75rem;
+    margin-top: .2rem;
+    flex-shrink: 0;
+    width: 14px;
+    text-align: center;
+}
+.vac-info-row .info-label {
+    color: #868e96;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.vac-info-row .info-val {
+    color: #212529;
+    font-weight: 500;
+}
+
+/* Footer */
+.vac-card .vac-footer {
+    padding: .9rem 1.25rem 1.25rem;
+    border-top: 1px solid #f0f2fa;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    margin-top: auto;
+}
+.vac-price {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+}
+.vac-price .price-num {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #c92a2a;
+}
+.vac-price .price-unit {
+    font-size: .7rem;
+    color: #adb5bd;
+}
+.btn-vaccine {
+    background: #3d5ee1;
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    font-size: .78rem;
+    font-weight: 700;
+    padding: .5rem 1.1rem;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background .15s;
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+}
+.btn-vaccine:hover {
+    background: #2f4fc7;
+    color: #fff;
+    text-decoration: none;
+}
+
+/* Empty state */
+.empty-vac {
+    text-align: center;
+    padding: 4rem 1rem;
+    background: #fff;
+    border: 1px solid #e2e8ff;
+    border-radius: 6px;
+}
+.empty-vac .empty-icon { font-size: 2.5rem; color: #c5cef7; margin-bottom: 1rem; }
+.empty-vac h4 { font-size: 1rem; font-weight: 700; color: #1a1a2e; margin-bottom: .4rem; }
+.empty-vac p  { font-size: .85rem; color: #868e96; margin: 0; }
+
+/* CSS Ghi đè để ép cái Card cũ thành dạng 2 cột (Layout ngang) */
+.vac-card {
+    display: flex;
+    flex-direction: row; /* Dàn hàng ngang */
+    align-items: center;
+    height: 100%;
+    padding: 20px 25px;
+    /* Các thuộc tính box-shadow, viền... vẫn ăn theo file vaccines.css cũ của sếp */
+}
+
+/* Ẩn cái dải viền trên cùng (nếu có trong CSS cũ) vì giờ layout chuyển sang ngang */
+.vac-strip {
+    display: none;
+}
+
+/* Nửa bên trái: Thông tin (chiếm toàn bộ không gian còn lại) */
+.vac-body {
+    flex-grow: 1;
+    padding-right: 20px;
+    /* Đảm bảo nội dung căn trái */
+    text-align: left;
+}
+
+/* Tên Vaccine (Giữ màu sắc cũ, ép to lên tí) */
+.vac-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    /* Bỏ cái margin của icon cũ đi vì mình đã xóa icon tròn */
+    margin-left: 0 !important;
+}
+
+/* Khối thông tin Phòng bệnh / Sản xuất */
+.vac-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Khoảng cách giữa các dòng */
+}
+
+/* Ẩn bớt các icon khiên/nhà máy nếu sếp thấy rối, ở đây tôi giữ lại vì nó đẹp */
+.vac-info-row {
+    font-size: 0.95rem;
+    color: #4a5568;
+}
+
+/* Nửa bên phải: Giá và Nút bấm */
+.vac-footer {
+    min-width: 180px; /* Ép cứng chiều rộng khu vực nút/giá */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; /* Căn lề phải */
+    justify-content: center;
+    border-top: none; /* Bỏ đường line đứt cũ của vac-footer (nếu có) */
+    padding-top: 0;
+    border-left: 1px dashed #e2e8f0; /* Thêm đường vạch dọc ngăn cách Giá và Thông tin */
+    padding-left: 20px;
+    margin-top: 0; /* Ghi đè margin cũ */
+}
+
+.vac-price {
+    margin-bottom: 15px;
+    text-align: right;
+}
+
+/* Tinh chỉnh lại nút tiêm cho hợp lý với layout dọc */
+.btn-vaccine {
+    width: 100%;
+    text-align: center;
+    padding: 10px 20px;
+    border-radius: 8px; /* Bo góc mềm mại hơn */
+}
+
+/* Xử lý giao diện cho màn hình Điện thoại */
+@@media (max-width: 768px) {
+    .vac-card {
+        flex-direction: column; /* Gập lại thành 1 cột */
+        align-items: stretch;
+    }
+
+    .vac-body {
+        padding-right: 0;
+        margin-bottom: 15px;
+    }
+
+    .vac-footer {
+        border-left: none;
+        border-top: 1px dashed #e2e8f0; /* Chuyển vạch dọc thành vạch ngang */
+        padding-left: 0;
+        padding-top: 20px;
+        align-items: center; /* Nút ra giữa */
+    }
+
+    .vac-price {
+        text-align: center;
+    }
+}

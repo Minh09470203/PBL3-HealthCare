@@ -53,6 +53,27 @@
                 </a>
             </li>
 
+            <li class="nav-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "PendingPackages" ? "active" : "")">
+                <a class="nav-link" asp-controller="Admin" asp-action="PendingPackages">
+                    <i class="fas fa-fw fa-clipboard-list"></i>
+                    <span>Duyệt Gói Khám</span>
+                    </a>
+            </li>
+
+            <li class="nav-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "PendingVaccinations" ? "active" : "")">
+                <a class="nav-link" asp-controller="Admin" asp-action="PendingVaccinations">
+                    <i class="fas fa-fw fa-syringe"></i>
+                    <span>Duyệt Tiêm Chủng</span>
+                </a>
+            </li>
+
+            <li class="nav-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "PendingHomeCare" ? "active" : "")">
+                <a class="nav-link" asp-controller="Admin" asp-action="PendingHomeCare">
+                    <i class="fas fa-fw fa-house-user"></i>
+                    <span>Duyệt Y Tế Tại Nhà</span>
+                </a>
+            </li>
+
             <li class="nav-item">
                 <a class="nav-link" asp-controller="Invoices" asp-action="Index">
                     <i class="fas fa-fw fa-file-invoice-dollar"></i>

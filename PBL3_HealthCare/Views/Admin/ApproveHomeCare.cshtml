@@ -1,0 +1,55 @@
+﻿@model PBL3_HealthCare.Models.HomeServiceRequest
+@{
+    ViewData["Title"] = "Phân công Y tá / Bác sĩ";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800"><i class="fas fa-clipboard-check text-info"></i> Điều phối nhân sự</h1>
+</div>
+
+<div class="row">
+    <div class="col-xl-6 col-lg-8 mx-auto">
+        <div class="card shadow mb-4 border-left-info">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-info">Xác nhận Yêu cầu Dịch vụ tại nhà</h6>
+            </div>
+            <div class="card-body p-4">
+                <div class="alert alert-secondary mb-4">
+                    <p class="mb-2"><strong>Bệnh nhân:</strong> @Model.Patient?.FullName</p>
+                    <p class="mb-2"><strong>Dịch vụ:</strong> <span class="text-info font-weight-bold">@Model.HomeService?.Name</span></p>
+                    <p class="mb-2"><strong>SĐT liên hệ:</strong> @Model.Phone</p>
+                    <p class="mb-0"><strong>Địa chỉ đến:</strong> @Model.Address</p>
+                </div>
+
+                <form asp-action="ApproveHomeCare" method="post">
+                    <input type="hidden" name="requestId" value="@Model.Id" />
+
+                    <div class="form-group mb-4">
+                        <label class="font-weight-bold text-dark">Chọn người thực hiện <span class="text-danger">*</span></label>
+                        <select name="doctorId" class="form-control form-control-lg shadow-sm" required>
+                            <option value="">-- Chọn Y tá / Bác sĩ --</option>
+                            @foreach (var doc in ViewBag.Doctors)
+                            {
+                                <option value="@doc.Id">@doc.User?.FullName - Khoa: @doc.Specialty?.Name</option>
+                            }
+                        </select>
+                        <small class="form-text text-muted mt-2">
+                            Lịch hẹn sẽ được gửi đến nhân sự này kèm theo địa chỉ và SĐT của bệnh nhân trong phần "Lý do khám".
+                        </small>
+                    </div>
+
+                    <hr />
+                    <div class="text-right">
+                        <a href="javascript:history.back()" class="btn btn-secondary mr-2">
+                            <i class="fas fa-times"></i> Hủy & Quay lại
+                        </a>
+                        <button type="submit" class="btn btn-info">
+                            <i class="fas fa-check-circle"></i> Chốt Phân Công
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

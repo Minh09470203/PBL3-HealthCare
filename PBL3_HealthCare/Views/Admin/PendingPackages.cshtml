@@ -1,0 +1,65 @@
+﻿@model IEnumerable<PBL3_HealthCare.Models.PackageBooking>
+
+@{
+    ViewData["Title"] = "Danh Sách Gói Khám Chờ Duyệt";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml"; //
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800"><i class="fas fa-clipboard-list text-primary"></i> Danh sách Yêu cầu Gói khám</h1>
+</div>
+
+<div class="card shadow mb-4 border-bottom-primary">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Ngày gửi</th>
+                        <th>Bệnh nhân</th>
+                        <th>Gói khám đăng ký</th>
+                        <th>Thời gian muốn khám</th>
+                        <th>Trạng thái</th>
+                        <th class="text-center">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="font-weight-bold text-dark">@item.Patient?.FullName</td>
+                            <td class="text-primary font-weight-bold">@item.HealthPackage?.Name</td>
+                            <td><span class="badge badge-warning text-dark p-2">@item.BookingDate.ToString("dd/MM - HH:mm")</span></td>
+                            <td><span class="badge badge-secondary p-2">Đang chờ</span></td>
+                            <td class="text-center">
+                                <a asp-controller="Admin" asp-action="ApproveAndAssignDoctor" asp-route-id="@item.Id" class="btn btn-primary btn-sm shadow-sm">
+                                    <i class="fas fa-user-md"></i> Phân công Bác sĩ
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (!Model.Any())
+            {
+                <div class="alert alert-success text-center mt-3">
+                    <i class="fas fa-check-circle"></i> Hiện không có yêu cầu đặt gói khám nào đang chờ duyệt.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#dataTable').DataTable({
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json"
+                }
+            });
+        });
+    </script>
+}

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -6,7 +6,7 @@ using PBL3_HealthCare.Data;
 
 using PBL3_HealthCare.Models;
 
-
+using Microsoft.AspNetCore.Authentication.Google;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,7 +31,14 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
     .AddRoles<IdentityRole>()
 
     .AddEntityFrameworkStores<ApplicationDbContext>();
-
+// Thêm code này vào Program.cs
+builder.Services.AddAuthentication()
+    .AddGoogle(options =>
+    {
+        IConfigurationSection googleAuthNSection = builder.Configuration.GetSection("Authentication:Google");
+        options.ClientId = googleAuthNSection["ClientId"];
+        options.ClientSecret = googleAuthNSection["ClientSecret"];
+    });
 builder.Services.AddControllersWithViews();
 // Đăng ký NotificationService để các Controller khác gọi được
 builder.Services.AddScoped<PBL3_HealthCare.Services.NotificationService>();

@@ -1,0 +1,77 @@
+﻿@model PBL3_HealthCare.Models.PackageBooking
+
+@{
+    ViewData["Title"] = "Phân Công Bác Sĩ";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800"><i class="fas fa-user-md text-primary"></i> Duyệt Gói Khám & Phân Công</h1>
+</div>
+
+<div class="row">
+    <div class="col-xl-6 col-lg-6">
+        <div class="card shadow mb-4 border-left-info">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-info"><i class="fas fa-info-circle"></i> Thông tin Yêu cầu</h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="40%">Tên Bệnh Nhân:</th>
+                        <td><strong>@Model.Patient?.FullName</strong></td>
+                    </tr>
+                    <tr>
+                        <th>Gói Khám:</th>
+                        <td class="text-primary font-weight-bold">@Model.HealthPackage?.Name</td>
+                    </tr>
+                    <tr>
+                        <th>Thời gian muốn khám:</th>
+                        <td><span class="badge badge-warning text-dark p-2" style="font-size: 14px;">@Model.BookingDate.ToString("dd/MM/yyyy - HH:mm")</span></td>
+                    </tr>
+                    <tr>
+                        <th>Ngày gửi yêu cầu:</th>
+                        <td>@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-6 col-lg-6">
+        <div class="card shadow mb-4 border-left-primary">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-clipboard-check"></i> Xử lý Phân công</h6>
+            </div>
+            <div class="card-body">
+                <form asp-action="ApproveAndAssignDoctor" method="post">
+                    <input type="hidden" name="packageBookingId" value="@Model.Id" />
+
+                    <div class="form-group mb-4">
+                        <label class="font-weight-bold text-dark">Chọn Bác sĩ phụ trách <span class="text-danger">*</span></label>
+                        <select name="doctorId" class="form-control form-control-lg shadow-sm" required>
+                            <option value="">-- Chọn Bác sĩ --</option>
+                            @foreach (var doc in ViewBag.Doctors)
+                            {
+                                <option value="@doc.Id">@doc.User?.FullName - Khoa: @doc.Specialty?.Name</option>
+                            }
+                        </select>
+                        <small class="form-text text-muted mt-2">
+                            Lịch khám sẽ tự động được tạo và thông báo đến lịch làm việc của Bác sĩ được chọn.
+                        </small>
+                    </div>
+
+                    <hr />
+                    <div class="text-right">
+                        <a href="javascript:history.back()" class="btn btn-secondary mr-2">
+                            <i class="fas fa-times"></i> Hủy & Quay lại
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check-circle"></i> Duyệt & Chốt lịch
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

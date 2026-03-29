@@ -251,5 +251,42 @@
     <script src="~/mediplus-master/js/scrollax.min.js"></script>
     <script src="~/mediplus-master/js/main.js"></script>
     @await RenderSectionAsync("Scripts", required: false)   @* ← thêm dòng này *@
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    @if (TempData["Success"] != null)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end', // Trôi nổi ở góc trên bên phải
+                    icon: 'success',
+                    title: 'Thành công!',
+                    text: '@Html.Raw(TempData["Success"])',
+                    showConfirmButton: false,
+                    timer: 3500, // Tự tắt sau 3.5 giây
+                    timerProgressBar: true
+                });
+            });
+        </script>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: 'Có lỗi xảy ra!',
+                    text: '@Html.Raw(TempData["Error"])',
+                    showConfirmButton: false,
+                    timer: 4000,
+                    timerProgressBar: true
+                });
+            });
+        </script>
+    }
 </body>
 </html>

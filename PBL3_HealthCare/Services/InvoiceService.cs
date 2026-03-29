@@ -94,5 +94,140 @@ namespace PBL3_HealthCare.Services
                 $"Hệ thống vừa tạo một hóa đơn mới trị giá {totalAmount:N0} VNĐ. Vui lòng đến quầy thu ngân để thanh toán."
             );
         }
+
+        // Hàm mới: Đẻ hóa đơn ngay khi Admin duyệt Gói Khám
+        public async Task GeneratePackageInvoiceAsync(int packageBookingId, int appointmentId)
+        {
+            // 1. Kéo data Gói Khám và Bệnh nhân
+            var packageBooking = await _context.PackageBookings
+                .Include(p => p.HealthPackage)
+                .FirstOrDefaultAsync(p => p.Id == packageBookingId);
+
+            if (packageBooking == null || packageBooking.HealthPackage == null)
+                throw new Exception("Hóa đơn: Không tìm thấy thông tin Gói khám!");
+
+            var appointment = await _context.Appointments.FindAsync(appointmentId);
+            if (appointment == null)
+                throw new Exception("Hóa đơn: Không tìm thấy Lịch khám!");
+
+            decimal packagePrice = packageBooking.HealthPackage.Price;
+
+            // 2. Tạo Hóa Đơn Cha (Nối trực tiếp với Lịch khám, không cần MedicalRecord)
+            var invoice = new Invoice
+            {
+                AppointmentId = appointment.Id,
+                TotalAmount = packagePrice,
+                Status = InvoiceStatus.Unpaid, // Trạng thái "Chưa thanh toán"
+                CreatedAt = DateTime.Now
+            };
+
+            _context.Invoices.Add(invoice);
+            await _context.SaveChangesAsync(); // Lưu để đẻ ra cái invoice.Id
+
+            // 3. Tạo Chi tiết Hóa đơn (Phí mua gói khám)
+            var detail = new InvoiceDetail
+            {
+                InvoiceId = invoice.Id,
+                Content = $"Gói khám: {packageBooking.HealthPackage.Name}",
+                Quantity = 1,
+                UnitPrice = packagePrice,
+                Type = (InvoiceDetailType)0 // 0: Dịch vụ/Khám bệnh
+            };
+
+            _context.InvoiceDetails.Add(detail);
+            await _context.SaveChangesAsync();
+
+            // 4. Bắn thông báo Quả Chuông cho Bệnh nhân
+            await _notificationService.CreateNotification(
+                packageBooking.PatientId,
+                $"Yêu cầu gói khám '{packageBooking.HealthPackage.Name}' của bạn đã được duyệt. Vui lòng thanh toán hóa đơn trị giá {packagePrice:N0} VNĐ."
+            );
+        }
+
+        // Hàm mới: Đẻ hóa đơn cho Tiêm chủng
+        public async Task GenerateVaccineInvoiceAsync(int vaccineBookingId, int appointmentId)
+        {
+            // 1. Kéo data lịch tiêm
+            var booking = await _context.VaccinationBookings
+                .Include(b => b.Vaccine)
+                .FirstOrDefaultAsync(b => b.Id == vaccineBookingId);
+
+            if (booking == null || booking.Vaccine == null)
+                throw new Exception("Hóa đơn: Không tìm thấy thông tin Tiêm chủng!");
+
+            decimal price = booking.Vaccine.Price;
+
+            // 2. Tạo Hóa Đơn Cha (Tiêm chủng không có AppointmentId nên để trống hoặc nối nếu cần)
+            var invoice = new Invoice
+            {
+                AppointmentId = appointmentId,
+                TotalAmount = price,
+                Status = InvoiceStatus.Unpaid,
+                CreatedAt = DateTime.Now
+            };
+
+            _context.Invoices.Add(invoice);
+            await _context.SaveChangesAsync();
+
+            // 3. Tạo Chi tiết
+            var detail = new InvoiceDetail
+            {
+                InvoiceId = invoice.Id,
+                Content = $"Tiêm chủng Vaccine: {booking.Vaccine.Name}",
+                Quantity = 1,
+                UnitPrice = price,
+                Type = (InvoiceDetailType)1 // 1: Thuốc/Vaccine
+            };
+
+            _context.InvoiceDetails.Add(detail);
+            await _context.SaveChangesAsync();
+
+            // 4. Thông báo
+            await _notificationService.CreateNotification(
+                booking.PatientId,
+                $"Hóa đơn tiêm chủng '{booking.Vaccine.Name}' đã được khởi tạo. Số tiền: {price:N0} VNĐ."
+            );
+        }
+
+        // Hàm mới: Đẻ hóa đơn cho Y Tế Tại Nhà
+        public async Task GenerateHomeCareInvoiceAsync(int requestId, int appointmentId)
+        {
+            var request = await _context.HomeServiceRequests
+                .Include(r => r.HomeService)
+                .FirstOrDefaultAsync(r => r.Id == requestId);
+
+            if (request == null || request.HomeService == null)
+                throw new Exception("Hóa đơn: Không tìm thấy Yêu cầu Y tế tại nhà!");
+
+            decimal price = request.HomeService.Price;
+
+            var invoice = new Invoice
+            {
+                AppointmentId = appointmentId, // Tránh lỗi khóa ngoại
+                TotalAmount = price,
+                Status = InvoiceStatus.Unpaid,
+                CreatedAt = DateTime.Now
+            };
+
+            _context.Invoices.Add(invoice);
+            await _context.SaveChangesAsync();
+
+            var detail = new InvoiceDetail
+            {
+                InvoiceId = invoice.Id,
+                Content = $"Dịch vụ tại nhà: {request.HomeService.Name}",
+                Quantity = 1,
+                UnitPrice = price,
+                Type = (InvoiceDetailType)0 // Dịch vụ
+            };
+
+            _context.InvoiceDetails.Add(detail);
+            await _context.SaveChangesAsync();
+
+            await _notificationService.CreateNotification(
+                request.PatientId,
+                $"Yêu cầu dịch vụ '{request.HomeService.Name}' tại nhà của bạn đã được duyệt. Vui lòng thanh toán hóa đơn trị giá {price:N0} VNĐ."
+            );
+        }
     }
 }

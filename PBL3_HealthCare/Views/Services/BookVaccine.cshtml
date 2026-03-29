@@ -1,0 +1,191 @@
+﻿@model PBL3_HealthCare.Models.VaccinationBooking
+@{
+    ViewData["Title"] = "Đăng Ký Tiêm Chủng";
+    Layout = "~/Views/Shared/_Layout.cshtml"; // Dùng layout khách hàng
+}
+
+@section Styles {
+    <style>
+        /* CSS FORM TIÊM CHỦNG ĐỒNG BỘ */
+        .booking-card {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid #f0f2f5;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            margin-bottom: 50px;
+        }
+
+        .booking-header {
+            /* Tông xanh lá nhạt dịu mắt cho Tiêm chủng */
+            background-color: #f0fdf4;
+            border-bottom: 1px solid #dcfce7;
+            padding: 25px 30px;
+            text-align: center;
+        }
+
+        .booking-title {
+            color: #166534; /* Chữ xanh đậm để nổi bật trên nền nhạt */
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .booking-body {
+            padding: 40px;
+        }
+
+        /* Khung thông tin Vaccine */
+        .vaccine-info-box {
+            background: #ffffff;
+            border: 1px dashed #22c55e; /* Viền đứt xanh lá */
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+            .vaccine-info-box::before {
+                content: "\f48e"; /* Icon Ống tiêm (Syringe) */
+                font-family: "Font Awesome 5 Free";
+                font-weight: 900;
+                position: absolute;
+                top: -15px;
+                left: 20px;
+                font-size: 24px;
+                color: #22c55e;
+                background: white;
+                padding: 0 5px;
+            }
+
+        /* Input bo tròn mượt mà */
+        .form-control-booking {
+            border-radius: 8px;
+            padding: 12px 15px;
+            border: 1.5px solid #e2e8f0;
+            transition: all 0.3s;
+            height: auto;
+        }
+
+            .form-control-booking:focus {
+                border-color: #22c55e;
+                box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
+            }
+
+        /* Nút bấm tinh tế */
+        .btn-booking {
+            border-radius: 50px;
+            padding: 12px 35px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+            border: none;
+        }
+
+        .btn-green {
+            background-color: #22c55e;
+            color: white;
+        }
+
+            .btn-green:hover {
+                background-color: #16a34a;
+                color: white;
+                transform: translateY(-1px);
+            }
+
+        .btn-cancel {
+            background-color: #f1f5f9;
+            color: #64748b;
+        }
+
+            .btn-cancel:hover {
+                background-color: #e2e8f0;
+                color: #475569;
+                text-decoration: none;
+            }
+    </style>
+}
+
+<div class="container mt-5 pt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+
+            <div class="booking-card">
+                <div class="booking-header">
+                    <h3 class="booking-title">ĐĂNG KÝ TIÊM CHỦNG</h3>
+                    <p class="text-muted mb-0 mt-2">Đăng ký tiêm ngay hôm nay để bảo vệ bản thân và gia đình</p>
+                </div>
+
+                <div class="booking-body">
+                    <div class="vaccine-info-box">
+                        <h5 class="font-weight-bold" style="color: #166534;">@ViewBag.VaccineName</h5>
+                        <p class="mb-1 mt-2 text-muted">
+                            <i class="fas fa-shield-virus mr-1" style="color: #22c55e;"></i> Phòng bệnh: <strong>@ViewBag.Disease</strong>
+                        </p>
+                        <p class="mb-0 text-muted">
+                            <i class="fas fa-tag mr-1" style="color: #22c55e;"></i> Chi phí dự kiến: <strong class="text-danger" style="font-size: 1.2rem;">@ViewBag.Price.ToString("N0") VNĐ</strong>
+                        </p>
+                    </div>
+
+                    <form asp-action="BookVaccine" method="post">
+                        <div asp-validation-summary="All" class="text-danger mb-3 small"></div>
+                        <input type="hidden" asp-for="VaccineId" />
+
+                        <div class="form-group mb-5">
+                            <label asp-for="BookingDate" class="font-weight-bold" style="color: #4a5568;">Chọn ngày muốn đến tiêm <span class="text-danger">*</span></label>
+
+                            <input asp-for="BookingDate" id="bookingDateOnly" class="form-control form-control-booking" type="date" required />
+
+                            <span asp-validation-for="BookingDate" class="text-danger small mt-1 d-block"></span>
+                            <small class="form-text text-muted mt-2"><i class="fas fa-info-circle mr-1"></i> Trung tâm tiêm chủng làm việc từ Thứ 2 đến Chủ nhật (Sáng: 7h30-11h30, Chiều: 13h00-17h00).</small>
+                        </div>
+
+                        <div class="text-center mt-2 pt-3 border-top" style="border-color: #f0f2f5 !important;">
+                            <button type="submit" class="btn btn-booking btn-green mr-2">
+                                <i class="fas fa-check-circle mr-1"></i> Xác nhận đăng ký
+                            </button>
+                            <a asp-action="Vaccines" class="btn btn-booking btn-cancel">Quay lại</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // SCRIPT CHẶN CHỌN NGÀY TRONG QUÁ KHỨ CHO THẺ <input type="date">
+        document.addEventListener('DOMContentLoaded', function () {
+            var inputDateOnly = document.getElementById('bookingDateOnly');
+
+            if (inputDateOnly) {
+                // Lấy thời gian hiện tại
+                var today = new Date();
+
+                // Format lại ngày theo chuẩn của thẻ <input type="date"> là yyyy-MM-dd
+                var year = today.getFullYear();
+                var month = (today.getMonth() + 1).toString().padStart(2, '0');
+                var day = today.getDate().toString().padStart(2, '0');
+
+                var minDateString = `${year}-${month}-${day}`;
+
+                // Set thuộc tính 'min' cho input (Các ngày trước đó trên Calendar sẽ bị xám đi)
+                inputDateOnly.min = minDateString;
+
+                // Chặn người dùng gõ tay một ngày sai vào
+                inputDateOnly.addEventListener('change', function() {
+                    if (this.value < minDateString) {
+                        alert('Vui lòng chọn ngày từ thời điểm hiện tại trở đi.');
+                        this.value = minDateString;
+                    }
+                });
+            }
+        });
+    </script>
+}

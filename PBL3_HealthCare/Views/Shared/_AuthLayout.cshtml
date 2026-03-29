@@ -1,0 +1,102 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - SuperStar Medical Center</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+
+    <style>
+        /* CSS DÙNG CHUNG CHO MỌI TRANG AUTH */
+        body { margin: 0; padding: 0; background-color: #ffffff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        .auth-wrapper { display: flex; flex-wrap: wrap; min-height: 100vh; }
+        
+        /* Cột chứa Form (Mặc định full màn hình trên Mobile) */
+        .auth-form-side { 
+            flex: 0 0 100%; max-width: 100%; 
+            padding: 5% 8%; 
+            display: flex; flex-direction: column; justify-content: center; 
+        }
+        
+        /* Cột chứa Ảnh (Ẩn trên Mobile) */
+        .auth-image-side { display: none; position: relative; }
+
+        /* Style chung cho các Input và Nút bấm (Viên thuốc) */
+        .form-control-pill { border-radius: 50px; padding: 12px 20px; border: 1.5px solid #e2e8f0; font-size: 0.95rem; transition: all 0.3s; }
+        .form-control-pill:focus { border-color: #00b5f1; box-shadow: 0 0 0 4px rgba(0, 181, 241, 0.15); outline: none; }
+        
+        .btn-pill { border-radius: 50px; padding: 12px 25px; font-weight: 700; transition: all 0.3s; border: none; }
+        .btn-cyan { background-color: #00b5f1; color: white; box-shadow: 0 4px 15px rgba(0, 181, 241, 0.3); }
+        .btn-cyan:hover { background-color: #0099cc; color: white; transform: translateY(-2px); }
+
+        /* Khi lên màn hình PC (Tablet/Desktop) thì chia đôi màn hình */
+        @@media (min-width: 992px) {
+            .auth-form-side { flex: 0 0 45%; max-width: 45%; padding: 40px 8%; }
+            .auth-image-side { 
+                display: block; flex: 1; 
+                /* SẾP THAY LINK ẢNH VÀO ĐÂY NHÉ */
+                background: url('/img/doctors/hinhnenbs.webp') center/cover no-repeat; 
+                /* Đường cắt vát chéo y hệt Medpro */
+                clip-path: polygon(12% 0, 100% 0, 100% 100%, 0% 100%); 
+            }
+        }
+
+        /* 🔥 NÚT GOOGLE TINH TẾ (GHOST BUTTON: VIỀN ĐỎ -> HOVER FULL ĐỎ) */
+        .btn-google-red {
+            background-color: #ffffff; /* Mặc định nền trắng ngoan hiền */
+            color: #db4437 !important; /* Chữ và icon màu đỏ Google */
+            border: 2px solid #db4437; /* Viền đỏ 2px cực kỳ sắc nét */
+            border-radius: 50px;
+            padding: 11px 25px; /* Trừ hao 1px của viền để kích thước bằng nút trên */
+            font-weight: 700; /* Chữ đậm lên để bù lại việc không có nền */
+            font-size: 0.95rem;
+            transition: all 0.3s ease; /* Hiệu ứng chuyển màu mượt mà */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            box-shadow: none; /* Mặc định tắt bóng đổ cho nó phẳng và sang */
+        }
+
+            .btn-google-red:hover {
+                background-color: #c53929; /* Đỏ lì, trầm hơn */
+                color: #ffffff !important;
+                border-color: #c53929;
+                transform: translateY(-1px); /* Chỉ nhích lên 1 xíu thôi */
+                /* 🔥 ĐỔI SANG BÓNG ĐEN SIÊU NHẠT: Không phát sáng, chỉ là bóng đổ vật lý */
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.03);
+            }
+
+            .btn-google-red i {
+                font-size: 1.15rem;
+                margin-right: 10px;
+            }
+
+            .btn-google-red:hover {
+                background-color: #c23321; /* Tối màu lại 1 xíu khi trỏ chuột */
+                transform: translateY(-1px);
+                box-shadow: 0 6px 15px rgba(219, 68, 55, 0.35);
+            }
+
+            .btn-google-red i {
+                font-size: 1.1rem;
+                margin-right: 10px;
+            }
+    </style>
+</head>
+<body>
+    <div class="auth-wrapper">
+        <div class="auth-form-side">
+            @RenderBody()
+        </div>
+
+        <div class="auth-image-side"></div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

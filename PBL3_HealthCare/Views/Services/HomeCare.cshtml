@@ -1,0 +1,149 @@
+﻿@model IEnumerable<PBL3_HealthCare.Models.HomeService>
+@{
+    ViewData["Title"] = "Dịch vụ Y tế tại nhà";
+    Layout = "~/Views/Shared/_Layout.cshtml"; // Layout khách hàng
+}
+
+@section Styles {
+    <style>
+        /* CSS MỚI: GIAO DIỆN TINH GỌN, CHỈ CÓ CHỮ VÀ 1 NÚT BẤM */
+        .homecare-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 24px;
+            height: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            border: 1px solid #f0f2f5;
+            display: flex;
+            flex-direction: column;
+        }
+
+            .homecare-card:hover {
+                box-shadow: 0 8px 25px rgba(0, 181, 241, 0.12);
+                border-color: #00b5f1;
+                transform: translateY(-3px);
+            }
+
+        /* Phần thông tin phía trên chiếm trọn chiều rộng */
+        .hc-top-section {
+            flex-grow: 1; /* Đẩy phần nút bấm xuống đáy */
+            text-align: left;
+        }
+
+        .hc-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #2b3452;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .hc-desc {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+            /* Cho phép mô tả hiện dài hơn (5 dòng) */
+            display: -webkit-box;
+            -webkit-line-clamp: 5;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.6;
+        }
+
+        /* Chỉnh lại phần Giá nổi bật */
+        .hc-price-wrap {
+            color: #f58220; /* Màu cam nổi bật */
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        /* Phần nút bấm ở đáy CHỈ CÓ 1 NÚT ÉP PHẢI */
+        .hc-bottom-section {
+            display: flex;
+            justify-content: flex-end; /* Ép nút sang phải tuyệt đối */
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #e2e8f0; /* Đường kẻ đứt phân cách */
+        }
+
+        /* Nút Đặt lịch (Tô full màu Cyan) bo tròn hạt đậu */
+        .btn-hc-solid {
+            background-color: #00cbff;
+            color: #ffffff !important;
+            border: none;
+            border-radius: 50px;
+            padding: 10px 30px; /* Nút to và bấm đã tay hơn */
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(0, 203, 255, 0.2);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+            .btn-hc-solid:hover {
+                background-color: #00b5f1;
+                transform: scale(1.05);
+                text-decoration: none;
+            }
+
+        /* Trên Mobile thì nút full chiều rộng */
+        @@media (max-width: 768px) {
+            .btn-hc-solid {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+}
+
+<section style="background-color: #f8f9fc; padding-top: 50px; padding-bottom: 60px;">
+    <div class="container">
+
+        <div class="text-center mb-5">
+            <p class="font-weight-bold text-primary text-uppercase" style="letter-spacing: 2px; font-size: 14px;">Chăm sóc sức khỏe</p>
+            <h2 style="font-weight: 800; color: #1a202c;">Dịch Vụ Y Tế Tại Nhà</h2>
+            <p class="text-muted">Mang tiêu chuẩn y tế chất lượng cao đến tận ngôi nhà của bạn.</p>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="alert alert-light text-center py-5 shadow-sm" style="border-radius: 16px;">
+                <i class="fas fa-box-open fa-3x mb-3 text-muted"></i>
+                <h4 class="text-dark">Hiện chưa có dịch vụ tại nhà nào.</h4>
+                <p class="text-muted">Phòng khám đang tiến hành cập nhật, vui lòng quay lại sau!</p>
+            </div>
+        }
+        else
+        {
+            <div class="row">
+                @foreach (var item in Model)
+                {
+                    <div class="col-lg-6 col-md-12 mb-4">
+                        <div class="homecare-card">
+
+                            <div class="hc-top-section">
+                                <div class="hc-title">@item.Name</div>
+                                <div class="hc-desc">
+                                    @item.Description
+                                </div>
+                                <div class="hc-price-wrap">
+                                    <i class="fas fa-money-bill-wave mr-1"></i> Giá: @item.Price.ToString("N0") VNĐ
+                                </div>
+                            </div>
+
+                            <div class="hc-bottom-section">
+                                <a asp-action="BookHomeCare" asp-route-id="@item.Id" class="btn-hc-solid">
+                                    <i class="fas fa-hand-holding-medical mr-1"></i> Đặt khám ngay
+                                </a>
+                            </div>
+
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>

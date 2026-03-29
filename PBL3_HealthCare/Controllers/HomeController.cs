@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,9 +13,9 @@ using PBL3_HealthCare.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.IO;
 
 namespace PBL3_HealthCare.Controllers
 {
@@ -185,6 +186,7 @@ namespace PBL3_HealthCare.Controllers
 
         // GET: /Home/BookAppointment (Hứng data từ DoctorProfile)
         [HttpGet]
+        [Authorize(Roles = "Patient")]
         public async Task<IActionResult> BookAppointment(int? doctorId, DateTime? date, string timeSlot)
         {
             if (!User.Identity.IsAuthenticated)
@@ -217,6 +219,7 @@ namespace PBL3_HealthCare.Controllers
         // POST: /Home/BookAppointment (Xử lý lưu vào Database)
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Patient")]
         public async Task<IActionResult> BookAppointment([Bind("DoctorId,Date,TimeSlot,Reason")] Appointment model)
         {
             ModelState.Remove("PatientId");
@@ -314,6 +317,11 @@ namespace PBL3_HealthCare.Controllers
                 .OrderByDescending(a => a.Date)
                 .ToListAsync();
 
+            ViewBag.PackageBookings = await _context.PackageBookings
+        .Include(p => p.HealthPackage)
+        .Where(p => p.PatientId == userId)
+        .OrderByDescending(p => p.CreatedAt)
+        .ToListAsync();
             return View(myAppointments);
         }
 

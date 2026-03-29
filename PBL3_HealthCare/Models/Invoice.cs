@@ -21,7 +21,7 @@ namespace PBL3_HealthCare.Models
 
         // Chi tiết hóa đơn (Các dòng tiền)
         public virtual ICollection<InvoiceDetail> Details { get; set; }
-        public int MedicalRecordId { get; set; }
+        public int? MedicalRecordId { get; set; }
         public virtual MedicalRecord MedicalRecord { get; set; }
 
         public string? Note { get; set; }

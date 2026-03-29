@@ -26,7 +26,12 @@ namespace PBL3_HealthCare.Data
         public DbSet<Invoice> Invoices { get; set; }
         public DbSet<InvoiceDetail> InvoiceDetails { get; set; }
         public DbSet<Notification> Notifications { get; set; }
-
+        public DbSet<HealthPackage> HealthPackages { get; set; }
+        public DbSet<Vaccine> Vaccines { get; set; }
+        public DbSet<HomeService> HomeServices { get; set; }
+        public DbSet<PackageBooking> PackageBookings { get; set; }
+        public DbSet<VaccinationBooking> VaccinationBookings { get; set; }
+        public DbSet<HomeServiceRequest> HomeServiceRequests { get; set; }
         // =========================================================
         // CẤU HÌNH FLUENT API
         // =========================================================
@@ -76,6 +81,40 @@ namespace PBL3_HealthCare.Data
                 .HasOne(i => i.MedicalRecord)
                 .WithMany()
                 .HasForeignKey(i => i.MedicalRecordId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // 1. Chặn xóa Bệnh nhân -> bay Lịch tiêm chủng
+            builder.Entity<VaccinationBooking>()
+                .HasOne(v => v.Patient)
+                .WithMany()
+                .HasForeignKey(v => v.PatientId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // 2. Chặn xóa Vaccine -> bay Lịch tiêm chủng
+            builder.Entity<VaccinationBooking>()
+                .HasOne(v => v.Vaccine)
+                .WithMany()
+                .HasForeignKey(v => v.VaccineId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // 3. Chặn xóa Bệnh nhân -> bay Lịch Y tế tại nhà
+            builder.Entity<HomeServiceRequest>()
+                .HasOne(h => h.Patient)
+                .WithMany()
+                .HasForeignKey(h => h.PatientId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // 4. Chặn xóa Dịch vụ -> bay Lịch Y tế tại nhà
+            builder.Entity<HomeServiceRequest>()
+                .HasOne(h => h.HomeService)
+                .WithMany()
+                .HasForeignKey(h => h.HomeServiceId)
+                .OnDelete(DeleteBehavior.NoAction);
+            // Chặn xóa Bệnh nhân -> bay PackageBooking
+            builder.Entity<PackageBooking>()
+                .HasOne(p => p.Patient)
+                .WithMany()
+                .HasForeignKey(p => p.PatientId)
                 .OnDelete(DeleteBehavior.NoAction);
 
             // 4. FIX LỖI DECIMAL

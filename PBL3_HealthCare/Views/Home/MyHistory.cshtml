@@ -64,3 +64,58 @@
         </div>
     </div>
 </div>
+
+<div class="card shadow mb-4 mt-5">
+    <div class="card-header py-3 bg-success">
+        <h6 class="m-0 font-weight-bold text-white"><i class="fas fa-box-open mr-2"></i>DANH SÁCH GÓI KHÁM ĐÃ ĐẶT</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                <thead class="bg-light text-center">
+                    <tr>
+                        <th>Ngày gửi yêu cầu</th>
+                        <th>Tên gói khám</th>
+                        <th>Ngày muốn khám</th>
+                        <th>Chi phí</th>
+                        <th>Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (ViewBag.PackageBookings != null && ((IEnumerable<PBL3_HealthCare.Models.PackageBooking>)ViewBag.PackageBookings).Any())
+                    {
+                        foreach (var pkg in (IEnumerable<PBL3_HealthCare.Models.PackageBooking>)ViewBag.PackageBookings)
+                        {
+                            <tr>
+                                <td class="text-center">@pkg.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="font-weight-bold text-primary">@(pkg.HealthPackage?.Name ?? "N/A")</td>
+                                <td class="text-center">@pkg.BookingDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="text-center text-danger font-weight-bold">@(pkg.HealthPackage?.Price.ToString("N0") ?? "0") VNĐ</td>
+                                <td class="text-center">
+                                    @if (pkg.Status == "Pending")
+                                    {
+                                        <span class="badge badge-warning p-2"><i class="fas fa-clock mr-1"></i>Chờ xếp Bác sĩ</span>
+                                    }
+                                    else if (pkg.Status == "Approved")
+                                    {
+                                        <span class="badge badge-success p-2"><i class="fas fa-check mr-1"></i>Đã xác nhận</span>
+                                    }
+                                    else if (pkg.Status == "Cancelled")
+                                    {
+                                        <span class="badge badge-danger p-2"><i class="fas fa-times mr-1"></i>Đã hủy</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center text-muted font-italic py-4">Bạn chưa đặt gói khám sức khỏe nào.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
