@@ -270,7 +270,7 @@
             background: #2f4ac7;
         }
 </style>
-
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <%-- SVG Robot icon có 2 mắt --%>
 <button class="chatbot-toggler" onclick="document.body.classList.toggle('show-chatbot')" title="Trợ lý AI">
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"
@@ -351,16 +351,18 @@
         <circle cx="15" cy="14" r="1.2" fill="#fff" stroke="none"/>
     </svg>`;
 
-    function appendMsg(text, isUser) {
+        function appendMsg(text, isUser) {
         const msgDiv = document.createElement('div');
         msgDiv.className = isUser ? 'msg-user' : 'msg-ai';
+
         if (isUser) {
-            msgDiv.innerHTML = `<div class="msg-user-bubble"></div>`;
-            msgDiv.querySelector('.msg-user-bubble').textContent = text;
+            msgDiv.innerHTML = `<div class="msg-user-bubble">${text}</div>`;
         } else {
+            // DÙNG marked.parse ĐỂ BIẾN ** THÀNH THẺ <b>
+            const formattedText = marked.parse(text);
             msgDiv.innerHTML = `
                 <div class="msg-ai-icon">${robotIconSvg}</div>
-                <div class="msg-ai-bubble">${text}</div>`;
+                <div class="msg-ai-bubble">${formattedText}</div>`;
         }
         chatBody.appendChild(msgDiv);
         chatBody.scrollTop = chatBody.scrollHeight;
@@ -384,23 +386,32 @@
     function sendMessage() {
         const text = chatInput.value.trim();
         if (!text) return;
-        chatInput.value = '';
-        appendMsg(text, true);
-        const typingEl = showTyping();
-        setTimeout(() => {
-            typingEl.remove();
-            let response = "Cảm ơn bạn đã quan tâm. Tôi có thể giúp gì thêm không?";
-            const lc = text.toLowerCase();
-            if (lc.includes("đặt lịch"))
-                response = "Bạn có thể chọn mục <strong>Đặt lịch khám</strong> trên menu hoặc gọi Hotline <strong>0123.456.789</strong>!";
-            else if (lc.includes("bác sĩ"))
-                response = "Phòng khám có đội ngũ bác sĩ chuyên khoa giàu kinh nghiệm từ bệnh viện TW.";
-            else if (lc.includes("triệu chứng"))
-                response = "Bạn vui lòng mô tả rõ hơn triệu chứng để tôi tư vấn sơ bộ ạ.";
-            appendMsg(response, false);
-        }, 1000);
-    }
 
+        chatInput.value = '';
+        appendMsg(text, true); // Hiện tin nhắn của sếp
+
+        const typingEl = showTyping(); // Hiện hiệu ứng "đang gõ"
+
+        // Gửi yêu cầu lên Server
+        $.ajax({
+            url: '/Chat/AskAI', // Đường dẫn tới Controller
+            type: 'POST',
+            data: { message: text },
+            success: function (response) {
+                typingEl.remove();
+                if (response.success) {
+                    appendMsg(response.data, false); // Hiện câu trả lời từ AI
+                } else {
+                    appendMsg("Lỗi: " + response.data, false);
+                }
+            },
+            error: function (xhr, status, error) {
+                typingEl.remove();
+                console.error("Chi tiết lỗi:", xhr.responseText);
+                appendMsg("Mất kết nối với máy chủ AI rồi sếp ơi! Kiểm tra Console để xem chi tiết.", false);
+            }
+        });
+    }
     function sendSuggest(text) {
         chatInput.value = text;
         sendMessage();

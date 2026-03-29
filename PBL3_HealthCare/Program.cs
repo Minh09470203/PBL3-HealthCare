@@ -44,7 +44,8 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<PBL3_HealthCare.Services.NotificationService>();
 // Đăng ký các Service tự viết
 builder.Services.AddScoped<PBL3_HealthCare.Services.InvoiceService>();
-
+// Đăng ký Service AI vào hệ thống
+builder.Services.AddScoped<PBL3_HealthCare.Services.GeminiService>();
 
 var app = builder.Build();
 
