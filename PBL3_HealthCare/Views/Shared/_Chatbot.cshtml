@@ -34,7 +34,7 @@
         opacity: 0;
         pointer-events: none;
         transform: translateY(16px);
-        transition: all 0.3s ease;
+        transition: all 0.35s ease;
         z-index: 1000;
         display: flex;
         flex-direction: column;
@@ -45,6 +45,22 @@
         pointer-events: auto;
         transform: translateY(0);
     }
+
+    /* ✅ FULLSCREEN MODE */
+    .chatbot-window.is-fullscreen {
+        right: 0;
+        bottom: 0;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        border: none;
+    }
+
+        .chatbot-window.is-fullscreen .chatbot-body {
+            height: calc(100vh - 130px); /* header ~65px + footer ~65px */
+        }
 
     .chatbot-header {
         background: #3B5BDB;
@@ -92,7 +108,8 @@
         background: #74fa9e;
     }
 
-    .btn-close-custom {
+    /* ✅ NÚT HEADER DÙNG CHUNG (phóng to + đóng) */
+    .btn-header-action {
         width: 28px;
         height: 28px;
         border: none;
@@ -103,10 +120,12 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        flex-shrink: 0;
+        transition: background 0.15s;
     }
 
-        .btn-close-custom:hover {
-            background: rgba(255,255,255,0.25);
+        .btn-header-action:hover {
+            background: rgba(255,255,255,0.28);
         }
 
     .chatbot-body {
@@ -118,6 +137,7 @@
         flex-direction: column;
         gap: 14px;
         scroll-behavior: smooth;
+        transition: height 0.3s ease;
     }
 
         .chatbot-body::-webkit-scrollbar {
@@ -159,6 +179,12 @@
         color: #2c2c3a;
         max-width: 82%;
         line-height: 1.5;
+    }
+
+    /* ✅ Fullscreen bubble rộng hơn */
+    .is-fullscreen .msg-ai-bubble,
+    .is-fullscreen .msg-user-bubble {
+        max-width: 60%;
     }
 
     .msg-user-bubble {
@@ -270,23 +296,21 @@
             background: #2f4ac7;
         }
 </style>
+
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<%-- SVG Robot icon có 2 mắt --%>
+
 <button class="chatbot-toggler" onclick="document.body.classList.toggle('show-chatbot')" title="Trợ lý AI">
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"
-         stroke-linecap="round" stroke-linejoin="round">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z" />
-        <%-- 2 con mắt --%>
         <circle cx="9" cy="14" r="1.2" fill="#fff" stroke="none" />
         <circle cx="15" cy="14" r="1.2" fill="#fff" stroke="none" />
     </svg>
 </button>
 
-<div class="chatbot-window">
+<div class="chatbot-window" id="chatbot-window">
     <div class="chatbot-header">
         <div class="chatbot-header-avatar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"
-                 stroke-linecap="round" stroke-linejoin="round">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z" />
                 <circle cx="9" cy="14" r="1.2" fill="#fff" stroke="none" />
                 <circle cx="15" cy="14" r="1.2" fill="#fff" stroke="none" />
@@ -296,7 +320,27 @@
             <p class="name">Trợ lý AI Y Tế</p>
             <p class="status"><span class="status-dot"></span> Đang hoạt động</p>
         </div>
-        <button class="btn-close-custom" onclick="document.body.classList.remove('show-chatbot')">
+
+        <button class="btn-header-action" onclick="toggleFullscreen()" id="btn-fullscreen" title="Phóng to">
+            <svg id="icon-maximize" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 3 21 3 21 9" />
+                <polyline points="9 21 3 21 3 15" />
+                <line x1="21" y1="3" x2="14" y2="10" />
+                <line x1="3" y1="21" x2="10" y2="14" />
+            </svg>
+
+            <svg id="icon-minimize" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                 style="display:none;">
+                <polyline points="4 14 10 14 10 20" />
+                <polyline points="20 10 14 10 14 4" />
+                <line x1="10" y1="14" x2="3" y2="21" />
+                <line x1="21" y1="3" x2="14" y2="10" />
+            </svg>
+        </button>
+
+        <button class="btn-header-action" onclick="document.body.classList.remove('show-chatbot')" title="Đóng">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="2.5" stroke-linecap="round">
                 <line x1="18" y1="6" x2="6" y2="18" />
@@ -308,8 +352,7 @@
     <div class="chatbot-body" id="chatbot-body">
         <div class="msg-ai">
             <div class="msg-ai-icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z" />
                     <circle cx="9" cy="14" r="1.2" fill="#fff" stroke="none" />
                     <circle cx="15" cy="14" r="1.2" fill="#fff" stroke="none" />
@@ -344,6 +387,7 @@
 <script>
     const chatBody = document.getElementById('chatbot-body');
     const chatInput = document.getElementById('chatbot-input');
+    const chatWindow = document.getElementById('chatbot-window');
 
     const robotIconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/>
@@ -351,14 +395,22 @@
         <circle cx="15" cy="14" r="1.2" fill="#fff" stroke="none"/>
     </svg>`;
 
-        function appendMsg(text, isUser) {
+    // ✅ HÀM PHÓNG TO / THU NHỎ
+    function toggleFullscreen() {
+        const isNowFullscreen = chatWindow.classList.toggle('is-fullscreen');
+        document.getElementById('icon-maximize').style.display = isNowFullscreen ? 'none' : 'block';
+        document.getElementById('icon-minimize').style.display = isNowFullscreen ? 'block' : 'none';
+        document.getElementById('btn-fullscreen').title = isNowFullscreen ? 'Thu nhỏ' : 'Phóng to';
+        // Scroll xuống cuối sau khi resize
+        setTimeout(() => { chatBody.scrollTop = chatBody.scrollHeight; }, 350);
+    }
+
+    function appendMsg(text, isUser) {
         const msgDiv = document.createElement('div');
         msgDiv.className = isUser ? 'msg-user' : 'msg-ai';
-
         if (isUser) {
             msgDiv.innerHTML = `<div class="msg-user-bubble">${text}</div>`;
         } else {
-            // DÙNG marked.parse ĐỂ BIẾN ** THÀNH THẺ <b>
             const formattedText = marked.parse(text);
             msgDiv.innerHTML = `
                 <div class="msg-ai-icon">${robotIconSvg}</div>
@@ -386,21 +438,17 @@
     function sendMessage() {
         const text = chatInput.value.trim();
         if (!text) return;
-
         chatInput.value = '';
-        appendMsg(text, true); // Hiện tin nhắn của sếp
-
-        const typingEl = showTyping(); // Hiện hiệu ứng "đang gõ"
-
-        // Gửi yêu cầu lên Server
+        appendMsg(text, true);
+        const typingEl = showTyping();
         $.ajax({
-            url: '/Chat/AskAI', // Đường dẫn tới Controller
+            url: '/Chat/AskAI',
             type: 'POST',
             data: { message: text },
             success: function (response) {
                 typingEl.remove();
                 if (response.success) {
-                    appendMsg(response.data, false); // Hiện câu trả lời từ AI
+                    appendMsg(response.data, false);
                 } else {
                     appendMsg("Lỗi: " + response.data, false);
                 }
@@ -412,6 +460,7 @@
             }
         });
     }
+
     function sendSuggest(text) {
         chatInput.value = text;
         sendMessage();
