@@ -24,5 +24,14 @@ namespace PBL3_HealthCare.Controllers
 
             return Json(new { success = true, data = answer });
         }
+
+        [HttpPost]
+        public IActionResult ResetChat()
+        {
+            // Gọi hàm Reset từ Service
+            _geminiService.ResetChatHistory();
+
+            return Json(new { success = true, message = "Đã xóa sạch trí nhớ!" });
+        }
     }
 }

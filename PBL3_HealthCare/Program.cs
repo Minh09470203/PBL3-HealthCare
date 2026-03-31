@@ -18,7 +18,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
+builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
@@ -31,6 +31,7 @@ builder.Services.AddAuthentication()
     });
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<PBL3_HealthCare.Services.NotificationService>();
 builder.Services.AddScoped<PBL3_HealthCare.Services.InvoiceService>();
 

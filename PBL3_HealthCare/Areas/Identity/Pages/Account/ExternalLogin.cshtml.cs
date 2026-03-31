@@ -106,8 +106,10 @@ namespace PBL3_HealthCare.Areas.Identity.Pages.Account
                     {
                         UserName = email,
                         Email = email,
-                        FullName = info.Principal.Identity.Name ?? "Người dùng Google"
+                        FullName = info.Principal.Identity.Name ?? "Người dùng Google",
+                        EmailConfirmed = true
                     };
+
 
                     var createResult = await _userManager.CreateAsync(user);
                     if (!createResult.Succeeded)

@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using PBL3_HealthCare.Models;
+using PBL3_HealthCare.Services;
 
 namespace PBL3_HealthCare.Areas.Identity.Pages.Account
 {
@@ -29,21 +30,21 @@ namespace PBL3_HealthCare.Areas.Identity.Pages.Account
         private readonly IUserStore<ApplicationUser> _userStore;
         private readonly IUserEmailStore<ApplicationUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
-        private readonly IEmailSender _emailSender;
+        private readonly EmailService _emailService;
 
         public RegisterModel(
             UserManager<ApplicationUser> userManager,
             IUserStore<ApplicationUser> userStore,
             SignInManager<ApplicationUser> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender)
+            EmailService emailService)
         {
             _userManager = userManager;
             _userStore = userStore;
             _emailStore = GetEmailStore();
             _signInManager = signInManager;
             _logger = logger;
-            _emailSender = emailSender;
+            _emailService = emailService;
         }
 
         /// <summary>
@@ -121,6 +122,7 @@ namespace PBL3_HealthCare.Areas.Identity.Pages.Account
         {
             returnUrl ??= Url.Content("~/");
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
             if (ModelState.IsValid)
             {
                 var user = CreateUser();
@@ -137,33 +139,40 @@ namespace PBL3_HealthCare.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(user, "Patient");
-                }
+                    _logger.LogInformation("Tài khoản mới đã được tạo.");
 
-                if (result.Succeeded)
-                {
-                    _logger.LogInformation("User created a new account with password.");
-
+                    // 1. TẠO MÃ XÁC THỰC (MÃ HÓA BẢO MẬT)
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+
+                    // 2. TẠO ĐƯỜNG LINK XÁC NHẬN TỰ ĐỘNG
                     var callbackUrl = Url.Page(
                         "/Account/ConfirmEmail",
                         pageHandler: null,
                         values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
                         protocol: Request.Scheme);
 
-                    await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                        $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                    // 3. SOẠN EMAIL ĐẸP LUNG LINH GỬI CHO KHÁCH
+                    string mailBody = $@"
+                        <div style='font-family: Arial, sans-serif; padding: 20px; background-color: #f4f7f6;'>
+                            <div style='max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);'>
+                                <h2 style='color: #3B5BDB; text-align: center;'>XÁC NHẬN TÀI KHOẢN</h2>
+                                <p>Chào <strong>{user.FullName}</strong>,</p>
+                                <p>Cảm ơn bạn đã đăng ký tài khoản tại Phòng Khám SuperStar. Để bảo vệ tài khoản của bạn, vui lòng xác thực địa chỉ email bằng cách bấm vào nút bên dưới:</p>
+                                <div style='text-align: center; margin: 30px 0;'>
+                                    <a href='{HtmlEncoder.Default.Encode(callbackUrl)}' style='background-color: #3B5BDB; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; display: inline-block;'>XÁC THỰC EMAIL NGAY</a>
+                                </div>
+                                <p style='color: #777; font-size: 12px; text-align: center;'>Nếu bạn không tạo tài khoản này, vui lòng bỏ qua email.</p>
+                            </div>
+                        </div>";
 
-                    if (_userManager.Options.SignIn.RequireConfirmedAccount)
-                    {
-                        return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
-                    }
-                    else
-                    {
-                        TempData["SuccessMessage"] = "Đăng ký thành công! Vui lòng đăng nhập.";
-                        return RedirectToPage("./Login");
-                    }
+                    // 4. BẮN EMAIL ĐI
+                    await _emailService.SendEmailAsync(Input.Email, "Xác thực tài khoản SuperStar", mailBody);
+
+                    // 5. KHÓA MÕM: Dù thế nào cũng đuổi ra màn hình Login bắt check mail, KHÔNG CHO ĐĂNG NHẬP!
+                    TempData["Success"] = "Đăng ký thành công! Vui lòng kiểm tra hộp thư Gmail (cả mục Thư rác) để bấm link xác thực trước khi đăng nhập.";
+                    return RedirectToPage("./Login");
                 }
                 foreach (var error in result.Errors)
                 {
@@ -171,7 +180,6 @@ namespace PBL3_HealthCare.Areas.Identity.Pages.Account
                 }
             }
 
-            // If we got this far, something failed, redisplay form
             return Page();
         }
 

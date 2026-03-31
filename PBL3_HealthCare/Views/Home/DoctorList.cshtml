@@ -11,6 +11,7 @@
 <section class="doctors-section">
     <div class="container">
 
+        @* Specialty hero banner *@
         @if (ViewBag.SpecialtyName != null)
         {
             <div class="specialty-hero">
@@ -57,27 +58,44 @@
 
         @if (Model != null && Model.Any())
         {
+            @* Layout ngang kiểu Medpro — mỗi card chiếm 1 hàng *@
             <div class="row">
                 @foreach (var item in Model)
                 {
-                    <div class="col-md-4 col-sm-6 mb-4">
+                    <div class="col-12 col-md-6">
                         <div class="doctor-card">
+
+                            @* Ảnh bên trái *@
                             <div class="photo-wrap">
                                 <img src="/img/doctors/@(item.Image ?? "default.jpg")"
                                      alt="@item.User?.FullName"
                                      onerror="this.src='/img/doctors/default.jpg'" />
                                 <span class="specialty-tag">@(item.Specialty?.Name ?? "Chuyên khoa")</span>
                             </div>
+
+                            @* Thông tin bên phải *@
                             <div class="card-content">
                                 <div class="doctor-name">BS. @(item.User?.FullName ?? "Đang cập nhật")</div>
                                 <div class="doctor-degree">@(item.Degree ?? "")</div>
-                                <div class="price-row">
-                                    <span class="price-label">Giá khám</span>
-                                    <span class="price-value">@string.Format("{0:N0}", item.Price)đ</span>
+
+                                <div class="info-row">
+                                    <span class="info-label">Chuyên khoa:</span>
+                                    <span class="info-val">@(item.Specialty?.Name ?? "—")</span>
                                 </div>
-                                <a asp-controller="Home" asp-action="DoctorInfo" asp-route-id="@item.Id"
-                                   class="btn-book">Xem lịch &amp; Đặt hẹn →</a>
+
+                                @* ĐÃ XÓA PHẦN INFO-ROW CỦA "GIÁ KHÁM" Ở ĐÂY CHO GỌN *@
+
+                                <div class="card-footer-row">
+                                    <div>
+                                        <div class="price-label">Giá khám</div>
+                                        <div class="price-value">@string.Format("{0:N0}", item.Price)đ</div>
+                                    </div>
+                                    <a asp-controller="Home" asp-action="DoctorInfo"
+                                       asp-route-id="@item.Id"
+                                       class="btn-book">Đặt hẹn →</a>
+                                </div>
                             </div>
+
                         </div>
                     </div>
                 }
@@ -91,5 +109,6 @@
                 <a asp-controller="Home" asp-action="Index" class="btn-back">Quay lại trang chủ</a>
             </div>
         }
+
     </div>
 </section>

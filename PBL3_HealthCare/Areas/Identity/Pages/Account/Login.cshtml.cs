@@ -160,6 +160,16 @@ namespace PBL3_HealthCare.Areas.Identity.Pages.Account
                     _logger.LogWarning("User account locked out.");
                     return RedirectToPage("./Lockout");
                 }
+                if (result.IsNotAllowed)
+                {
+                    var user = await _userManager.FindByEmailAsync(Input.Email);
+                    if (user != null && !await _userManager.IsEmailConfirmedAsync(user))
+                    {
+                        _logger.LogWarning("Tài khoản chưa xác thực email cố gắng đăng nhập.");
+                        ModelState.AddModelError(string.Empty, "Tài khoản chưa được xác thực! Vui lòng kiểm tra hộp thư Gmail (kể cả Thư rác) và bấm vào link để kích hoạt.");
+                        return Page();
+                    }
+                }
                 else
                 {
                     ModelState.AddModelError(string.Empty, "Invalid login attempt.");
