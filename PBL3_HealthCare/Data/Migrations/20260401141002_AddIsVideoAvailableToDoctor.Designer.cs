@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PBL3_HealthCare.Data;
 
@@ -11,9 +12,11 @@ using PBL3_HealthCare.Data;
 namespace PBL3_HealthCare.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260401141002_AddIsVideoAvailableToDoctor")]
+    partial class AddIsVideoAvailableToDoctor
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -514,15 +517,8 @@ namespace PBL3_HealthCare.Data.Migrations
                     b.Property<int>("DoctorId")
                         .HasColumnType("int");
 
-                    b.Property<string>("DoctorNotes")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime?>("ReExaminationDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("Symptoms")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Treatment")
                         .HasColumnType("nvarchar(max)");

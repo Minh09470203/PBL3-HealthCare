@@ -26,5 +26,6 @@ namespace PBL3_HealthCare.Models
         public virtual ICollection<Appointment>? Appointments { get; set; }
         // Mối quan hệ: Bác sĩ có nhiều lịch trực
         public ICollection<Schedule>? Schedules { get; set; }
+        public bool IsVideoAvailable { get; set; } = false;
     }
 }

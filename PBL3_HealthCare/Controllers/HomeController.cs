@@ -201,7 +201,7 @@ namespace PBL3_HealthCare.Controllers
 
             var doctor = await _context.Doctors.Include(d => d.User).FirstOrDefaultAsync(d => d.Id == doctorId);
             if (doctor == null) return NotFound();
-
+            ViewBag.IsVideoCall = doctor.IsVideoAvailable;
             // Khởi tạo Model để chống lỗi NullReferenceException
             var model = new Appointment
             {
@@ -626,6 +626,53 @@ namespace PBL3_HealthCare.Controllers
                 .ToListAsync();
 
             return View(invoices);
+        }
+        // GET: /Home/PatientDashboard
+        [Authorize(Roles = "Patient")]
+        public async Task<IActionResult> PatientDashboard()
+        {
+            // Lấy ID của User đang đăng nhập
+            var userId = _userManager.GetUserId(User);
+            if (userId == null) return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            // Lấy danh sách lịch hẹn, bao gồm thông tin Bác sĩ và Chuyên khoa để hiển thị
+            var appointments = await _context.Appointments
+                .Include(a => a.Doctor)
+                    .ThenInclude(d => d.User)
+                .Include(a => a.Doctor)
+                    .ThenInclude(d => d.Specialty)
+                .Where(a => a.PatientId == userId)
+                .OrderByDescending(a => a.Date)
+                .ToListAsync();
+
+            return View(appointments);
+        }
+        // GET: /Home/DoctorDashboard
+        [Authorize(Roles = "Doctor")]
+        public async Task<IActionResult> DoctorDashboard()
+        {
+            // 1. Lấy User ID hiện tại
+            var userId = _userManager.GetUserId(User);
+            if (userId == null) return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            // 2. Tìm ID bác sĩ tương ứng trong bảng Doctors
+            var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId);
+            if (doctor == null) return NotFound("Không tìm thấy hồ sơ bác sĩ.");
+
+            // 3. Lấy danh sách lịch hẹn của HÔM NAY
+            var today = DateTime.Today;
+            var appointmentsToday = await _context.Appointments
+                .Include(a => a.Patient) // Lấy thông tin bệnh nhân
+                .Where(a => a.DoctorId == doctor.Id &&
+                            a.Date.Date == today &&
+                            a.Status != AppointmentStatus.Cancelled) // Không lấy lịch đã hủy
+                .OrderBy(a => a.TimeSlot)
+                .ToListAsync();
+
+            // Truyền thêm dữ liệu phụ ra View nếu cần (ví dụ: tổng số ca trong ngày)
+            ViewBag.TotalToday = appointmentsToday.Count;
+
+            return View(appointmentsToday);
         }
     }
 }
