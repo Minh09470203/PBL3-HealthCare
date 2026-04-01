@@ -171,7 +171,7 @@ namespace PBL3_HealthCare.Areas.Identity.Pages.Account
                     await _emailService.SendEmailAsync(Input.Email, "Xác thực tài khoản SuperStar", mailBody);
 
                     // 5. KHÓA MÕM: Dù thế nào cũng đuổi ra màn hình Login bắt check mail, KHÔNG CHO ĐĂNG NHẬP!
-                    TempData["Success"] = "Đăng ký thành công! Vui lòng kiểm tra hộp thư Gmail (cả mục Thư rác) để bấm link xác thực trước khi đăng nhập.";
+                    TempData["SuccessMessage"] = "Vui lòng kiểm tra hộp thư Gmail (cả mục Thư rác) để xác thực tài khoản trước khi đăng nhập.";
                     return RedirectToPage("./Login");
                 }
                 foreach (var error in result.Errors)
