@@ -26,18 +26,21 @@ namespace PBL3_HealthCare.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly NotificationService _notificationService;
+        private readonly EmailService _emailService;
         public HomeController(
             ILogger<HomeController> logger,
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
             IWebHostEnvironment webHostEnvironment,
-            NotificationService notificationService)
+            NotificationService notificationService,
+            EmailService emailService)
         {
             _logger = logger;
             _context = context;
             _userManager = userManager;
             _webHostEnvironment = webHostEnvironment;
             _notificationService = notificationService;
+            _emailService = emailService;
         }
 
         public async Task<IActionResult> Index()
@@ -185,9 +188,11 @@ namespace PBL3_HealthCare.Controllers
         // ==========================================
 
         // GET: /Home/BookAppointment (Hứng data từ DoctorProfile)
+        // GET: /Home/BookAppointment (Hứng data từ DoctorProfile)
         [HttpGet]
         [Authorize(Roles = "Patient")]
-        public async Task<IActionResult> BookAppointment(int? doctorId, DateTime? date, string timeSlot)
+        // Sếp THÊM tham số isVideoCall vào đây nhé:
+        public async Task<IActionResult> BookAppointment(int? doctorId, DateTime? date, string timeSlot, bool isVideoCall = false)
         {
             if (!User.Identity.IsAuthenticated)
             {
@@ -202,7 +207,6 @@ namespace PBL3_HealthCare.Controllers
             var doctor = await _context.Doctors.Include(d => d.User).FirstOrDefaultAsync(d => d.Id == doctorId);
             if (doctor == null) return NotFound();
 
-            // Khởi tạo Model để chống lỗi NullReferenceException
             var model = new Appointment
             {
                 DoctorId = doctorId.Value,
@@ -213,14 +217,19 @@ namespace PBL3_HealthCare.Controllers
             ViewBag.DoctorName = $"BS. {doctor.User.FullName}";
             ViewBag.DisplayDate = date.Value.ToString("dd/MM/yyyy");
 
+            // DÒNG NÀY RẤT QUAN TRỌNG: Check xem url có chữ isVideoCall=true không, VÀ bác sĩ này có nhận khám online không!
+            ViewBag.IsVideoCall = isVideoCall && doctor.IsVideoAvailable;
+
             return View(model);
         }
 
         // POST: /Home/BookAppointment (Xử lý lưu vào Database)
+        // POST: /Home/BookAppointment (Xử lý lưu vào Database)
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Patient")]
-        public async Task<IActionResult> BookAppointment([Bind("DoctorId,Date,TimeSlot,Reason")] Appointment model)
+        // NHỚ THÊM IsVideoCall VÀO DÒNG BIND DƯỚI ĐÂY:
+        public async Task<IActionResult> BookAppointment([Bind("DoctorId,Date,TimeSlot,Reason,IsVideoCall")] Appointment model)
         {
             ModelState.Remove("PatientId");
             ModelState.Remove("Status");
@@ -240,7 +249,7 @@ namespace PBL3_HealthCare.Controllers
                     return await ReloadViewOnError(model);
                 }
 
-                // THUẬT TOÁN CHECK TRÙNG LỊCH (Chặn nếu có người nhanh tay đặt trước)
+                // Check trùng lịch
                 bool isConflict = await _context.Appointments.AnyAsync(a =>
                     a.DoctorId == model.DoctorId &&
                     a.Date == model.Date &&
@@ -253,29 +262,65 @@ namespace PBL3_HealthCare.Controllers
                     return await ReloadViewOnError(model);
                 }
 
-                // LƯU VÀO DB
-                var userId = _userManager.GetUserId(User);
-                if (userId == null)
+                // Lấy thông tin user
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null)
                 {
                     return RedirectToPage("/Account/Login", new { area = "Identity" });
                 }
 
-                model.PatientId = userId;
+                // LƯU VÀO DB
+                model.PatientId = user.Id;
                 model.Status = AppointmentStatus.Pending;
                 model.CreatedAt = DateTime.Now;
+
+                // 🔥 LOGIC KHÁM VIDEO Ở ĐÂY 🔥
+                if (model.IsVideoCall)
+                {
+                    // Sinh mã phòng ngẫu nhiên 8 ký tự
+                    model.MeetingRoomId = "ROOM-" + Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper();
+                    // Đặt CallStatus cho phòng gọi (enum mà sếp vừa tạo đó)
+                    model.CallStatus = CallStatus.Pending;
+                }
 
                 _context.Appointments.Add(model);
                 await _context.SaveChangesAsync();
 
-                // Tìm thông tin bác sĩ để lấy cái UserId của ổng
+                // Bắn thông báo nội bộ cho bác sĩ
                 var doctorInfo = await _context.Doctors.FindAsync(model.DoctorId);
                 if (doctorInfo != null)
                 {
-                    // Bắn thông báo cho bác sĩ
                     await _notificationService.CreateNotification(
                         doctorInfo.UserId,
                         $"Có bệnh nhân vừa đặt lịch khám với bạn vào lúc {model.TimeSlot} ngày {model.Date:dd/MM/yyyy}."
                     );
+                }
+
+                // 🔥 GỬI EMAIL CHỨA LINK PHÒNG KHÁM CHO BỆNH NHÂN 🔥
+                if (model.IsVideoCall && !string.IsNullOrEmpty(user.Email))
+                {
+                    // Tự động lấy domain hiện tại (http://localhost:xxxx) để tạo link
+                    var request = HttpContext.Request;
+                    var domain = $"{request.Scheme}://{request.Host}";
+                    string roomUrl = $"{domain}/VideoCall/Room?roomId={model.MeetingRoomId}";
+
+                    string emailSubject = "Xác nhận Lịch Khám Qua Video - PBL3 HealthCare";
+                    string emailBody = $@"
+                <div style='font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 10px;'>
+                    <h2 style='color: #0d6efd;'>PBL3 HealthCare Clinic</h2>
+                    <p>Chào <strong>{user.FullName}</strong>,</p>
+                    <p>Lịch khám Online của bạn đã được xác nhận thành công. Thông tin chi tiết:</p>
+                    <ul>
+                        <li><strong>Bác sĩ:</strong> BS. {ViewBag.DoctorName ?? doctorInfo?.UserId}</li>
+                        <li><strong>Ngày khám:</strong> {model.Date:dd/MM/yyyy}</li>
+                        <li><strong>Giờ khám:</strong> {model.TimeSlot}</li>
+                    </ul>
+                    <p style='color: red;'><strong>Lưu ý:</strong> Vui lòng chuẩn bị Camera, Micro và truy cập vào link bên dưới <strong>trước giờ hẹn 10 phút</strong>.</p>
+                    <a href='{roomUrl}' style='display: inline-block; padding: 12px 20px; margin-top: 10px; background-color: #0d6efd; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;'>BẤM VÀO ĐÂY ĐỂ VÀO PHÒNG KHÁM</a>
+                    <p style='margin-top: 20px; font-size: 12px; color: #888;'>Mã phòng dự phòng của bạn là: {model.MeetingRoomId}</p>
+                </div>";
+
+                    await _emailService.SendEmailAsync(user.Email, emailSubject, emailBody);
                 }
 
                 TempData["Success"] = "Đặt lịch thành công! Vui lòng chờ phòng khám xác nhận.";

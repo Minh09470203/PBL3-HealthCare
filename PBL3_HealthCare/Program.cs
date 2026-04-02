@@ -34,7 +34,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<PBL3_HealthCare.Services.NotificationService>();
 builder.Services.AddScoped<PBL3_HealthCare.Services.InvoiceService>();
-
+builder.Services.AddScoped<ZegoTokenService>();
 // ✅ Chatbot services
 builder.Services.AddMemoryCache();
 builder.Services.AddSession(options =>

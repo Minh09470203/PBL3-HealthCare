@@ -29,4 +29,12 @@
         Service = 0,    // Dịch vụ (Khám, Xét nghiệm...)
         Medicine = 1    // Thuốc
     }
+
+    public enum CallStatus
+    {
+        Pending,    // Đang chờ đến giờ
+        InProgress, // Đang trong cuộc gọi
+        Completed,  // Đã khám xong
+        Cancelled   // Đã hủy
+    }
 }

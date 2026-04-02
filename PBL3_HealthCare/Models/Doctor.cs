@@ -21,6 +21,7 @@ namespace PBL3_HealthCare.Models
         public string? Degree { get; set; } // Học vị (Thạc sĩ, Bác sĩ CKI...)
         public decimal Price { get; set; } // Giá khám
         public string? Image { get; set; } // Link ảnh
+        public bool IsVideoAvailable { get; set; } = false;
 
         // Mối quan hệ: Bác sĩ có nhiều lịch hẹn
         public virtual ICollection<Appointment>? Appointments { get; set; }

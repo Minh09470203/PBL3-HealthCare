@@ -29,12 +29,8 @@ namespace PBL3_HealthCare.Models
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public virtual MedicalRecord? MedicalRecord { get; set; } // 1 cuộc hẹn có 1 kết quả khám
         public virtual Invoice? Invoice { get; set; }             // 1 cuộc hẹn có 1 hóa đơn
+        public bool IsVideoCall { get; set; } = false;
+        public string? MeetingRoomId { get; set; }
+        public CallStatus CallStatus { get; set; } = CallStatus.Pending;
     }
- /* public enum AppointmentStatus
-    {
-        Pending,    // 0: Chờ duyệt
-        Confirmed,  // 1: Đã duyệt
-        Completed,  // 2: Hoàn thành
-        Cancelled   // 3: Đã hủy
-    } */
 }
