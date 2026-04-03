@@ -1,433 +1,246 @@
-﻿@{
-    ViewData["Title"] = "SS Medical Center";
-    Layout = "~/Views/Shared/_HomeLayout.cshtml";
-}
-@using Microsoft.AspNetCore.Identity
-@using PBL3_HealthCare.Models
-@using System.Security.Claims
-@model PBL3_HealthCare.ViewModels.HomeViewModel
+﻿    @{
+        ViewData["Title"] = "SS Medical Center";
+        Layout = "~/Views/Shared/_HomeLayout.cshtml";
+    }
+    @using Microsoft.AspNetCore.Identity
+    @using PBL3_HealthCare.Models
+    @using System.Security.Claims
+    @model PBL3_HealthCare.ViewModels.HomeViewModel
 
-@section Styles {
-    <link rel="stylesheet" href="~/css/home/home.css" />
-}
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-
-<style>
-    /* 1. Nâng cấp Card Dịch vụ */
-    .service-card {
-        border-radius: 20px;
-        background: #ffffff;
-        border: 1px solid #f4f6f9;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.03); /* Bóng nền nhạt hơn nữa */
-        transition: all 0.3s ease;
-        text-align: center;
-        padding: 20px 10px; /* Thẻ nhỏ gọn lại một xíu */
-        height: 190px; /* Thẻ lùn xuống một chút */
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-decoration: none;
-        color: #2b3452;
-        position: relative;
-        overflow: hidden;
+    @section Styles {
+        <link rel="stylesheet" href="~/css/home/home.css" />
     }
 
-        .service-card:hover {
-            transform: translateY(-5px); /* Nảy lên nhẹ nhàng hơn */
-            box-shadow: 0 12px 25px rgba(61, 94, 225, 0.1); /* Bóng lúc hover cũng nhạt đi */
-            color: #3d5ee1;
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
+    <style>
+        /* 1. Nâng cấp Card Dịch vụ */
+        .service-card {
+            border-radius: 20px;
+            background: #ffffff;
+            border: 1px solid #f4f6f9;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.03);
+            transition: all 0.3s ease;
+            text-align: center;
+            padding: 20px 10px;
+            height: 190px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-decoration: none;
+            color: #2b3452;
+            position: relative;
+            overflow: hidden;
         }
 
-        /* Tạo một đường viền Gradient chạy dưới đáy Card khi hover */
-        .service-card::after {
-            content: '';
+            .service-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 12px 25px rgba(61, 94, 225, 0.1);
+                color: #3d5ee1;
+            }
+
+            .service-card::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                height: 4px;
+                background: linear-gradient(90deg, #3d5ee1, #00d2ff);
+                transform: scaleX(0);
+                transition: transform 0.3s ease;
+                transform-origin: left;
+            }
+
+            .service-card:hover::after {
+                transform: scaleX(1);
+            }
+
+        .badge-hot {
             position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, #3d5ee1, #00d2ff);
-            transform: scaleX(0);
-            transition: transform 0.3s ease;
-            transform-origin: left;
+            top: 12px;
+            right: 12px;
+            font-size: 11px;
+            border-radius: 8px;
         }
 
-        .service-card:hover::after {
-            transform: scaleX(1);
+        /* 2. Nút bấm Mũi tên */
+        .swiper-button-next, .swiper-button-prev {
+            background-color: #ffffff;
+            width: 45px !important;
+            height: 45px !important;
+            border-radius: 50%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            color: #3d5ee1 !important;
+            margin-top: -22px;
+            z-index: 10;
         }
 
-    .badge-hot {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        font-size: 11px;
-        border-radius: 8px;
-    }
+            .swiper-button-next:after, .swiper-button-prev:after {
+                font-size: 16px !important;
+                font-weight: 900;
+            }
 
-    /* 2. Nâng cấp Nút bấm Mũi tên (Đẩy ra ngoài rìa) */
-    .swiper-button-next, .swiper-button-prev {
-        background-color: #ffffff;
-        width: 45px !important;
-        height: 45px !important;
-        border-radius: 50%;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.08); /* Bóng nút nhạt đi */
-        color: #3d5ee1 !important;
-        margin-top: -22px;
-    }
-
-        .swiper-button-next:after, .swiper-button-prev:after {
-            font-size: 16px !important;
-            font-weight: 900;
+        .swiper-button-prev {
+            left: -5px !important;
         }
 
-    /* Đẩy nút sát ra ngoài viền màn hình để không đè lên card */
-    .swiper-button-prev {
-        left: -5px !important;
-    }
+        .swiper-button-next {
+            right: -5px !important;
+        }
+    </style>
 
-    .swiper-button-next {
-        right: -5px !important;
-    }
-</style>
-
-<!-- HERO -->
-<section class="hero-wrap js-fullheight"
-         style="background-image:url('/img/bg_3.jpg');"
-         data-section="home" data-stellar-background-ratio="0.5"
-         id="home-section">
-    <div class="overlay"></div>
-    <div class="container h-100">
-        <div class="row slider-text js-fullheight align-items-center">
-            <div class="col-md-6 pt-5">
-                <div class="mt-5 fade-up">
-                    <span class="subheading">Chào mừng đến với SuperStar Medical Center</span>
-                    <h1 class="mb-4">Chúng tôi luôn ở đây<br>để chăm sóc<br>sức khỏe của bạn</h1>
-                    <p class="mb-4">Đội ngũ y bác sĩ chuyên nghiệp, trang thiết bị hiện đại và dịch vụ tận tâm — chúng tôi cam kết mang đến trải nghiệm khám chữa bệnh tốt nhất.</p>
-                    <a asp-controller="Home" asp-action="BookAppointment" class="btn btn-primary py-3 px-4">Đặt lịch khám ngay →</a>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- STATS STRIP -->
-<div class="stats-strip">
-    <div class="container">
-        <div class="row text-center">
-            <div class="col-6 col-md-3 stat-item fade-up">
-                <div class="stat-number">50+</div>
-                <div class="stat-label">Bác sĩ chuyên khoa</div>
-            </div>
-            <div class="col-6 col-md-3 stat-item stat-divider fade-up delay-1">
-                <div class="stat-number">12</div>
-                <div class="stat-label">Chuyên khoa</div>
-            </div>
-            <div class="col-6 col-md-3 stat-item stat-divider fade-up delay-2">
-                <div class="stat-number">10K+</div>
-                <div class="stat-label">Bệnh nhân tin tưởng</div>
-            </div>
-            <div class="col-6 col-md-3 stat-item stat-divider fade-up delay-3">
-                <div class="stat-number">24/7</div>
-                <div class="stat-label">Hỗ trợ liên tục</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ABOUT -->
-<section class="section-pad" id="about-section">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-md-5 mb-5 mb-md-0 fade-up">
-                <div class="about-img-wrap" style="height:420px;">
-                    <img src="/img/about.jpg" alt="Về chúng tôi" style="width:100%;height:100%;object-fit:cover;" />
-                    <div class="about-badge">
-                        <div class="badge-number">15+</div>
-                        <div class="badge-text">Năm kinh nghiệm</div>
+    <section class="hero-wrap js-fullheight"
+             style="background-image:url('/img/bg_3.jpg');"
+             data-section="home" data-stellar-background-ratio="0.5"
+             id="home-section">
+        <div class="overlay"></div>
+        <div class="container h-100">
+            <div class="row slider-text js-fullheight align-items-center">
+                <div class="col-md-6 pt-5">
+                    <div class="mt-5 fade-up">
+                        <span class="subheading">Chào mừng đến với SuperStar Medical Center</span>
+                        <h1 class="mb-4">Chúng tôi luôn ở đây<br>để chăm sóc<br>sức khỏe của bạn</h1>
+                        <p class="mb-4">Đội ngũ y bác sĩ chuyên nghiệp, trang thiết bị hiện đại và dịch vụ tận tâm — chúng tôi cam kết mang đến trải nghiệm khám chữa bệnh tốt nhất.</p>
+                        <a asp-controller="Home" asp-action="BookAppointment" class="btn btn-primary py-3 px-4">Đặt lịch khám ngay →</a>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6 offset-md-1 about-content fade-up delay-1">
-                <p class="section-eyebrow">Về chúng tôi</p>
-                <h2 class="mb-3">Chúng tôi là <span>SuperStar</span><br>Medical Center</h2>
-                <div class="divider-line"></div>
-                <p class="mb-3">SuperStar Medical Center là phòng khám đa khoa hiện đại, quy tụ đội ngũ bác sĩ giàu kinh nghiệm từ các bệnh viện lớn. Chúng tôi ứng dụng công nghệ y tế tiên tiến nhất để chăm sóc sức khỏe toàn diện cho mỗi bệnh nhân.</p>
-                <p class="mb-4">Với phương châm <strong>"Tận tâm — Chuyên nghiệp — Hiệu quả"</strong>, chúng tôi cam kết mang lại dịch vụ khám chữa bệnh chất lượng cao và an toàn nhất.</p>
-                <div class="d-flex flex-wrap" style="gap:.75rem">
-                    <a asp-controller="Home" asp-action="BookAppointment" class="btn btn-primary py-2 px-4" style="background:#3d5ee1;border:none;border-radius:4px;font-weight:600;">Đặt lịch khám</a>
-                    <a href="#contact-section" class="btn-outline-primary-custom">Liên hệ chúng tôi</a>
+        </div>
+    </section>
+
+    <div class="stats-strip">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-6 col-md-3 stat-item fade-up">
+                    <div class="stat-number">50+</div>
+                    <div class="stat-label">Bác sĩ chuyên khoa</div>
+                </div>
+                <div class="col-6 col-md-3 stat-item stat-divider fade-up delay-1">
+                    <div class="stat-number">12</div>
+                    <div class="stat-label">Chuyên khoa</div>
+                </div>
+                <div class="col-6 col-md-3 stat-item stat-divider fade-up delay-2">
+                    <div class="stat-number">10K+</div>
+                    <div class="stat-label">Bệnh nhân tin tưởng</div>
+                </div>
+                <div class="col-6 col-md-3 stat-item stat-divider fade-up delay-3">
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">Hỗ trợ liên tục</div>
                 </div>
             </div>
         </div>
     </div>
-</section>
 
-<!-- SERVICES -->
-<section style="background-color: #f8f9fc; padding-top: 50px; padding-bottom: 50px;">
-    <div class="container mt-5">
-        <h3 class="text-center font-weight-bold text-primary mb-4">Dịch vụ Y tế Toàn diện</h3>
+    <section style="background-color: #f8f9fc; padding-top: 50px; padding-bottom: 50px;">
+        <div class="container mt-5">
+            <h3 class="text-center font-weight-bold text-primary mb-4">Dịch vụ Y tế Toàn diện</h3>
 
-        <div class="swiper mySwiper" style="padding: 20px 50px;">
-            <div class="swiper-wrapper py-3">
+            <div class="swiper mySwiper" style="padding: 20px 50px;">
+                <div class="swiper-wrapper py-3">
 
-                <div class="swiper-slide">
-                    <a asp-controller="Home" asp-action="DoctorList" class="service-card">
-                        <img src="~/img/cards/medical-team.png" alt="Đặt khám Bác sĩ"
-                             style="height: 65px; width: 65px; margin-bottom: 15px; object-fit: cover; border-radius: 14px; box-shadow: 0 4px 10px rgba(61, 94, 225, 0.15);" />
-                        <h6 class="font-weight-bold">Đặt khám Bác sĩ</h6>
-                    </a>
-                </div>
-
-                <div class="swiper-slide">
-                    <a asp-controller="Home" asp-action="SpecialtyList" class="service-card">
-                        <img src="~/img/cards/medical.png" alt="Khám Chuyên khoa"
-                             style="height: 65px; width: 65px; margin-bottom: 15px; object-fit: cover; border-radius: 14px; box-shadow: 0 4px 10px rgba(255, 152, 0, 0.15);" />
-                        <h6 class="font-weight-bold">Khám Chuyên khoa</h6>
-                    </a>
-                </div>
-
-                <div class="swiper-slide">
-                    <a asp-controller="Services" asp-action="Packages" class="service-card">
-                        <img src="~/img/cards/insurance.png" alt="Gói khám Sức khỏe"
-                             style="height: 65px; width: 65px; margin-bottom: 15px; object-fit: cover; border-radius: 14px; box-shadow: 0 4px 10px rgba(0, 210, 255, 0.15);" />
-                        <h6 class="font-weight-bold">Gói khám Sức khỏe</h6>
-                    </a>
-                </div>
-
-                <div class="swiper-slide">
-                    <a asp-controller="Services" asp-action="Vaccines" class="service-card">
-                        <img src="~/img/cards/syringe.png" alt="Đặt Lịch Tiêm Chủng"
-                             style="height: 65px; width: 65px; margin-bottom: 15px; object-fit: cover; border-radius: 14px; box-shadow: 0 4px 10px rgba(233, 30, 99, 0.15);" />
-                        <h6 class="font-weight-bold">Đặt Lịch Tiêm Chủng</h6>
-                    </a>
-                </div>
-
-                <div class="swiper-slide">
-                    <a asp-controller="Services" asp-action="HomeCare" class="service-card">
-                        <img src="~/img/cards/house-cleaning.png" alt="Y Tế Tại Nhà"
-                             style="height: 65px; width: 65px; margin-bottom: 15px; object-fit: cover; border-radius: 14px; box-shadow: 0 4px 10px rgba(32, 201, 151, 0.15);" />
-                        <h6 class="font-weight-bold">Y Tế Tại Nhà</h6>
-                    </a>
-                </div>
-
-                <div class="swiper-slide">
-                    <a href="https://www.nhathuocankhang.com/" target="_blank" rel="noopener noreferrer" class="service-card">
-                        <span class="badge bg-danger text-white badge-hot">Hot</span>
-                        <img src="~/img/cards/images.png" alt="Nhà thuốc Online"
-                             style="height: 65px; width: 65px; margin-bottom: 15px; object-fit: cover; border-radius: 14px; box-shadow: 0 4px 10px rgba(0, 175, 82, 0.15);" />
-                        <h6 class="font-weight-bold">Mua thuốc tại An Khang</h6>
-                    </a>
-                </div>
-
-                <div class="swiper-slide">
-                    <a href="#" class="service-card" onclick="alert('Tính năng đang phát triển!');">
-                        <span class="badge bg-warning text-dark badge-hot">Sắp ra mắt</span>
-                        <img src="~/img/cards/telemedicine.png" alt="Khám qua Video"
-                             style="height: 65px; width: 65px; margin-bottom: 15px; object-fit: cover; border-radius: 14px; box-shadow: 0 4px 10px rgba(156, 39, 176, 0.15);" />
-                        <h6 class="font-weight-bold">Khám qua Video</h6>
-                    </a>
-                </div>
-
-                <div class="swiper-slide">
-                    <a href="#" class="service-card" onclick="document.body.classList.add('show-chatbot'); return false;">
-                        <span class="badge bg-info text-white badge-hot">AI</span>
-                        <img src="~/img/cards/ai.png" alt="Trợ lý Y tế AI"
-                             style="height: 65px; width: 65px; margin-bottom: 15px; object-fit: cover; border-radius: 14px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);" />
-                        <h6 class="font-weight-bold">Trợ lý Y tế AI</h6>
-                    </a>
-                </div>
-
-            </div>
-            <div class="swiper-button-next"></div>
-            <div class="swiper-button-prev"></div>
-        </div>
-    </div>
-</section>
-
-<!-- DEPARTMENTS -->
-<section class="section-pad dept-section" id="department-section">
-    <div class="container">
-        <div class="row align-items-center mb-5">
-            <div class="col-md-6 fade-up">
-                <p class="section-eyebrow">Chuyên khoa</p>
-                <h2>Các khoa điều trị</h2>
-                <div class="divider-line"></div>
-                <p style="color:#6b7280;font-size:.88rem;">Hệ thống các chuyên khoa hiện đại với đội ngũ bác sĩ giàu kinh nghiệm, sẵn sàng chăm sóc sức khỏe toàn diện cho bạn.</p>
-            </div>
-            <div class="col-md-4 offset-md-2 text-md-right fade-up delay-1">
-                <a asp-controller="Home" asp-action="SpecialtyList" style="font-size:.83rem;font-weight:600;color:#3d5ee1;text-decoration:none;">Xem tất cả chuyên khoa →</a>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-4 mb-4 fade-up">
-                <div class="dept-img-col" style="height:100%;min-height:280px;">
-                    <img src="/img/dept-1.jpg" alt="Chuyên khoa" style="width:100%;height:100%;min-height:280px;object-fit:cover;" />
-                </div>
-            </div>
-            <div class="col-md-8">
-                <div class="row">
-                    @if (ViewBag.TopSpecialties != null)
-                    {
-                        int dIdx = 0;
-                        foreach (var khoa in ViewBag.TopSpecialties)
-                        {
-                            string delay = dIdx == 0 ? "" : dIdx == 1 ? "delay-1" : dIdx == 2 ? "delay-2" : "delay-3";
-                            <div class="col-md-4 mb-4 fade-up @delay">
-                                <a asp-controller="Home" asp-action="DoctorList"
-                                   asp-route-specialtyId="@khoa.Id"
-                                   class="dept-card">
-                                    <div class="dept-icon"><span class="flaticon-stethoscope"></span></div>
-                                    <h3>@khoa.Name</h3>
-                                    <p>Khám và điều trị chuyên sâu các bệnh lý thuộc chuyên khoa @khoa.Name.</p>
-                                </a>
-                            </div>
-                            dIdx++;
-                        }
-                    }
-                    else
-                    {
-                        <div class="col-12 py-4 text-center">
-                            <p style="color:#6b7280;">Đang cập nhật danh sách chuyên khoa...</p>
-                        </div>
-                    }
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- DOCTORS -->
-<section class="section-pad doctors-section" id="doctor-section">
-    <div class="container">
-        <div class="row justify-content-center mb-5">
-            <div class="col-md-7 text-center fade-up">
-                <p class="section-eyebrow">Đội ngũ y tế</p>
-                <h2>Những bác sĩ hàng đầu</h2>
-                <div class="divider-line mx-auto"></div>
-                <p style="color:#6b7280;font-size:.88rem;margin-top:.5rem;">Đội ngũ bác sĩ giàu kinh nghiệm, chuyên môn cao và luôn tận tâm trong việc chăm sóc sức khỏe bệnh nhân.</p>
-            </div>
-        </div>
-        <div class="row">
-            @if (Model?.TopDoctors != null && Model.TopDoctors.Any())
-            {
-                int docIdx = 0;
-                foreach (var doctor in Model.TopDoctors)
-                {
-                    string delay = docIdx == 0 ? "" : docIdx == 1 ? "delay-1" : docIdx == 2 ? "delay-2" : "delay-3";
-                    <div class="col-md-6 col-lg-3 mb-4 fade-up @delay">
-                        <div class="doctor-card-home">
-                            <div class="photo" style="background-image:url('/img/doctors/@(doctor.Image ?? "default.jpg")');">
-                                <div class="photo-overlay">
-                                    <div class="social-links">
-                                        <a href="#"><span class="icon-facebook"></span></a>
-                                        <a href="#"><span class="icon-twitter"></span></a>
-                                        <a href="#"><span class="icon-instagram"></span></a>
-                                    </div>
-                                    <a asp-controller="Home" asp-action="DoctorInfo"
-                                       asp-route-id="@doctor.Id"
-                                       class="btn-book-home">Đặt lịch ngay</a>
-                                </div>
-                            </div>
-                            <div class="card-info">
-                                <h3>@(doctor.User?.FullName ?? "Bác sĩ")</h3>
-                                <div class="specialty">@(doctor.Specialty?.Name ?? "Chuyên khoa")</div>
-                            </div>
-                        </div>
+                    <div class="swiper-slide">
+                        <a asp-controller="Home" asp-action="DoctorList" class="service-card">
+                            <img src="~/img/cards/medical-team.png" alt="Đặt khám Bác sĩ"
+                                 style="height: 65px; width: 65px; margin-bottom: 15px; object-fit: cover; border-radius: 14px; box-shadow: 0 4px 10px rgba(61, 94, 225, 0.15);" />
+                            <h6 class="font-weight-bold">Đặt khám Bác sĩ</h6>
+                        </a>
                     </div>
-                    docIdx++;
-                }
-            }
-            else
-            {
-                <div class="col-12 text-center py-4">
-                    <p style="color:#6b7280;">Đang cập nhật danh sách bác sĩ tiêu biểu...</p>
-                </div>
-            }
-        </div>
-        <div class="text-center mt-3 fade-up">
-            <a asp-controller="Home" asp-action="DoctorList" style="font-size:.85rem;font-weight:600;color:#3d5ee1;text-decoration:none;">Xem tất cả bác sĩ →</a>
-        </div>
-    </div>
-</section>
 
-<!-- CONTACT -->
-<section class="section-pad contact-section" id="contact-section">
-    <div class="container">
-        <div class="row justify-content-center mb-5">
-            <div class="col-md-7 text-center fade-up">
-                <p class="section-eyebrow">Liên hệ</p>
-                <h2>Liên hệ với chúng tôi</h2>
-                <div class="divider-line mx-auto"></div>
-                <p style="color:#6b7280;font-size:.88rem;margin-top:.5rem;">Đội ngũ của chúng tôi luôn sẵn sàng hỗ trợ và tư vấn cho bạn.</p>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-6 col-lg-3 mb-4 fade-up">
-                <div class="contact-box">
-                    <div class="contact-icon"><span class="icon-map-signs"></span></div>
-                    <h3>Địa chỉ</h3>
-                    <p>120 Yên Lãng, Hà Nội</p>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3 mb-4 fade-up delay-1">
-                <div class="contact-box">
-                    <div class="contact-icon"><span class="icon-phone2"></span></div>
-                    <h3>Số điện thoại</h3>
-                    <a href="tel:+12352355 98">+ 1235 2355 98</a>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3 mb-4 fade-up delay-2">
-                <div class="contact-box">
-                    <div class="contact-icon"><span class="icon-paper-plane"></span></div>
-                    <h3>Email</h3>
-                    <a href="mailto:info@yoursite.com">info@yoursite.com</a>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3 mb-4 fade-up delay-3">
-                <div class="contact-box">
-                    <div class="contact-icon"><span class="icon-globe"></span></div>
-                    <h3>Website</h3>
-                    <a href="#">superstarmedical.vn</a>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+                    <div class="swiper-slide">
+                        <a asp-controller="Home" asp-action="SpecialtyList" class="service-card">
+                            <img src="~/img/cards/medical.png" alt="Khám Chuyên khoa"
+                                 style="height: 65px; width: 65px; margin-bottom: 15px; object-fit: cover; border-radius: 14px; box-shadow: 0 4px 10px rgba(255, 152, 0, 0.15);" />
+                            <h6 class="font-weight-bold">Khám Chuyên khoa</h6>
+                        </a>
+                    </div>
 
-@section Scripts {
-    <script>
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(e => {
-                if (e.isIntersecting) {
-                    e.target.classList.add('visible');
-                    observer.unobserve(e.target);
-                }
+                    <div class="swiper-slide">
+                        <a asp-controller="Home" asp-action="BookAppointment" asp-route-type="video" class="service-card">
+                            <span class="badge bg-success text-white badge-hot">Sẵn sàng</span>
+                            <img src="~/img/cards/telemedicine.png" alt="Khám qua Video"
+                                 style="height: 65px; width: 65px; margin-bottom: 15px; object-fit: cover; border-radius: 14px; box-shadow: 0 4px 10px rgba(156, 39, 176, 0.15);" />
+                            <h6 class="font-weight-bold">Khám qua Video</h6>
+                        </a>
+                    </div>
+
+                    <div class="swiper-slide">
+                        <a asp-controller="Services" asp-action="Packages" class="service-card">
+                            <img src="~/img/cards/insurance.png" alt="Gói khám Sức khỏe"
+                                 style="height: 65px; width: 65px; margin-bottom: 15px; object-fit: cover; border-radius: 14px; box-shadow: 0 4px 10px rgba(0, 210, 255, 0.15);" />
+                            <h6 class="font-weight-bold">Gói khám Sức khỏe</h6>
+                        </a>
+                    </div>
+
+                    <div class="swiper-slide">
+                        <a asp-controller="Services" asp-action="Vaccines" class="service-card">
+                            <img src="~/img/cards/syringe.png" alt="Đặt Lịch Tiêm Chủng"
+                                 style="height: 65px; width: 65px; margin-bottom: 15px; object-fit: cover; border-radius: 14px; box-shadow: 0 4px 10px rgba(233, 30, 99, 0.15);" />
+                            <h6 class="font-weight-bold">Đặt Lịch Tiêm Chủng</h6>
+                        </a>
+                    </div>
+
+                    <div class="swiper-slide">
+                        <a asp-controller="Services" asp-action="HomeCare" class="service-card">
+                            <img src="~/img/cards/house-cleaning.png" alt="Y Tế Tại Nhà"
+                                 style="height: 65px; width: 65px; margin-bottom: 15px; object-fit: cover; border-radius: 14px; box-shadow: 0 4px 10px rgba(32, 201, 151, 0.15);" />
+                            <h6 class="font-weight-bold">Y Tế Tại Nhà</h6>
+                        </a>
+                    </div>
+
+                    <div class="swiper-slide">
+                        <a href="https://www.nhathuocankhang.com/" target="_blank" rel="noopener noreferrer" class="service-card">
+                            <span class="badge bg-danger text-white badge-hot">Hot</span>
+                            <img src="~/img/cards/images.png" alt="Nhà thuốc Online"
+                                 style="height: 65px; width: 65px; margin-bottom: 15px; object-fit: cover; border-radius: 14px; box-shadow: 0 4px 10px rgba(0, 175, 82, 0.15);" />
+                            <h6 class="font-weight-bold">Nhà thuốc An Khang</h6>
+                        </a>
+                    </div>
+
+                    <div class="swiper-slide">
+                        <a href="#" class="service-card" onclick="document.body.classList.add('show-chatbot'); return false;">
+                            <span class="badge bg-info text-white badge-hot">AI</span>
+                            <img src="~/img/cards/ai.png" alt="Trợ lý Y tế AI"
+                                 style="height: 65px; width: 65px; margin-bottom: 15px; object-fit: cover; border-radius: 14px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);" />
+                            <h6 class="font-weight-bold">Trợ lý Y tế AI</h6>
+                        </a>
+                    </div>
+
+                </div>
+                <div class="swiper-button-next"></div>
+                <div class="swiper-button-prev"></div>
+            </div>
+        </div>
+    </section>
+
+    @section Scripts {
+        <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+        <script>
+            // Animation Fade Up
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(e => {
+                    if (e.isIntersecting) {
+                        e.target.classList.add('visible');
+                        observer.unobserve(e.target);
+                    }
+                });
+            }, { threshold: 0.12 });
+            document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+            // Swiper Initialization
+            var swiper = new Swiper(".mySwiper", {
+                slidesPerView: 1,
+                spaceBetween: 20,
+                navigation: {
+                    nextEl: ".swiper-button-next",
+                    prevEl: ".swiper-button-prev",
+                },
+                breakpoints: {
+                    640: { slidesPerView: 2, spaceBetween: 20 },
+                    768: { slidesPerView: 3, spaceBetween: 30 },
+                    1024: { slidesPerView: 4, spaceBetween: 30 },
+                },
             });
-        }, { threshold: 0.12 });
-        document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
-
-        window.addEventListener('scroll', () => {
-            const nav = document.getElementById('ftco-navbar');
-            if (nav) nav.classList.toggle('scrolled', window.scrollY > 40);
-        });
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"></script>
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-    <script>
-        var swiper = new Swiper(".mySwiper", {
-            slidesPerView: 1, // Mặc định Mobile hiện 1 card
-            spaceBetween: 20,
-            navigation: {
-                nextEl: ".swiper-button-next",
-                prevEl: ".swiper-button-prev",
-            },
-            breakpoints: {
-                640: { slidesPerView: 2, spaceBetween: 20 },
-                768: { slidesPerView: 3, spaceBetween: 30 },
-                1024: { slidesPerView: 4, spaceBetween: 30 }, // Màn hình PC hiện 4 card
-            },
-        });
-    </script>
-}
+        </script>
+    }

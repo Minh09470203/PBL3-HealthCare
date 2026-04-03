@@ -1,0 +1,59 @@
+﻿@{
+    Layout = null; // Phòng họp chạy toàn màn hình nên không dùng Layout chung
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Phòng khám trực tuyến</title>
+    <style>
+        #root {
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script src="https://unpkg.com/zego-zim-web@latest/index.js"></script>
+    <script src="https://unpkg.com/@@zegocloud/zego-uikit-prebuilt@latest/zego-uikit-prebuilt.js"></script>
+
+    <script>
+        function getUrlParams(url) {
+            let urlStr = url.split('?')[1];
+            const urlSearchParams = new URLSearchParams(urlStr);
+            const result = Object.fromEntries(urlSearchParams.entries());
+            return result;
+        }
+
+        // Lấy thông tin từ ViewBag mà Thái đã chuẩn bị ở Controller
+        const appID = @ViewBag.AppID;
+        const serverSecret = "@ViewBag.ServerSecret";
+        const roomID = "@ViewBag.RoomID";
+        const userID = "@ViewBag.UserID" || Math.floor(Math.random() * 10000) + "";
+        const userName = "@ViewBag.UserName" || "Bệnh nhân";
+
+        // Khởi tạo cuộc gọi
+        const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(appID, serverSecret, roomID, userID, userName);
+
+        const zp = ZegoUIKitPrebuilt.create(kitToken);
+        zp.joinRoom({
+            container: document.querySelector("#root"),
+            sharedLinks: [],
+            scenario: {
+                mode: ZegoUIKitPrebuilt.GroupCall, // Chế độ gọi nhóm/1-1
+            },
+            showScreenSharingButton: true,
+            layout: "Auto",
+            showLayoutButton: true,
+            // Cài đặt vai trò: Bệnh nhân là Audience (hoặc Participant)
+            role: ZegoUIKitPrebuilt.Participant,
+            onLeaveRoom: () => {
+                // Khi rời phòng thì quay về Dashboard
+                window.location.href = '/Home/PatientDashboard';
+            }
+        });
+    </script>
+</body>
+</html>

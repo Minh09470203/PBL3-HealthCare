@@ -1,0 +1,132 @@
+﻿@model IEnumerable<PBL3_HealthCare.Models.Appointment>
+@{
+    ViewData["Title"] = "Bảng điều khiển Bệnh nhân";
+    Layout = "~/Views/Shared/_HomeLayout.cshtml";
+}
+
+<section class="ftco-section bg-light">
+    <div class="container">
+        <div class="row justify-content-center mb-5">
+            <div class="col-md-8 text-center">
+                <h2 class="font-weight-bold">LỊCH KHÁM CỦA TÔI</h2>
+                <p>Quản lý các cuộc hẹn và tham gia khám trực tuyến</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="table-responsive bg-white p-4 shadow-sm" style="border-radius: 15px;">
+                    <table class="table table-hover">
+                        <thead class="thead-primary">
+                            <tr>
+                                <th>Bác sĩ</th>
+                                <th>Ngày khám</th>
+                                <th>Khung giờ</th>
+                                <th>Loại hình</th>
+                                <th>Trạng thái</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                var apptDateTime = item.Date.Add(item.TimeSlot);
+                                // Lưu timestamp để JS tính toán
+                                var timestamp = new DateTimeOffset(apptDateTime).ToUnixTimeMilliseconds();
+
+                                <tr>
+                                    <td><strong>@item.Doctor?.User?.FullName</strong></td>
+                                    <td>@item.Date.ToString("dd/MM/yyyy")</td>
+                                    <td><span class="badge badge-info">@item.TimeSlot.ToString(@"hh\:mm")</span></td>
+                                    <td>
+                                        @if (item.AppointmentType == "VideoCall")
+                                        {
+                                            <span class="badge badge-success">Khám Video</span>
+                                        }
+                                        else
+                                        {
+
+                                            <span class="badge badge-secondary">Tại phòng khám</span>
+                                        }
+                                    </td>
+                                    <td>@item.Status</td>
+                                    <td class="text-center">
+                                        @if (item.AppointmentType == "VideoCall")
+                                        {
+                                            <a asp-controller="VideoCall" asp-action="Room" asp-route-id="@item.Id"
+                                               class="btn btn-primary btn-join-room disabled"
+                                               data-time="@timestamp" id="btn-@item.Id">
+                                                <i class="fas fa-video mr-1"></i> VÀO PHÒNG
+                                            </a>
+                                            <div class="small text-danger mt-1 countdown-text" id="timer-@item.Id"></div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">Vui lòng đến đúng giờ</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        function updateCountdowns() {
+            const now = new Date().getTime();
+            const buttons = document.querySelectorAll('.btn-join-room');
+
+            buttons.forEach(btn => {
+                const apptTime = parseInt(btn.getAttribute('data-time'));
+                const timeLeft = apptTime - now;
+                const timerId = btn.id.replace('btn-', 'timer-');
+                const timerDisplay = document.getElementById(timerId);
+
+                // Nếu còn hơn 10 phút (600.000 ms)
+                if (timeLeft > 600000) {
+                    btn.classList.add('disabled');
+                    btn.style.pointerEvents = 'none';
+                    btn.style.opacity = '0.5';
+
+                    // Tính thời gian còn lại để hiện thông báo
+                    const minutes = Math.floor(timeLeft / 60000);
+                    timerDisplay.innerText = `Mở sau ${minutes} phút nữa`;
+                }
+                // Nếu trong khoảng 10 phút trước giờ khám cho đến khi hết giờ (ví dụ sau 30p vẫn cho vào)
+                else if (timeLeft <= 600000 && timeLeft > -1800000) {
+                    btn.classList.remove('disabled');
+                    btn.style.pointerEvents = 'auto';
+                    btn.style.opacity = '1';
+                    btn.classList.add('btn-pulse'); // Hiệu ứng nhấp nháy cho nút
+                    timerDisplay.innerText = "Phòng đã mở!";
+                    timerDisplay.classList.remove('text-danger');
+                    timerDisplay.classList.add('text-success');
+                }
+                else {
+                    btn.classList.add('disabled');
+                    timerDisplay.innerText = "Lịch hẹn đã kết thúc";
+                }
+            });
+        }
+
+        // Cập nhật mỗi giây
+        setInterval(updateCountdowns, 1000);
+        updateCountdowns();
+    </script>
+
+    <style>
+        .btn-pulse {
+            animation: pulse-blue 2s infinite;
+        }
+        @@keyframes pulse-blue {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(0, 123, 255, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 123, 255, 0); }
+        }
+    </style>
+}

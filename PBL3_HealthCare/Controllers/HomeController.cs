@@ -63,10 +63,10 @@ namespace PBL3_HealthCare.Controllers
             ViewBag.TopSpecialties = await _context.Specialties.Take(6).ToListAsync();
             // Query lấy 4 bác sĩ đầu tiên, Include bảng User và Specialty
             var doctors = await _context.Doctors
-                                           .Include(d => d.User)
-                                           .Include(d => d.Specialty)
-                                           .Take(4)
-                                           .ToListAsync();
+            .Include(d => d.User)
+            .Include(d => d.Specialty)
+            .Take(4)
+            .ToListAsync();
             var viewModel = new HomeViewModel
             {
                 TopDoctors = doctors,
@@ -671,6 +671,16 @@ namespace PBL3_HealthCare.Controllers
                 .ToListAsync();
 
             return View(invoices);
+        }
+        public async Task<IActionResult> PatientDashboard()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var appointments = await _context.Appointments
+                .Include(a => a.Doctor).ThenInclude(d => d.User)
+                .Where(a => a.PatientId == user.Id)
+                .OrderByDescending(a => a.Date)
+                .ToListAsync();
+            return View(appointments);
         }
     }
 }
