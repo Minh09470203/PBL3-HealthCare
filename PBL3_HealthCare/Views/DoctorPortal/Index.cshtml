@@ -5,7 +5,6 @@
     ViewData["Title"] = "Bảng điều khiển Bác sĩ";
     Layout = "~/Views/Shared/_DoctorLayout.cshtml";
 
-    // Tính toán nhanh các con số thống kê hôm nay
     int totalToday = Model.Count();
     int completedToday = Model.Count(a => a.Status == AppointmentStatus.Completed);
     int onlineToday = Model.Count(a => a.IsVideoCall);
@@ -51,6 +50,18 @@
             border: 1px solid #e3e6f0;
         }
 
+        /* Style cho Badge trạng thái chuẩn */
+        .badge-waiting {
+            background-color: #f6e05e;
+            color: #856404;
+        }
+        /* Vàng cho Chờ duyệt */
+        .badge-ready {
+            background-color: #c6f6d5;
+            color: #22543d;
+        }
+        /* Xanh lá nhạt cho Đã duyệt */
+
         .btn-join-blink {
             animation: pulse-blue 2s infinite;
         }
@@ -72,6 +83,7 @@
 }
 
 <div class="container-fluid mt-4">
+    @* --- Phần Header và Stats giữ nguyên như cũ --- *@
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
             <h4 class="font-weight-bold text-gray-800 mb-1">Chào buổi sáng, Bác sĩ!</h4>
@@ -91,14 +103,11 @@
                             <div class="text-xs font-weight-bold text-uppercase mb-1" style="opacity: 0.8;">Tổng ca khám hôm nay</div>
                             <div class="h5 mb-0 font-weight-bold">@totalToday Ca</div>
                         </div>
-                        <div class="col-auto">
-                            <i class="fas fa-calendar fa-2x" style="opacity: 0.3;"></i>
-                        </div>
+                        <div class="col-auto"><i class="fas fa-calendar fa-2x" style="opacity: 0.3;"></i></div>
                     </div>
                 </div>
             </div>
         </div>
-
         <div class="col-xl-4 col-md-6 mb-4">
             <div class="card stat-card bg-gradient-success-custom h-100 py-2">
                 <div class="card-body">
@@ -107,14 +116,11 @@
                             <div class="text-xs font-weight-bold text-uppercase mb-1" style="opacity: 0.8;">Đã hoàn thành</div>
                             <div class="h5 mb-0 font-weight-bold">@completedToday / @totalToday</div>
                         </div>
-                        <div class="col-auto">
-                            <i class="fas fa-check-double fa-2x" style="opacity: 0.3;"></i>
-                        </div>
+                        <div class="col-auto"><i class="fas fa-check-double fa-2x" style="opacity: 0.3;"></i></div>
                     </div>
                 </div>
             </div>
         </div>
-
         <div class="col-xl-4 col-md-6 mb-4">
             <div class="card stat-card bg-gradient-info-custom h-100 py-2">
                 <div class="card-body">
@@ -123,18 +129,17 @@
                             <div class="text-xs font-weight-bold text-uppercase mb-1" style="opacity: 0.8;">Khám Online (Video Call)</div>
                             <div class="h5 mb-0 font-weight-bold">@onlineToday Ca</div>
                         </div>
-                        <div class="col-auto">
-                            <i class="fas fa-video fa-2x" style="opacity: 0.3;"></i>
-                        </div>
+                        <div class="col-auto"><i class="fas fa-video fa-2x" style="opacity: 0.3;"></i></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    @* --- BẢNG DANH SÁCH --- *@
     <div class="card shadow-sm border-0 mb-4" style="border-radius: 15px; overflow: hidden;">
         <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
-            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-list-ul mr-2"></i>Danh sách bệnh nhân đang chờ</h6>
+            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-list-ul mr-2"></i>Danh sách bệnh nhân hôm nay</h6>
             <a asp-controller="Appointments" asp-action="Index" class="btn btn-sm btn-light text-primary font-weight-bold">Xem tất cả lịch cũ →</a>
         </div>
         <div class="card-body p-0">
@@ -150,15 +155,6 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (!Model.Any())
-                        {
-                            <tr>
-                                <td colspan="5" class="text-center py-5 text-muted">
-                                    <i class="fas fa-mug-hot fa-3x mb-3 d-block"></i>
-                                    Bạn chưa có lịch hẹn nào cho hôm nay. Nghỉ ngơi chút nhé!
-                                </td>
-                            </tr>
-                        }
                         @foreach (var item in Model)
                         {
                             <tr>
@@ -178,15 +174,11 @@
                                 <td>
                                     @if (item.IsVideoCall)
                                     {
-                                        <span class="badge badge-info shadow-sm" style="padding: 6px 12px;">
-                                            <i class="fas fa-video mr-1"></i> Khám Online
-                                        </span>
+                                        <span class="badge badge-info shadow-sm" style="padding: 6px 12px;"><i class="fas fa-video mr-1"></i> Online</span>
                                     }
                                     else
                                     {
-                                        <span class="badge badge-success shadow-sm" style="padding: 6px 12px;">
-                                            <i class="fas fa-hospital mr-1"></i> Tại chỗ
-                                        </span>
+                                        <span class="badge badge-success shadow-sm" style="padding: 6px 12px;"><i class="fas fa-hospital mr-1"></i> Tại chỗ</span>
                                     }
                                 </td>
                                 <td>
@@ -196,7 +188,11 @@
                                     }
                                     else if (item.Status == AppointmentStatus.Confirmed)
                                     {
-                                        <span class="status-badge status-pending">Đang chờ</span>
+                                        <span class="status-badge status-confirmed" style="background-color: #ebf8ff; color: #2b6cb0;">Đã duyệt</span>
+                                    }
+                                    else if (item.Status == AppointmentStatus.Pending)
+                                    {
+                                        <span class="status-badge status-pending">Chờ duyệt</span>
                                     }
                                     else
                                     {
@@ -204,27 +200,21 @@
                                     }
                                 </td>
                                 <td class="text-center pr-4">
-                                    @if (item.Status != AppointmentStatus.Completed)
+                                    @if (item.Status == AppointmentStatus.Pending)
+                                    {
+                                        <span class="text-warning small font-italic"><i class="fas fa-exclamation-circle mr-1"></i>Đang đợi Admin duyệt...</span>
+                                    }
+                                    else if (item.Status == AppointmentStatus.Confirmed)
                                     {
                                         @if (item.IsVideoCall)
                                         {
-                                            @if (item.Status == AppointmentStatus.Confirmed)
-                                            {
-                                                var appointmentDateTime = item.Date.ToString("yyyy-MM-dd") + "T" + item.TimeSlot.ToString();
-                                                <a href="/VideoCall/Room?roomId=@item.MeetingRoomId"
-                                                   class="btn btn-primary btn-sm rounded-pill px-3 py-1 btn-join-room disabled"
-                                                   data-time="@appointmentDateTime">
-                                                    <i class="fas fa-phone-alt mr-1"></i>
-                                                    <span class="join-text">Vào phòng Video</span>
-                                                    <div class="countdown-text small" style="font-size: 0.7rem; display: block;">(Đang chờ...)</div>
-                                                </a>
-                                            }
-                                            else if (item.Status == AppointmentStatus.Pending)
-                                            {
-                                                <span class="badge badge-light text-warning border border-warning">
-                                                    <i class="fas fa-clock mr-1"></i> Chờ duyệt
-                                                </span>
-                                            }
+                                            var appointmentDateTime = item.Date.ToString("yyyy-MM-dd") + "T" + item.TimeSlot.ToString();
+                                            <a href="/VideoCall/Room?roomId=@item.MeetingRoomId"
+                                               class="btn btn-primary btn-join-room disabled"
+                                               data-time="@appointmentDateTime" style="padding: 5px 15px; border-radius: 20px;">
+                                                <i class="fas fa-phone-alt mr-1"></i> <span class="join-text">Vào phòng Video</span>
+                                                <small class="countdown-text d-block" style="font-size: 0.65rem;">(Đang chờ...)</small>
+                                            </a>
                                         }
                                         else
                                         {
@@ -234,12 +224,21 @@
                                             </a>
                                         }
                                     }
-                                    else
+                                    else if (item.Status == AppointmentStatus.Completed)
                                     {
-                                        <a asp-controller="MedicalRecords" asp-for-Details asp-route-id="@item.MedicalRecord?.Id"
-                                           class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-                                            <i class="fas fa-eye mr-1"></i> Xem lại bệnh án
-                                        </a>
+                                        if (item.MedicalRecord != null) // Kiểm tra xem có bệnh án thật không
+                                        {
+                                            <a asp-controller="MedicalRecords"
+                                               asp-action="Details"
+                                               asp-route-id="@item.MedicalRecord.Id"
+                                               class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                                                <i class="fas fa-eye mr-1"></i> Bệnh án
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-warning">Lỗi: Chưa tạo BA</span>
+                                        }
                                     }
                                 </td>
                             </tr>
@@ -253,7 +252,7 @@
 
 @section Scripts {
     <script>
-        // 1. Đồng hồ hệ thống (Giữ nguyên)
+        // Copy y nguyên phần Scripts của sếp, tôi chỉ tối ưu hiển thị
         function updateClock() {
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
@@ -263,10 +262,8 @@
             if(clockEl) clockEl.textContent = `${hours}:${minutes}:${seconds}`;
         }
 
-        // 2. Logic kiểm tra giờ khám (Giống bên Patient)
         function checkDoctorRoomAvailability() {
             const now = new Date();
-
             document.querySelectorAll('.btn-join-room').forEach(function(btn) {
                 const apptTime = new Date(btn.getAttribute('data-time'));
                 const diffMs = apptTime - now;
@@ -275,42 +272,28 @@
                 const joinText = btn.querySelector('.join-text');
 
                 if (diffMins > 10) {
-                    // CHƯA ĐẾN GIỜ: Khóa nút, màu Xanh nhạt
                     btn.classList.add('disabled');
-                    btn.style.backgroundColor = '#858796'; // Màu xám (secondary)
-                    btn.style.borderColor = '#858796';
-                    btn.classList.remove('btn-join-blink');
-
-                    if (diffMins > 60) {
-                        countdownSpan.innerText = `(Mở sau ${Math.floor(diffMins/60)}h ${diffMins%60}p)`;
-                    } else {
-                        countdownSpan.innerText = `(Mở sau ${diffMins} phút)`;
-                    }
+                    btn.style.backgroundColor = '#858796';
+                    countdownSpan.innerText = `(Mở sau ${diffMins} phút)`;
                 }
                 else if (diffMins <= 10 && diffMins >= -30) {
-                    // ĐÃ ĐẾN GIỜ (Mở trước 10p, trễ tối đa 30p): Mở nút, màu Xanh dương, nhấp nháy
                     btn.classList.remove('disabled');
-                    btn.style.backgroundColor = '#4e73df'; // Màu Primary chuẩn
-                    btn.style.borderColor = '#4e73df';
+                    btn.style.backgroundColor = '#4e73df';
                     btn.classList.add('btn-join-blink');
                     joinText.innerText = "Vào khám ngay!";
                     countdownSpan.innerText = "(Sẵn sàng)";
                 }
                 else {
-                    // QUÁ HẠN 30 PHÚT: Khóa nút, màu Đỏ
                     btn.classList.add('disabled');
-                    btn.style.backgroundColor = '#e74a3b'; // Màu Danger
-                    btn.style.borderColor = '#e74a3b';
-                    btn.classList.remove('btn-join-blink');
-                    joinText.innerText = "Đã quá hạn";
-                    countdownSpan.innerText = "(Hết giờ khám)";
+                    btn.style.backgroundColor = '#e74a3b';
+                    joinText.innerText = "Quá hạn";
+                    countdownSpan.innerText = "(Đã hết giờ)";
                 }
             });
         }
 
-        // Chạy ngay khi load và lặp lại mỗi phút
         setInterval(updateClock, 1000);
-        setInterval(checkDoctorRoomAvailability, 30000); // Check mỗi 30s cho chắc
+        setInterval(checkDoctorRoomAvailability, 30000);
         updateClock();
         checkDoctorRoomAvailability();
     </script>

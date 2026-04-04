@@ -86,55 +86,69 @@ namespace PBL3_HealthCare.Controllers
         // 2. API KẾT THÚC KHÁM & LƯU BỆNH ÁN
         // =====================================
         [HttpPost]
-        [Authorize(Roles = "Doctor")] // Chỉ bác sĩ mới được chốt sổ
+        [Authorize(Roles = "Doctor")]
         public async Task<IActionResult> FinishCall([FromBody] FinishAppointmentViewModel model)
         {
-            if (!ModelState.IsValid)
+            // 1. Kiểm tra Model (Không được để trống)
+            if (model == null)
             {
-                return BadRequest("Dữ liệu nhập vào không hợp lệ.");
+                return BadRequest(new { success = false, message = "Dữ liệu gửi lên bị rỗng." });
             }
 
+            if (string.IsNullOrEmpty(model.Symptoms) || string.IsNullOrEmpty(model.Diagnosis))
+            {
+                return BadRequest(new { success = false, message = "Vui lòng nhập đầy đủ Triệu chứng và Chẩn đoán." });
+            }
+
+            // 2. Tìm ca khám (Include thêm Doctor để lấy thông tin gán vào bệnh án)
             var appointment = await _context.Appointments
                 .Include(a => a.Doctor)
                 .FirstOrDefaultAsync(a => a.Id == model.AppointmentId);
 
-            if (appointment == null) return NotFound("Không tìm thấy ca khám.");
+            if (appointment == null)
+            {
+                return NotFound(new { success = false, message = "Không tìm thấy thông tin ca khám này." });
+            }
 
             try
             {
-                // 1. TẠO BỆNH ÁN MỚI TỪ DỮ LIỆU VIDEO CALL
+                // 3. TẠO BỆNH ÁN MỚI
                 var medicalRecord = new MedicalRecord
                 {
                     AppointmentId = appointment.Id,
-                    Diagnosis = $"Triệu chứng: {model.Symptoms} \nChẩn đoán: {model.Diagnosis}",
-                    Treatment = model.DoctorNotes,
+                                                     // Kết hợp triệu chứng và chẩn đoán vào cột Diagnosis
+                    Diagnosis = $"Triệu chứng: {model.Symptoms} | Chẩn đoán: {model.Diagnosis}",
+                    Treatment = model.DoctorNotes ?? "Không có dặn dò",
                     CreatedAt = DateTime.Now
                 };
 
                 _context.MedicalRecords.Add(medicalRecord);
 
-                // Lưu bệnh án trước để lấy được MedicalRecord ID (phục vụ nếu có thêm đơn thuốc)
-                await _context.SaveChangesAsync();
-
-                // 2. ĐỔI TRẠNG THÁI LỊCH HẸN THÀNH COMPLETED
-                appointment.Status = AppointmentStatus.Completed; // Trạng thái chung
-                appointment.CallStatus = CallStatus.Completed;   // Trạng thái của video call
+                // 4. CẬP NHẬT TRẠNG THÁI LỊCH HẸN
+                appointment.Status = AppointmentStatus.Completed;
+                appointment.CallStatus = CallStatus.Completed;
 
                 _context.Update(appointment);
+
+                // Lưu tất cả thay đổi vào DB
                 await _context.SaveChangesAsync();
 
-                // (Tùy chọn): Nếu sếp có bảng Đơn thuốc riêng, thì xử lý model.Prescription ở đây
-
-                // 🔥 ĐIỂM ĂN TIỀN NHẤT LÀ ĐÂY: Trả về medicalRecordId cho Javascript bẻ lái 🔥
-                return Ok(new { 
-                    success = true, 
+                // 🔥 TRẢ VỀ JSON CHUẨN ĐỂ JAVASCRIPT KHÔNG BỊ LỖI PARSE 🔥
+                return Ok(new
+                {
+                    success = true,
                     message = "Lưu bệnh án thành công!",
-                    medicalRecordId = medicalRecord.Id // Đẻ xong ID là ném ra ngoài luôn
+                    medicalRecordId = medicalRecord.Id
                 });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "Lỗi Server: " + ex.Message);
+                // 🔥 NẾU LỖI CŨNG PHẢI TRẢ VỀ JSON 🔥
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Lỗi hệ thống: " + ex.Message
+                });
             }
         }
     }

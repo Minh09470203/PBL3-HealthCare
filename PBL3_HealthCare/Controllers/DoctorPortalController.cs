@@ -50,6 +50,7 @@ namespace PBL3_HealthCare.Controllers
             // Lấy các lịch hẹn CHỈ TRONG HÔM NAY của bác sĩ này
             var todayAppointments = await _context.Appointments
                 .Include(a => a.Patient)
+                .Include(a => a.MedicalRecord)
                 .Where(a => a.DoctorId == doctor.Id && a.Date.Date == DateTime.Today.Date)
                 .OrderBy(a => a.TimeSlot)
                 .ToListAsync();

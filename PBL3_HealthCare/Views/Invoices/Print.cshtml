@@ -4,10 +4,26 @@
     Layout = "~/Views/Shared/_PrintLayout.cshtml";
     ViewData["Title"] = "Hóa Đơn #" + Model.Id;
 }
+@{
+    // Tự động xác định đường dẫn về dựa trên Role
+    string returnUrl = Url.Action("Index", "Home"); // Mặc định về trang chủ nếu có lỗi
 
+    if (User.IsInRole("Admin"))
+    {
+        // Admin thì về trang quản lý lịch khám chung (hoặc trang Dashboard Admin của sếp)
+        returnUrl = Url.Action("Index", "Appointments");
+    }
+    else if (User.IsInRole("Doctor"))
+    {
+        // Bác sĩ thì về Portal riêng
+        returnUrl = Url.Action("DoctorDashboard", "DoctorPortal");
+    }
+}
 <div class="no-print text-end mb-4 border-bottom pb-3">
     <button onclick="window.print()" class="btn btn-primary btn-lg"><i class="fas fa-print"></i> In Hóa Đơn</button>
-    <button onclick="window.close()" class="btn btn-secondary btn-lg">Đóng</button>
+    <a href="@returnUrl" class="btn btn-secondary btn-lg">
+        <i class="fas fa-times"></i> Đóng
+    </a>
 </div>
 
 <div class="text-center mb-4">

@@ -17,8 +17,8 @@ namespace PBL3_HealthCare.Models
         public string? Treatment { get; set; } // Hướng điều trị/Lời dặn
         public DateTime? ReExaminationDate { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
-        public virtual Doctor Doctor { get; set; }
-        public virtual ApplicationUser ApplicationUser { get; set; }
+        public virtual Doctor? Doctor { get; set; }
+        public virtual ApplicationUser? ApplicationUser { get; set; }
         public virtual ICollection<Prescription> Prescriptions { get; set; }
     }
 }
