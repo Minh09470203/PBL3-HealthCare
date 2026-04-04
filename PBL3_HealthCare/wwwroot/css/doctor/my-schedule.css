@@ -1,0 +1,271 @@
+/* ============================================================
+   my-schedule.css — Lịch làm việc bác sĩ (Google Calendar style)
+   ============================================================ */
+
+/* === PAGE HEADER === */
+.schedule-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+}
+.schedule-page-header h4 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #3c4043;
+    margin: 0;
+}
+
+/* === CALENDAR WRAPPER === */
+.calendar-card {
+    background: #fff;
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.08);
+}
+.calendar-card .card-body {
+    padding: 0;
+}
+#calendar {
+    min-height: 650px;
+}
+
+/* ── FullCalendar overrides ── */
+
+/* Toolbar */
+.fc .fc-toolbar {
+    padding: 12px 16px;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 0 !important;
+    background: #fff;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+.fc .fc-toolbar-title {
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    color: #3c4043 !important;
+    letter-spacing: 0;
+}
+
+/* Nav buttons */
+.fc .fc-button {
+    background: transparent !important;
+    border: 1px solid #dadce0 !important;
+    color: #3c4043 !important;
+    border-radius: 4px !important;
+    font-size: .78rem !important;
+    font-weight: 500 !important;
+    padding: .3rem .75rem !important;
+    box-shadow: none !important;
+    transition: background .15s !important;
+    text-transform: none !important;
+}
+.fc .fc-button:hover {
+    background: #f1f3f4 !important;
+    border-color: #dadce0 !important;
+    color: #3c4043 !important;
+}
+.fc .fc-button-active,
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+    background: #e8f0fe !important;
+    border-color: #d2e3fc !important;
+    color: #1a73e8 !important;
+}
+.fc .fc-today-button {
+    border-color: #1a73e8 !important;
+    color: #1a73e8 !important;
+    font-weight: 600 !important;
+}
+.fc .fc-today-button:hover {
+    background: #e8f0fe !important;
+}
+
+/* Column headers (Mon, Tue...) */
+.fc .fc-col-header-cell {
+    background: #fff;
+    border-color: #e0e0e0 !important;
+    padding: .55rem 0 !important;
+}
+.fc .fc-col-header-cell-cushion {
+    font-size: .75rem !important;
+    font-weight: 600 !important;
+    color: #70757a !important;
+    text-decoration: none !important;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+
+/* Today highlight */
+.fc .fc-day-today {
+    background: rgba(26,115,232,.04) !important;
+}
+.fc .fc-day-today .fc-col-header-cell-cushion {
+    color: #1a73e8 !important;
+}
+/* Today số ngày trong month view */
+.fc .fc-day-today .fc-daygrid-day-number {
+    background: #1a73e8;
+    color: #fff !important;
+    border-radius: 50%;
+    width: 26px; height: 26px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    text-decoration: none;
+    margin: 2px;
+}
+
+/* Time grid */
+.fc .fc-timegrid-slot {
+    height: 40px !important;
+    border-color: #f1f3f4 !important;
+}
+.fc .fc-timegrid-slot-label {
+    font-size: .72rem !important;
+    color: #70757a !important;
+    vertical-align: top;
+    padding-top: 2px !important;
+}
+.fc .fc-timegrid-axis { border-color: #e0e0e0 !important; }
+.fc .fc-scrollgrid { border-color: #e0e0e0 !important; }
+.fc td, .fc th { border-color: #e0e0e0 !important; }
+
+/* Day grid (month view) */
+.fc .fc-daygrid-day-number {
+    font-size: .8rem !important;
+    color: #3c4043 !important;
+    text-decoration: none !important;
+    padding: 4px 6px !important;
+}
+.fc .fc-daygrid-day.fc-day-other .fc-daygrid-day-number { color: #bdc1c6 !important; }
+
+/* === EVENTS === */
+/* Ca trực background (Giữ nguyên hoặc chỉnh lại cho rõ) */
+.fc-bg-event.bg-work-shift {
+    background-color: rgba(251, 188, 4, 0.15) !important; /* Tăng độ đậm một chút */
+    border: none !important;
+    border-left: 4px solid #fbbc04 !important;
+    opacity: 1 !important;
+}
+
+/* Lịch khám (Màu Xanh Dương) */
+.fc-event.event-medical {
+    background: #1a73e8 !important;
+    border: none !important;
+    border-radius: 4px !important;
+    padding: 2px 5px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2) !important;
+}
+
+/* Tiêm chủng (Màu Xanh Lá) */
+.fc-event.event-vaccine {
+    background: #0f9d58 !important;
+    border: none !important;
+    border-radius: 4px !important;
+    padding: 2px 5px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2) !important;
+}
+
+    /* 🔥 QUAN TRỌNG: ÉP MÀU CHỮ TRẮNG CHO TẤT CẢ TEXT TRONG EVENT */
+    .fc-event.event-medical *,
+    .fc-event.event-vaccine * {
+        color: #ffffff !important; /* Chữ trắng hoàn toàn */
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2); /* Thêm chút bóng cho chữ nổi bật */
+        text-decoration: none !important;
+    }
+
+/* Event title và time cụ thể */
+.fc-event-title {
+    font-size: .75rem !important;
+    font-weight: 600 !important;
+}
+
+.fc-event-time {
+    font-size: .7rem !important;
+    font-weight: 700 !important;
+    margin-right: 3px;
+}
+
+/* List view */
+.fc-list-event:hover td { background: #f1f3f4 !important; }
+.fc-list-event-time { color: #70757a !important; font-size: .78rem !important; }
+.fc-list-event-title { font-size: .85rem !important; color: #3c4043 !important; }
+.fc-list-day-cushion { background: #f8f9fa !important; }
+.fc-list-day-text, .fc-list-day-side-text {
+    font-size: .8rem !important;
+    font-weight: 600 !important;
+    color: #3c4043 !important;
+    text-decoration: none !important;
+}
+
+/* === LEGEND === */
+.calendar-legend {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: .65rem 1rem;
+    border-top: 1px solid #e0e0e0;
+    background: #fafafa;
+    flex-wrap: wrap;
+}
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .75rem;
+    color: #5f6368;
+}
+.legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+.legend-dot.shift   { background: #fbbc04; }
+.legend-dot.medical { background: #1a73e8; }
+.legend-dot.vaccine { background: #0f9d58; }
+
+/* === POPUP khi click event === */
+.schedule-popup-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    z-index: 1040;
+    background: rgba(0,0,0,.25);
+}
+.schedule-popup-overlay.show { display: block; }
+.schedule-popup {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1050;
+    width: 320px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.18);
+    overflow: hidden;
+    display: none;
+}
+.schedule-popup.show { display: block; }
+.popup-header {
+    padding: .85rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.popup-header.medical { background: #1a73e8; }
+.popup-header.vaccine { background: #0f9d58; }
+.popup-header h6 { color: #fff; font-weight: 600; font-size: .88rem; margin: 0; }
+.popup-close {
+    background: none; border: none;
+    color: rgba(255,255,255,.8); font-size: 1.1rem;
+    cursor: pointer; line-height: 1; padding: 0;
+}
+.popup-close:hover { color: #fff; }
+.popup-body { padding: 1rem; }
+.popup-row {
+    display: flex; gap: .6rem;
+    font-size: .83rem; color: #3c4043;
+    margin-bottom: .55rem;
+}
+.popup-row i { color: #70757a; margin-top: .1rem; flex-shrink: 0; width: 14px; }
+.popup-row .popup-label { color: #70757a; font-size: .75rem; display: block; }

@@ -13,16 +13,24 @@ using System.Threading.Tasks;
 
 namespace PBL3_HealthCare.Controllers
 {
+    [Authorize(Roles = "Admin,Doctor")]
     public class AppointmentsController : Controller
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly NotificationService _notificationService;
-        public AppointmentsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, NotificationService notificationService)
+        private readonly EmailService _emailService; // 🔥 ĐÃ THÊM
+
+        public AppointmentsController(
+            ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager,
+            NotificationService notificationService,
+            EmailService emailService) // 🔥 TIÊM EMAIL SERVICE VÀO
         {
             _context = context;
             _userManager = userManager;
             _notificationService = notificationService;
+            _emailService = emailService;
         }
 
         // ==========================================
@@ -66,8 +74,8 @@ namespace PBL3_HealthCare.Controllers
                 }
             }
 
-            var applicationDbContext = await query.OrderByDescending(a => a.Date).ToListAsync();
-            return View(applicationDbContext);
+            var appointments = await query.OrderByDescending(a => a.Date).ToListAsync();
+            return View(appointments);
         }
 
         // ==========================================
@@ -79,8 +87,7 @@ namespace PBL3_HealthCare.Controllers
 
             var appointment = await _context.Appointments
                 .Include(a => a.Patient)
-                .Include(a => a.Doctor)
-                    .ThenInclude(d => d.User)
+                .Include(a => a.Doctor).ThenInclude(d => d.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (appointment == null) return NotFound();
@@ -99,34 +106,35 @@ namespace PBL3_HealthCare.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,PatientId,DoctorId,Date,Reason,Status,TimeSlot,Symptoms,CreatedAt")] Appointment appointment)
+        // 🔥 ĐÃ THÊM IsVideoCall, MeetingRoomId VÀO BIND ĐỂ ADMIN CÓ THỂ TẠO LỊCH ONLINE THỦ CÔNG
+        public async Task<IActionResult> Create([Bind("Id,PatientId,DoctorId,Date,Reason,Status,TimeSlot,Symptoms,CreatedAt,IsVideoCall,MeetingRoomId")] Appointment appointment)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var isDoctor = await _userManager.IsInRoleAsync(currentUser, "Doctor");
 
-            // 🔥 BỔ SUNG: Nếu là Doctor → ép về đúng quyền
             if (isDoctor)
             {
                 var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == currentUser.Id);
-                if (doctor != null)
-                {
-                    appointment.DoctorId = doctor.Id;
-                }
+                if (doctor != null) appointment.DoctorId = doctor.Id;
 
                 appointment.Status = AppointmentStatus.Pending;
-                appointment.CreatedAt = DateTime.Now;
             }
 
             if (ModelState.IsValid)
             {
+                appointment.CreatedAt = DateTime.Now;
+
+                // Nếu là Online mà Admin quên sinh mã phòng
+                if (appointment.IsVideoCall && string.IsNullOrEmpty(appointment.MeetingRoomId))
+                {
+                    appointment.MeetingRoomId = "ROOM-" + Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper();
+                    appointment.CallStatus = CallStatus.Pending;
+                }
+
                 _context.Add(appointment);
                 await _context.SaveChangesAsync();
+
                 TempData["Success"] = "Tạo lịch khám thành công!";
-                var doctor = await _context.Doctors.FindAsync(appointment.DoctorId);
-                if (doctor != null)
-                {
-                    await _notificationService.CreateNotification(doctor.UserId, $"Bạn có lịch hẹn mới vào ngày {appointment.Date:dd/MM/yyyy}");
-                }
                 return RedirectToAction(nameof(Index));
             }
 
@@ -137,17 +145,11 @@ namespace PBL3_HealthCare.Controllers
         // ==========================================
         // EDIT
         // ==========================================
-        [HttpGet]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
 
-            var appointment = await _context.Appointments
-                .Include(a => a.Patient)
-                .Include(a => a.Doctor)
-                .ThenInclude(d => d.User)
-                .FirstOrDefaultAsync(m => m.Id == id);
-
+            var appointment = await _context.Appointments.FindAsync(id);
             if (appointment == null) return NotFound();
 
             PopulateNames(appointment);
@@ -156,22 +158,9 @@ namespace PBL3_HealthCare.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,PatientId,DoctorId,Date,Reason,Status,TimeSlot,Symptoms,CreatedAt")] Appointment appointment)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,PatientId,DoctorId,Date,Reason,Status,TimeSlot,Symptoms,CreatedAt,IsVideoCall,MeetingRoomId")] Appointment appointment)
         {
             if (id != appointment.Id) return NotFound();
-
-            var currentUser = await _userManager.GetUserAsync(User);
-            var isDoctor = await _userManager.IsInRoleAsync(currentUser, "Doctor");
-
-            if (isDoctor)
-            {
-                var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == currentUser.Id);
-
-                if (doctor != null)
-                {
-                    appointment.DoctorId = doctor.Id; 
-                }
-            }
 
             if (ModelState.IsValid)
             {
@@ -194,19 +183,79 @@ namespace PBL3_HealthCare.Controllers
         }
 
         // ==========================================
-        // DELETE
+        // UPDATE STATUS (TRÁI TIM CỦA LUỒNG DUYỆT)
         // ==========================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateStatus(int id, AppointmentStatus newStatus)
+        {
+            // Include đầy đủ để lấy Email và Tên gửi mail
+            var appointment = await _context.Appointments
+                .Include(a => a.Patient)
+                .Include(a => a.Doctor).ThenInclude(d => d.User)
+                .FirstOrDefaultAsync(a => a.Id == id);
+
+            if (appointment == null) return NotFound();
+
+            // 1. Cập nhật trạng thái
+            appointment.Status = newStatus;
+            _context.Update(appointment);
+            await _context.SaveChangesAsync();
+
+            // 2. Bắn thông báo nội bộ (Notification Service)
+            string msg = newStatus == AppointmentStatus.Confirmed
+                ? $"Lịch khám của bạn với BS. {appointment.Doctor.User.FullName} vào lúc {appointment.TimeSlot} ngày {appointment.Date:dd/MM/yyyy} đã được XÁC NHẬN."
+                : $"Lịch khám ngày {appointment.Date:dd/MM/yyyy} của bạn đã BỊ HỦY.";
+
+            await _notificationService.CreateNotification(appointment.PatientId, msg);
+
+            // 🔥 3. LOGIC GỬI EMAIL CHỨA LINK KHI ADMIN BẤM XÁC NHẬN LỊCH ONLINE 🔥
+            if (newStatus == AppointmentStatus.Confirmed && appointment.IsVideoCall && appointment.Patient != null && !string.IsNullOrEmpty(appointment.Patient.Email))
+            {
+                try
+                {
+                    var request = HttpContext.Request;
+                    var domain = $"{request.Scheme}://{request.Host}";
+                    string roomUrl = $"{domain}/VideoCall/Room?roomId={appointment.MeetingRoomId}";
+
+                    string emailSubject = "Xác nhận Lịch Khám Online - PBL3 HealthCare";
+                    string emailBody = $@"
+                        <div style='font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 10px; max-width: 600px;'>
+                            <h2 style='color: #0d6efd;'>PBL3 HealthCare Clinic</h2>
+                            <p>Chào <strong>{appointment.Patient.FullName}</strong>,</p>
+                            <p>Lịch khám Online của bạn đã được <strong>XÁC NHẬN THÀNH CÔNG</strong> sau khi kiểm tra thông tin.</p>
+                            <div style='background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;'>
+                                <p style='margin: 5px 0;'><strong>Bác sĩ:</strong> BS. {appointment.Doctor.User.FullName}</p>
+                                <p style='margin: 5px 0;'><strong>Ngày khám:</strong> {appointment.Date:dd/MM/yyyy}</p>
+                                <p style='margin: 5px 0;'><strong>Giờ khám:</strong> {appointment.TimeSlot}</p>
+                            </div>
+                            <p style='color: #d63384; font-weight: bold;'>Hướng dẫn vào phòng:</p>
+                            <p>Vui lòng chuẩn bị Camera, Micro và nhấn vào nút bên dưới để vào phòng khám <strong>trước giờ hẹn 10 phút</strong>.</p>
+                            <a href='{roomUrl}' style='display: inline-block; padding: 12px 25px; background-color: #0d6efd; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;'>BẤM VÀO ĐÂY ĐỂ VÀO PHÒNG KHÁM</a>
+                            <p style='margin-top: 25px; font-size: 11px; color: #888; border-top: 1px solid #eee; padding-top: 10px;'>Mã phòng dự phòng: {appointment.MeetingRoomId}. Nếu không thể nhấn nút, hãy copy link sau dán vào trình duyệt: {roomUrl}</p>
+                        </div>";
+
+                    await _emailService.SendEmailAsync(appointment.Patient.Email, emailSubject, emailBody);
+                }
+                catch (Exception ex)
+                {
+                    // Log lỗi gửi mail nếu cần, nhưng không làm chết app
+                    TempData["Error"] = "Lịch đã duyệt nhưng không gửi được Email: " + ex.Message;
+                }
+            }
+
+            TempData["Success"] = "Cập nhật trạng thái thành công!";
+            return RedirectToAction(nameof(Index));
+        }
+
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
-
             var appointment = await _context.Appointments
                 .Include(a => a.Doctor).ThenInclude(d => d.User)
                 .Include(a => a.Patient)
                 .FirstOrDefaultAsync(m => m.Id == id);
-
             if (appointment == null) return NotFound();
-
             return View(appointment);
         }
 
@@ -224,86 +273,9 @@ namespace PBL3_HealthCare.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // ==========================================
-        // UPDATE STATUS (ADMIN + DOCTOR DUYỆT)
-        // ==========================================
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateStatus(int id, AppointmentStatus newStatus)
-        {
-            // Tui đổi FindAsync thành FirstOrDefaultAsync + Include để móc được cái tên Bác sĩ ra nhé
-            var appointment = await _context.Appointments
-                .Include(a => a.Doctor)
-                    .ThenInclude(d => d.User)
-                .FirstOrDefaultAsync(a => a.Id == id);
-
-            if (appointment == null) return NotFound();
-
-            var currentUser = await _userManager.GetUserAsync(User);
-            var isDoctor = await _userManager.IsInRoleAsync(currentUser, "Doctor");
-
-            if (isDoctor)
-            {
-                var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == currentUser.Id);
-
-                // 🔥 CHỈ ĐƯỢC DUYỆT LỊCH CỦA CHÍNH MÌNH
-                if (doctor == null || appointment.DoctorId != doctor.Id)
-                    return Unauthorized();
-
-                // 🔥 CHỈ ĐƯỢC CHUYỂN TỪ PENDING
-                if (appointment.Status != AppointmentStatus.Pending)
-                    return BadRequest();
-            }
-
-            appointment.Status = newStatus;
-            _context.Update(appointment);
-            await _context.SaveChangesAsync();
-
-            TempData["Success"] = "Cập nhật trạng thái thành công!";
-
-            if (newStatus == AppointmentStatus.Confirmed) 
-            {
-                await _notificationService.CreateNotification(
-                    appointment.PatientId,
-                    $"Lịch khám của bạn với BS. {appointment.Doctor.User.FullName} vào lúc {appointment.TimeSlot} ngày {appointment.Date:dd/MM/yyyy} đã được XÁC NHẬN."
-                );
-            }
-            else if (newStatus == AppointmentStatus.Cancelled)
-            {
-                await _notificationService.CreateNotification(
-                    appointment.PatientId,
-                    $"Lịch khám ngày {appointment.Date:dd/MM/yyyy} của bạn đã BỊ HỦY. Vui lòng liên hệ phòng khám để biết thêm chi tiết."
-                );
-            }
-
-            return RedirectToAction(nameof(Index));
-        }
-
         private bool AppointmentExists(int id)
         {
             return _context.Appointments.Any(e => e.Id == id);
-        }
-
-        [Authorize(Roles = "Doctor")]
-        public async Task<IActionResult> MySchedule()
-        {
-            // 1. Lấy thông tin bác sĩ đang đăng nhập
-            var currentUser = await _userManager.GetUserAsync(User);
-            var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == currentUser.Id);
-
-            if (doctor == null) return NotFound("Không tìm thấy thông tin bác sĩ.");
-
-            // 2. Lấy danh sách lịch khám ĐÃ XÁC NHẬN từ hôm nay trở đi
-            var mySchedule = await _context.Appointments
-                .Include(a => a.Patient)
-                .Where(a => a.DoctorId == doctor.Id
-                         && a.Status == AppointmentStatus.Confirmed
-                         && a.Date.Date >= DateTime.Today)
-                .OrderBy(a => a.Date)         // Sắp xếp ngày gần nhất lên đầu
-                .ThenBy(a => a.TimeSlot)      // Trong 1 ngày thì xếp theo giờ từ sáng đến chiều
-                .ToListAsync();
-
-            return View(mySchedule);
         }
     }
 }

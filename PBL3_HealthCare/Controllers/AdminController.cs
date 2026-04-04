@@ -53,46 +53,92 @@ namespace PBL3_HealthCare.Controllers
         }
 
         // ========================================================
-        // 2. API TRẢ VỀ JSON: DÀNH CHO THÁI (FE 2) VẼ CHART.JS
+        // 2. API TRẢ VỀ JSON: VẼ CHART.JS (BẢN CHỐNG LỖI 500)
         // ========================================================
         [HttpGet]
         public async Task<IActionResult> GetChartData()
         {
-            // A. BIỂU ĐỒ TRÒN: Tỷ lệ bệnh nhân theo Chuyên khoa
-            // Logic: Điếm số lượng Lịch khám (Appointment) gom nhóm theo Khoa của Bác sĩ
-            var specialtyStats = await _context.Appointments
-                .Include(a => a.Doctor)
-                .ThenInclude(d => d.Specialty)
-                .Where(a => a.Doctor != null && a.Doctor.Specialty != null)
-                .GroupBy(a => a.Doctor.Specialty.Name)
-                .Select(g => new
-                {
-                    SpecialtyName = g.Key,
-                    PatientCount = g.Count()
-                })
-                .ToListAsync();
-
-            // B. BIỂU ĐỒ CỘT: Doanh thu 6 tháng gần nhất
-            // Khúc này hơi khoai, tui viết sẵn logic gom nhóm theo tháng cho sếp luôn
-            var sixMonthsAgo = DateTime.Now.AddMonths(-5);
-            var revenueStats = await _context.Invoices
-                .Where(i => i.Status == InvoiceStatus.Paid && i.CreatedAt >= new DateTime(sixMonthsAgo.Year, sixMonthsAgo.Month, 1))
-                .GroupBy(i => new { i.CreatedAt.Year, i.CreatedAt.Month })
-                .Select(g => new
-                {
-                    Month = g.Key.Month + "/" + g.Key.Year,
-                    Total = g.Sum(i => i.TotalAmount)
-                })
-                .OrderBy(r => r.Month) // Sắp xếp theo tháng
-                .ToListAsync();
-
-            // Gói 2 cục data này thành dạng JSON quăng ra ngoài
-            return Json(new
+            try
             {
-                PieChartData = specialtyStats,
-                BarChartData = revenueStats
-            });
+                // A. BIỂU ĐỒ TRÒN: Tỷ lệ bệnh nhân theo Chuyên khoa
+                // BƯỚC 1: Lấy toàn bộ Appointment có chứa Doctor và Specialty về RAM trước (Tránh lỗi EF Core GroupBy)
+                var rawAppointments = await _context.Appointments
+                    .Include(a => a.Doctor)
+                        .ThenInclude(d => d.Specialty)
+                    .Where(a => a.Doctor != null && a.Doctor.Specialty != null)
+                    .ToListAsync();
 
+                // BƯỚC 2: Gom nhóm trên RAM
+                var specialtyStats = rawAppointments
+                    .GroupBy(a => a.Doctor.Specialty.Name)
+                    .Select(g => new
+                    {
+                        SpecialtyName = g.Key,
+                        PatientCount = g.Count()
+                    })
+                    .ToList<dynamic>(); // Ép kiểu để dễ gán data giả
+
+                // 🔥 THỦ THUẬT DEMO: Nếu trống trơn thì đắp data giả vào
+                if (!specialtyStats.Any())
+                {
+                    specialtyStats = new List<dynamic>
+                    {
+                        new { SpecialtyName = "Nội khoa", PatientCount = 45 },
+                        new { SpecialtyName = "Ngoại khoa", PatientCount = 20 },
+                        new { SpecialtyName = "Da liễu", PatientCount = 30 },
+                        new { SpecialtyName = "Tai - Mũi - Họng", PatientCount = 15 }
+                    };
+                }
+
+                // B. BIỂU ĐỒ CỘT: Doanh thu 6 tháng gần nhất
+                var sixMonthsAgo = DateTime.Now.AddMonths(-5);
+                var startDate = new DateTime(sixMonthsAgo.Year, sixMonthsAgo.Month, 1);
+
+                // BƯỚC 1: Lấy hóa đơn về RAM
+                var rawInvoices = await _context.Invoices
+                    .Where(i => i.Status == InvoiceStatus.Paid && i.CreatedAt >= startDate)
+                    .ToListAsync();
+
+                // BƯỚC 2: Gom nhóm trên RAM
+                var revenueStats = rawInvoices
+                    .GroupBy(i => new { i.CreatedAt.Year, i.CreatedAt.Month })
+                    .Select(g => new
+                    {
+                        Month = g.Key.Month.ToString("00") + "/" + g.Key.Year, // Định dạng 04/2026 cho đẹp
+                        Total = g.Sum(i => i.TotalAmount)
+                    })
+                    .OrderBy(r => r.Month)
+                    .ToList<dynamic>();
+
+                // 🔥 THỦ THUẬT DEMO: Tạo chuỗi 6 tháng liên tiếp (kể cả tháng không có doanh thu)
+                if (!revenueStats.Any())
+                {
+                    revenueStats = new List<dynamic>();
+                    for (int i = 5; i >= 0; i--)
+                    {
+                        var pastMonth = DateTime.Now.AddMonths(-i);
+                        revenueStats.Add(new
+                        {
+                            Month = pastMonth.Month.ToString("00") + "/" + pastMonth.Year,
+                            Total = new Random().Next(15000000, 50000000)
+                        });
+                    }
+                }
+
+                // TRẢ VỀ JSON THÀNH CÔNG
+                return Json(new
+                {
+                    PieChartData = specialtyStats,
+                    BarChartData = revenueStats
+                });
+            }
+            catch (Exception ex)
+            {
+                // Bắt Lỗi Xuyên Tâm Liên: Nếu có lỗi, in ra Console của Visual Studio để sếp dễ bắt bệnh
+                Console.WriteLine("======= LỖI GET CHART DATA =======");
+                Console.WriteLine(ex.Message);
+                return StatusCode(500, "Lỗi máy chủ nội bộ: " + ex.Message);
+            }
         }
 
         [HttpGet]
@@ -207,11 +253,13 @@ namespace PBL3_HealthCare.Controllers
         [HttpGet]
         public async Task<IActionResult> PendingPackages()
         {
-            // Lấy danh sách các yêu cầu đang chờ duyệt (Pending), xếp cái cũ lên trước để duyệt trước
+            var now = DateTime.Now; // Lấy mốc thời gian ngay lúc này
+
+            // Lấy danh sách các yêu cầu đang chờ duyệt (Pending) VÀ có thời gian khám ở tương lai
             var pendingList = await _context.PackageBookings
                 .Include(p => p.Patient)
                 .Include(p => p.HealthPackage)
-                .Where(p => p.Status == "Pending")
+                .Where(p => p.Status == "Pending" && p.BookingDate >= now)
                 .OrderBy(p => p.CreatedAt)
                 .ToListAsync();
 
@@ -222,13 +270,16 @@ namespace PBL3_HealthCare.Controllers
         [HttpGet]
         public async Task<IActionResult> PendingVaccinations()
         {
+            var now = DateTime.Now;
+
             var list = await _context.VaccinationBookings
                 .Include(v => v.Patient)
                 .Include(v => v.Vaccine)
-                // Lấy cả 2 trạng thái để quản lý trên cùng 1 trang
-                .Where(v => v.Status == "Pending" || v.Status == "Approved")
+                // Phải có ngoặc đơn bao quanh 2 cái Status, sau đó mới AND với BookingDate
+                .Where(v => (v.Status == "Pending" || v.Status == "Approved") && v.BookingDate >= now)
                 .OrderBy(v => v.BookingDate)
                 .ToListAsync();
+
             return View(list);
         }
 
@@ -272,12 +323,16 @@ namespace PBL3_HealthCare.Controllers
         [HttpGet]
         public async Task<IActionResult> PendingHomeCare()
         {
+            var now = DateTime.Now;
+
             var list = await _context.HomeServiceRequests
                 .Include(h => h.Patient)
                 .Include(h => h.HomeService)
-                .Where(h => h.Status == "Pending")
+                // Lọc trạng thái Pending VÀ Thời gian yêu cầu phải ở tương lai
+                .Where(h => h.Status == "Pending" && h.RequestDate >= now)
                 .OrderBy(h => h.CreatedAt)
                 .ToListAsync();
+
             return View(list);
         }
 

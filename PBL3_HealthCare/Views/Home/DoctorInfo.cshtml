@@ -117,6 +117,7 @@
                                            asp-route-doctorId="@Model.Id"
                                            asp-route-date="@currentDate.ToString("yyyy-MM-dd")"
                                            asp-route-timeSlot="@slot"
+                                           asp-route-isVideoCall="@(ViewBag.IsVideoCall == true ? "true" : "false")"
                                            class="slot-btn">@slot</a>
                                     }
                                 }

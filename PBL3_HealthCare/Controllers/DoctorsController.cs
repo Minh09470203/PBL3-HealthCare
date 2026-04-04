@@ -65,7 +65,7 @@ namespace PBL3_HealthCare.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         // BỔ SUNG THÊM THAM SỐ IFormFile AvatarFile
-        public async Task<IActionResult> Create([Bind("Id,UserId,SpecialtyId,Bio,Degree,Price,Image")] Doctor doctor, IFormFile AvatarFile)
+        public async Task<IActionResult> Create([Bind("Id,UserId,SpecialtyId,Bio,Degree,Price,Image,IsVideoAvailable")] Doctor doctor, IFormFile AvatarFile)
         {
             if (ModelState.IsValid)
             {
@@ -130,9 +130,12 @@ namespace PBL3_HealthCare.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         // BỔ SUNG THÊM THAM SỐ IFormFile AvatarFile
-        public async Task<IActionResult> Edit(int id, [Bind("Id,UserId,SpecialtyId,Bio,Degree,Price,Image")] Doctor doctor, IFormFile AvatarFile)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,UserId,SpecialtyId,Bio,Degree,Price,Image,IsVideoAvailable")] Doctor doctor, IFormFile AvatarFile)
         {
             if (id != doctor.Id) return NotFound();
+
+            ModelState.Remove("AvatarFile");
+            ModelState.Remove("Image");
 
             if (ModelState.IsValid)
             {

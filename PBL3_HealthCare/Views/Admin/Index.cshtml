@@ -55,14 +55,28 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         $(document).ready(function () {
-            // Gọi API do Minh (BE 1) viết để lấy JSON data
+            // Gọi API lấy data
             $.ajax({
                 url: '/Admin/GetChartData',
                 type: 'GET',
                 success: function (res) {
-                    // 1. VẼ BIỂU ĐỒ CỘT (DOANH THU)
-                    let barLabels = res.barChartData.map(x => x.month);
-                    let barData = res.barChartData.map(x => x.total);
+                    console.log("Dữ liệu từ Server trả về:", res); // Sếp F12 xem dòng này để biết data trông thế nào nhé
+
+                    // 1. LẤY DATA (Chấp cả viết hoa lẫn viết thường)
+                    let barChartList = res.barChartData || res.BarChartData || [];
+                    let pieChartList = res.pieChartData || res.PieChartData || [];
+
+                    // Nếu CÓ tiền nhưng chưa có đủ data vẽ (ví dụ chưa có Khoa nào), bọc giáp trống lỗi
+                    if (barChartList.length === 0) {
+                        barChartList = [{ month: "Tháng này", total: 0 }];
+                    }
+                    if (pieChartList.length === 0) {
+                        pieChartList = [{ specialtyName: "Chưa phân khoa", patientCount: 1 }];
+                    }
+
+                    // 2. VẼ BIỂU ĐỒ CỘT (DOANH THU)
+                    let barLabels = barChartList.map(x => x.month || x.Month || "N/A");
+                    let barData = barChartList.map(x => x.total || x.Total || 0);
 
                     new Chart(document.getElementById('revenueChart'), {
                         type: 'bar',
@@ -71,30 +85,46 @@
                             datasets: [{
                                 label: 'Doanh thu (VNĐ)',
                                 data: barData,
-                                backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                                borderColor: 'rgba(54, 162, 235, 1)',
-                                borderWidth: 1
+                                backgroundColor: 'rgba(78, 115, 223, 0.85)', // Màu xanh Primary của sếp
+                                borderColor: 'rgba(78, 115, 223, 1)',
+                                borderWidth: 1,
+                                borderRadius: 5 // Bo góc cột cho hiện đại
                             }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false, // Để biểu đồ tự giãn theo thẻ Card
+                            scales: {
+                                y: { beginAtZero: true }
+                            }
                         }
                     });
 
-                    // 2. VẼ BIỂU ĐỒ TRÒN (TỶ LỆ KHOA)
-                    let pieLabels = res.pieChartData.map(x => x.specialtyName);
-                    let pieData = res.pieChartData.map(x => x.patientCount);
+                    // 3. VẼ BIỂU ĐỒ TRÒN (TỶ LỆ KHOA)
+                    let pieLabels = pieChartList.map(x => x.specialtyName || x.SpecialtyName || "N/A");
+                    let pieData = pieChartList.map(x => x.patientCount || x.PatientCount || 0);
 
                     new Chart(document.getElementById('specialtyChart'), {
-                        type: 'doughnut',
+                        type: 'doughnut', // Biểu đồ bánh donut rỗng ruột cho đẹp
                         data: {
                             labels: pieLabels,
                             datasets: [{
                                 data: pieData,
-                                backgroundColor: ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', '#9966ff']
+                                backgroundColor: ['#4e73df', '#1cc88a', '#f6c23e', '#e74a3b', '#36b9cc'],
+                                hoverBorderColor: "rgba(234, 236, 244, 1)"
                             }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'bottom' } // Đưa chú thích xuống dưới cho gọn
+                            }
                         }
                     });
                 },
-                error: function () {
-                    console.log("Lỗi tải dữ liệu biểu đồ!");
+                error: function (err) {
+                    console.error("Lỗi API tải biểu đồ:", err);
                 }
             });
         });

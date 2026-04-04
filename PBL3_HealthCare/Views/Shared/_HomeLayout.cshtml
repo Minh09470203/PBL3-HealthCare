@@ -40,13 +40,22 @@
                 <div class="col-md-5 d-flex justify-content-end align-items-center">
                     @if (User.Identity.IsAuthenticated)
                     {
-                        var userId = UserManager.GetUserId(User);
+                        // 1. LẤY THÔNG TIN USER (Chỉ lấy 1 lần duy nhất)
+                        var user = await UserManager.GetUserAsync(User);
+                        var userId = user?.Id;
+
+                        // 2. LOGIC THÔNG BÁO
                         var unreadCount = await _context.Notifications.CountAsync(n => n.ReceiverId == userId && !n.IsRead);
                         var latestNotifications = await _context.Notifications
                         .Where(n => n.ReceiverId == userId && !n.IsRead)
                         .OrderByDescending(n => n.CreatedAt)
                         .Take(5)
                         .ToListAsync();
+
+                        // 3. LOGIC AVATAR (Có chống kẹt cache)
+                        var avatarUrl = (user != null && !string.IsNullOrEmpty(user.Avatar))
+                        ? "/img/" + user.Avatar + "?v=" + DateTime.Now.Ticks
+                        : "/img/undraw_profile.svg";
 
                         <div class="dropdown mr-4" style="display:inline-block;">
                             <a href="#" class="dropdown-toggle d-flex align-items-center" id="patientAlertsDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="color: rgba(255,255,255,0.8); text-decoration: none;">
@@ -59,7 +68,6 @@
                                     }
                                 </span>
                             </a>
-
                             <div class="dropdown-menu shadow-lg border-0" aria-labelledby="patientAlertsDropdown" style="width: 320px; padding: 0; border-radius: 8px; overflow: hidden; margin-top: 10px; right: 0; left: auto;">
                                 <div class="dropdown-header text-white p-3" style="background: #3d5ee1; font-size: 0.95rem; font-weight: 600;">
                                     Thông báo của bạn (@unreadCount)
@@ -79,22 +87,19 @@
                                     }
                                     else
                                     {
-                                        <div class="p-4 text-center text-muted" style="font-size: 0.85rem;">
-                                            Không có thông báo nào mới.
-                                        </div>
+                                        <div class="p-4 text-center text-muted" style="font-size: 0.85rem;">Không có thông báo nào mới.</div>
                                     }
                                 </div>
-                                <a href="#" class="dropdown-item text-center p-2" style="font-size: 0.85rem; font-weight: 600; color: #3d5ee1; background: #f8f9fa;">
-                                    Xem tất cả thông báo
-                                </a>
+                                <a href="#" class="dropdown-item text-center p-2" style="font-size: 0.85rem; font-weight: 600; color: #3d5ee1; background: #f8f9fa;">Xem tất cả</a>
                             </div>
                         </div>
-                        <a asp-controller="Home" asp-action="Profile" class="mr-3">
-                            Xin chào, @User.Identity.Name
+
+                        <a asp-controller="Home" asp-action="Profile" class="mr-3 d-inline-flex align-items-center" style="color: #fff; text-decoration: none; transition: opacity .2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                            <span class="mr-2 d-none d-lg-inline">Xin chào, @(user?.FullName ?? User.Identity.Name)</span>
+                            <img src="@avatarUrl" class="rounded-circle shadow-sm" style="width: 32px; height: 32px; object-fit: cover; border: 1.5px solid rgba(255,255,255,0.6);">
                         </a>
-                        <form asp-area="Identity" asp-page="/Account/Logout"
-                              asp-route-returnUrl="@Url.Action("Index","Home",new{area=""})"
-                              method="post" class="d-inline m-0">
+
+                        <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index","Home",new{area=""})" method="post" class="d-inline m-0">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn-logout">Đăng xuất</button>
                         </form>

@@ -24,7 +24,7 @@
             <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3" style="border-radius:10px;font-size:.85rem;"></div>
             <input type="hidden" asp-for="Id" />
 
-            <input type="hidden" asp-for="Image" />
+            <input type="hidden" name="Image" value="@Model?.Image" />
 
             <p class="form-section-title yellow"><i class="fas fa-id-card mr-1"></i>Thông tin cơ bản</p>
             <div class="row">
@@ -60,6 +60,14 @@
                             <input asp-for="Price" class="form-control" type="number" />
                         </div>
                         <span asp-validation-for="Price" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-12 mt-3">
+                    <div class="custom-control custom-checkbox" style="padding-left: 2rem;">
+                        <input asp-for="IsVideoAvailable" class="custom-control-input" id="IsVideoAvailableEdit" style="cursor:pointer;" />
+                        <label class="custom-control-label font-weight-bold text-primary" for="IsVideoAvailableEdit" style="font-size: 1.05rem; cursor:pointer;">
+                            <i class="fas fa-video mr-1"></i> Hỗ trợ Khám Online (Video Call)
+                        </label>
                     </div>
                 </div>
             </div>

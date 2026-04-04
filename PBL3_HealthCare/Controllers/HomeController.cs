@@ -93,7 +93,7 @@ namespace PBL3_HealthCare.Controllers
         }
 
         // 1. LẤY DANH SÁCH BÁC SĨ (CÓ LỌC KHOA)
-        public async Task<IActionResult> DoctorList(int? specialtyId)
+        public async Task<IActionResult> DoctorList(int? specialtyId, bool isVideoCall = false)
         {
             var query = _context.Doctors
                 .Include(d => d.User)
@@ -118,11 +118,20 @@ namespace PBL3_HealthCare.Controllers
                 }
             }
 
+            if (isVideoCall)
+            {
+                // Chỉ lấy những bác sĩ có IsVideoAvailable = true
+                query = query.Where(d => d.IsVideoAvailable == true);
+
+                // Truyền cờ này xuống View để FE biết đang ở chế độ lọc
+                ViewBag.IsVideoCall = true;
+            }
+
             return View(await query.ToListAsync());
         }
 
         // 2. LẤY THÔNG TIN CHI TIẾT & BẢNG GIỜ KHÁM (Dựa vào Schedule)
-        public async Task<IActionResult> DoctorInfo(int id)
+        public async Task<IActionResult> DoctorInfo(int id, bool isVideoCall = false)
         {
             var doctor = await _context.Doctors
                 .Include(d => d.Specialty)
@@ -161,7 +170,7 @@ namespace PBL3_HealthCare.Controllers
                         slotsForToday.AddRange(new[] { "14:00", "15:00", "16:00" });
 
                     if (schedule.Shift.Contains("Tối"))
-                        slotsForToday.AddRange(new[] { "18:00", "19:00", "20:00" });
+                        slotsForToday.AddRange(new[] { "18:00", "19:00", "20:00", "21:00", "22:00", "23:00" });
                 }
 
                 // Lọc trùng, sắp xếp và cất vào "ngăn kéo" của ngày đó
@@ -179,6 +188,7 @@ namespace PBL3_HealthCare.Controllers
             ViewBag.Next3Days = availableDates;
             ViewBag.TimeSlotsByDate = timeSlotsByDate; // Gửi cả cái Từ điển ra ngoài
             ViewBag.BookedAppointments = bookedAppointments;
+            ViewBag.IsVideoCall = isVideoCall;
 
             return View(doctor);
         }
@@ -294,33 +304,6 @@ namespace PBL3_HealthCare.Controllers
                         doctorInfo.UserId,
                         $"Có bệnh nhân vừa đặt lịch khám với bạn vào lúc {model.TimeSlot} ngày {model.Date:dd/MM/yyyy}."
                     );
-                }
-
-                // 🔥 GỬI EMAIL CHỨA LINK PHÒNG KHÁM CHO BỆNH NHÂN 🔥
-                if (model.IsVideoCall && !string.IsNullOrEmpty(user.Email))
-                {
-                    // Tự động lấy domain hiện tại (http://localhost:xxxx) để tạo link
-                    var request = HttpContext.Request;
-                    var domain = $"{request.Scheme}://{request.Host}";
-                    string roomUrl = $"{domain}/VideoCall/Room?roomId={model.MeetingRoomId}";
-
-                    string emailSubject = "Xác nhận Lịch Khám Qua Video - PBL3 HealthCare";
-                    string emailBody = $@"
-                <div style='font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 10px;'>
-                    <h2 style='color: #0d6efd;'>PBL3 HealthCare Clinic</h2>
-                    <p>Chào <strong>{user.FullName}</strong>,</p>
-                    <p>Lịch khám Online của bạn đã được xác nhận thành công. Thông tin chi tiết:</p>
-                    <ul>
-                        <li><strong>Bác sĩ:</strong> BS. {ViewBag.DoctorName ?? doctorInfo?.UserId}</li>
-                        <li><strong>Ngày khám:</strong> {model.Date:dd/MM/yyyy}</li>
-                        <li><strong>Giờ khám:</strong> {model.TimeSlot}</li>
-                    </ul>
-                    <p style='color: red;'><strong>Lưu ý:</strong> Vui lòng chuẩn bị Camera, Micro và truy cập vào link bên dưới <strong>trước giờ hẹn 10 phút</strong>.</p>
-                    <a href='{roomUrl}' style='display: inline-block; padding: 12px 20px; margin-top: 10px; background-color: #0d6efd; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;'>BẤM VÀO ĐÂY ĐỂ VÀO PHÒNG KHÁM</a>
-                    <p style='margin-top: 20px; font-size: 12px; color: #888;'>Mã phòng dự phòng của bạn là: {model.MeetingRoomId}</p>
-                </div>";
-
-                    await _emailService.SendEmailAsync(user.Email, emailSubject, emailBody);
                 }
 
                 TempData["Success"] = "Đặt lịch thành công! Vui lòng chờ phòng khám xác nhận.";
@@ -511,70 +494,6 @@ namespace PBL3_HealthCare.Controllers
             return View(doctor);
         }
 
-        // POST: /Home/DoctorProfile
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DoctorProfile(
-            string FullName, string Email, string PhoneNumber, string Address,
-            string Degree, decimal Price, string Bio,
-            IFormFile AvatarFile)
-        {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
-                return RedirectToPage("/Account/Login", new { area = "Identity" });
-
-            var doctor = await _context.Doctors
-                .Include(d => d.Specialty)
-                .Include(d => d.User)
-                .FirstOrDefaultAsync(d => d.UserId == user.Id);
-
-            if (doctor == null) return NotFound();
-
-            // Cập nhật thông tin tài khoản (ApplicationUser)
-            user.FullName = FullName;
-            user.Email = Email;
-            user.PhoneNumber = PhoneNumber;
-            user.Address = Address;
-            await _userManager.UpdateAsync(user);
-
-            // Cập nhật thông tin hành nghề (Doctor)
-            doctor.Degree = Degree;
-            doctor.Price = Price;
-            doctor.Bio = Bio;
-
-            // Xử lý upload ảnh đại diện nếu có chọn file mới
-            if (AvatarFile != null && AvatarFile.Length > 0)
-            {
-                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "img", "doctors");
-                if (!Directory.Exists(uploadsFolder))
-                    Directory.CreateDirectory(uploadsFolder);
-
-                string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(AvatarFile.FileName);
-                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    await AvatarFile.CopyToAsync(fileStream);
-                }
-
-                // Xóa ảnh cũ nếu tồn tại
-                if (!string.IsNullOrEmpty(doctor.Image))
-                {
-                    string oldPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "doctors", doctor.Image);
-                    if (System.IO.File.Exists(oldPath))
-                        System.IO.File.Delete(oldPath);
-                }
-
-                doctor.Image = uniqueFileName;
-            }
-
-            _context.Update(doctor);
-            await _context.SaveChangesAsync();
-
-            TempData["Success"] = "Cập nhật hồ sơ thành công!";
-            return RedirectToAction(nameof(DoctorProfile));
-        }
-
         public IActionResult Privacy()
         {
             return View();
@@ -671,6 +590,48 @@ namespace PBL3_HealthCare.Controllers
                 .ToListAsync();
 
             return View(invoices);
+        }
+
+        // ==========================================
+        // DASHBOARD CHO VIDEO CALL
+        // ==========================================
+
+        // 1. Dashboard Bệnh Nhân
+        [HttpGet]
+        [Authorize(Roles = "Patient")]
+        public async Task<IActionResult> PatientDashboard()
+        {
+            var userId = _userManager.GetUserId(User);
+
+            // Lấy các lịch khám từ hôm nay trở đi của bệnh nhân này
+            var myAppointments = await _context.Appointments
+                .Include(a => a.Doctor)
+                .ThenInclude(d => d.User)
+                .Where(a => a.PatientId == userId && a.Date.Date >= DateTime.Today.Date)
+                .OrderBy(a => a.Date).ThenBy(a => a.TimeSlot)
+                .ToListAsync();
+
+            return View(myAppointments);
+        }
+
+        // 2. Dashboard Bác Sĩ
+        [HttpGet]
+        [Authorize(Roles = "Doctor")]
+        public async Task<IActionResult> DoctorDashboard()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == user.Id);
+
+            if (doctor == null) return NotFound("Không tìm thấy hồ sơ Bác sĩ");
+
+            // Lấy các lịch hẹn CHỈ TRONG HÔM NAY của bác sĩ này
+            var todayAppointments = await _context.Appointments
+                .Include(a => a.Patient) // Lấy thông tin user bệnh nhân
+                .Where(a => a.DoctorId == doctor.Id && a.Date.Date == DateTime.Today.Date)
+                .OrderBy(a => a.TimeSlot)
+                .ToListAsync();
+
+            return View(todayAppointments);
         }
     }
 }

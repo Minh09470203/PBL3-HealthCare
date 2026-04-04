@@ -31,6 +31,15 @@
 
             <hr class="sidebar-divider my-0">
 
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="DoctorPortal" asp-action="Index">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>Tổng quan</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider my-0">
+
             <div class="sidebar-heading mt-3">Chuyên môn y tế</div>
 
             <li class="nav-item">
@@ -41,7 +50,7 @@
             </li>
 
             <li class="nav-item">
-                <a class="nav-link" asp-controller="Appointments" asp-action="MySchedule">
+                <a class="nav-link" asp-controller="DoctorPortal" asp-action="MySchedule">
                     <i class="fas fa-fw fa-calendar-alt"></i>
                     <span>Lịch làm việc của tôi</span>
                 </a>
@@ -51,7 +60,7 @@
             <div class="sidebar-heading">Cá nhân</div>
 
             <li class="nav-item">
-                <a class="nav-link" asp-controller="Home" asp-action="DoctorProfile">
+                <a class="nav-link" asp-controller="DoctorPortal" asp-action="Profile">
                     <i class="fas fa-fw fa-id-badge"></i>
                     <span>Hồ sơ công tác</span>
                 </a>

@@ -56,6 +56,19 @@
                 <div class="info-label"><i class="fas fa-id-badge mr-1"></i>Mã bác sĩ</div>
                 <div class="info-value">#@Model?.Id</div>
             </div>
+            <div class="info-item" style="border-left: 4px solid #36b9cc;">
+                <div class="info-label"><i class="fas fa-laptop-medical mr-1"></i>Khám Online</div>
+                <div class="info-value mt-1">
+                    @if (Model?.IsVideoAvailable == true)
+                    {
+                        <span class="badge bg-info text-white" style="font-size: 0.85rem; padding: 6px 10px;"><i class="fas fa-check-circle mr-1"></i>Có hỗ trợ</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary text-white" style="font-size: 0.85rem; padding: 6px 10px;"><i class="fas fa-times-circle mr-1"></i>Không hỗ trợ</span>
+                    }
+                </div>
+            </div>
         </div>
 
         @if (!string.IsNullOrWhiteSpace(Model?.Bio))

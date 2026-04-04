@@ -1,0 +1,84 @@
+﻿<div class="modal fade" id="finishCallModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="staticBackdropLabel"><i class="fas fa-notes-medical"></i> Cập Nhật Bệnh Án & Kết Thúc</h5>
+            </div>
+            <div class="modal-body">
+                <form id="finishCallForm">
+                    <input type="hidden" name="AppointmentId" id="AppointmentId" value="@ViewBag.AppointmentId" />
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Triệu chứng của bệnh nhân:</label>
+                        <textarea class="form-control" name="Symptoms" id="Symptoms" rows="2" placeholder="Ví dụ: Ho khan, sốt nhẹ..." required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Chẩn đoán (Kết luận):</label>
+                        <input type="text" class="form-control" name="Diagnosis" id="Diagnosis" placeholder="Ví dụ: Viêm họng cấp" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Lời dặn dò (Hướng điều trị):</label>
+                        <textarea class="form-control" name="DoctorNotes" id="DoctorNotes" rows="2" placeholder="Ví dụ: Uống nhiều nước, kiêng đồ lạnh..."></textarea>
+                    </div>
+                </form>
+
+                <div id="alertMessage" class="alert d-none mt-2"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" id="btnSubmitForm">Lưu Bệnh Án & Hoàn Thành</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Xử lý gửi form bằng Ajax khi Bác sĩ bấm "Lưu Bệnh Án"
+    document.getElementById('btnSubmitForm').addEventListener('click', function () {
+
+        // Đóng gói data theo đúng tên biến của FinishAppointmentViewModel bên BE
+        const data = {
+            AppointmentId: parseInt(document.getElementById('AppointmentId').value),
+            Symptoms: document.getElementById('Symptoms').value,
+            Diagnosis: document.getElementById('Diagnosis').value,
+            DoctorNotes: document.getElementById('DoctorNotes').value,
+            Prescription: "" // Có thể làm thêm form kê thuốc nếu cần
+        };
+
+        if(!data.Symptoms || !data.Diagnosis) {
+            alert("Vui lòng nhập đủ Triệu chứng và Chẩn đoán!");
+            return;
+        }
+
+        // Đổi text nút bấm
+        this.innerHTML = "Đang xử lý...";
+        this.disabled = true;
+
+        fetch('/VideoCall/FinishCall', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json()) // Chuyển response thành JSON để đọc ID
+        .then(res => {
+            if (res.success) {
+                // 🔥 ĐIỂM ĂN TIỀN LÀ ĐÂY: Chuyển hướng thẳng sang trang Kê Đơn Thuốc
+                // Nhớ truyền kèm theo cái medicalRecordId vừa đẻ ra
+                window.location.href = '/Prescriptions/Create?medicalRecordId=' + res.medicalRecordId;
+            } else {
+                throw new Error(res.message || 'Lưu thất bại');
+            }
+        })
+        .catch(error => {
+            const alertBox = document.getElementById('alertMessage');
+            alertBox.className = "alert alert-danger mt-2";
+            alertBox.innerText = "Có lỗi xảy ra: " + error.message;
+
+            document.getElementById('btnSubmitForm').innerHTML = "Lưu Bệnh Án & Hoàn Thành";
+            document.getElementById('btnSubmitForm').disabled = false;
+        });
+    });
+</script>

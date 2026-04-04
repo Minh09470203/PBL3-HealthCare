@@ -92,6 +92,7 @@
                                     </div>
                                     <a asp-controller="Home" asp-action="DoctorInfo"
                                        asp-route-id="@item.Id"
+                                       asp-route-isVideoCall="@(ViewBag.IsVideoCall == true ? "true" : "false")"
                                        class="btn-book">Đặt hẹn →</a>
                                 </div>
                             </div>

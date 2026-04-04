@@ -132,9 +132,9 @@
                         <input type="hidden" asp-for="VaccineId" />
 
                         <div class="form-group mb-5">
-                            <label asp-for="BookingDate" class="font-weight-bold" style="color: #4a5568;">Chọn ngày muốn đến tiêm <span class="text-danger">*</span></label>
+                            <label asp-for="BookingDate" class="font-weight-bold" style="color: #4a5568;">Chọn ngày giờ đến tiêm <span class="text-danger">*</span></label>
 
-                            <input asp-for="BookingDate" id="bookingDateOnly" class="form-control form-control-booking" type="date" required />
+                            <input asp-for="BookingDate" id="bookingDateTime" class="form-control form-control-booking" type="datetime-local" required />
 
                             <span asp-validation-for="BookingDate" class="text-danger small mt-1 d-block"></span>
                             <small class="form-text text-muted mt-2"><i class="fas fa-info-circle mr-1"></i> Trung tâm tiêm chủng làm việc từ Thứ 2 đến Chủ nhật (Sáng: 7h30-11h30, Chiều: 13h00-17h00).</small>
@@ -160,29 +160,34 @@
     }
 
     <script>
-        // SCRIPT CHẶN CHỌN NGÀY TRONG QUÁ KHỨ CHO THẺ <input type="date">
+        // SCRIPT CHẶN CHỌN NGÀY VÀ GIỜ TRONG QUÁ KHỨ (GIỐNG FORM GÓI KHÁM)
         document.addEventListener('DOMContentLoaded', function () {
-            var inputDateOnly = document.getElementById('bookingDateOnly');
+            var inputDate = document.getElementById('bookingDateTime');
 
-            if (inputDateOnly) {
+            if (inputDate) {
                 // Lấy thời gian hiện tại
-                var today = new Date();
+                var now = new Date();
 
-                // Format lại ngày theo chuẩn của thẻ <input type="date"> là yyyy-MM-dd
-                var year = today.getFullYear();
-                var month = (today.getMonth() + 1).toString().padStart(2, '0');
-                var day = today.getDate().toString().padStart(2, '0');
+                // Cộng thêm 1 tiếng để khớp với logic bên Gói Khám
+                now.setHours(now.getHours() + 1);
 
-                var minDateString = `${year}-${month}-${day}`;
+                // Format lại ngày giờ theo chuẩn của thẻ <input type="datetime-local"> là yyyy-MM-ddThh:mm
+                var year = now.getFullYear();
+                var month = (now.getMonth() + 1).toString().padStart(2, '0');
+                var day = now.getDate().toString().padStart(2, '0');
+                var hours = now.getHours().toString().padStart(2, '0');
+                var minutes = now.getMinutes().toString().padStart(2, '0');
 
-                // Set thuộc tính 'min' cho input (Các ngày trước đó trên Calendar sẽ bị xám đi)
-                inputDateOnly.min = minDateString;
+                var minDateTimeString = `${year}-${month}-${day}T${hours}:${minutes}`;
 
-                // Chặn người dùng gõ tay một ngày sai vào
-                inputDateOnly.addEventListener('change', function() {
-                    if (this.value < minDateString) {
-                        alert('Vui lòng chọn ngày từ thời điểm hiện tại trở đi.');
-                        this.value = minDateString;
+                // Set thuộc tính 'min' cho input
+                inputDate.min = minDateTimeString;
+
+                // Nếu người dùng cố tình nhập tay (gõ phím) một ngày trong quá khứ, tự động reset
+                inputDate.addEventListener('change', function() {
+                    if (this.value < minDateTimeString) {
+                        alert('Vui lòng chọn thời gian trong tương lai (Cách hiện tại ít nhất 1 tiếng).');
+                        this.value = minDateTimeString; // Trả về thời gian hợp lệ gần nhất
                     }
                 });
             }

@@ -2,12 +2,14 @@
 @model IEnumerable<PBL3_HealthCare.Models.Appointment>
 
 @{
-    ViewData["Title"] = "Quản lý Lịch khám";
+    bool isDoctor = User.IsInRole("Doctor");
+    ViewData["Title"] = isDoctor ? "Lịch khám của tôi" : "Quản lý Lịch khám";
+
     if (User.IsInRole("Admin"))
     {
         Layout = "~/Views/Shared/_AdminLayout.cshtml";
     }
-    else if (User.IsInRole("Doctor"))
+    else if (isDoctor)
     {
         Layout = "~/Views/Shared/_DoctorLayout.cshtml";
     }
@@ -18,6 +20,7 @@
 }
 
 <style>
+    /* Giữ nguyên toàn bộ CSS của sếp */
     .page-header {
         display: flex;
         align-items: center;
@@ -86,14 +89,6 @@
         border-bottom: 1px solid #f0f2fa !important;
     }
 
-    table.dataTable tbody tr:hover td {
-        background: #f8fefc;
-    }
-
-    table.dataTable tbody tr:last-child td {
-        border-bottom: none !important;
-    }
-
     .status-badge {
         display: inline-flex;
         align-items: center;
@@ -144,68 +139,43 @@
         gap: .3rem;
     }
 
-        .btn-action:hover {
-            transform: translateY(-1px);
-        }
-
-    .btn-action-edit {
-        background: #fff8e0;
-        color: #b8860b;
-    }
-
-    .btn-action-detail {
-        background: #e8f0fe;
-        color: #4e73df;
-    }
-
-    .btn-action-delete {
-        background: #fde8e6;
-        color: #e74a3b;
-    }
-
-    .dataTables_wrapper .dataTables_filter input {
-        border: 1.5px solid #e3e6f0;
-        border-radius: 10px;
-        padding: .4rem .9rem;
-        font-size: .85rem;
-    }
-
-    .dataTables_wrapper .dataTables_length select {
-        border: 1.5px solid #e3e6f0;
-        border-radius: 8px;
-        padding: .3rem .6rem;
-        font-size: .85rem;
-    }
-
-    .dataTables_wrapper {
-        padding: 1.25rem;
-    }
-
-    .dataTables_info, .dataTables_paginate {
-        padding: .75rem 0 0 !important;
-    }
-
     .btn-action-examine {
-        background: #1cc88a; /* Màu xanh lá nổi bật */
+        background: #1cc88a;
         color: #fff;
-        box-shadow: 0 2px 5px rgba(28,200,138,.3);
     }
-
-        .btn-action-examine:hover {
-            background: #13855c;
-            color: #fff;
-        }
 </style>
 
 <div class="page-header">
     <div>
-        <h4><i class="fas fa-calendar-check mr-2 text-success"></i>Quản lý Lịch khám</h4>
-        <p>Danh sách toàn bộ lịch hẹn khám trong hệ thống</p>
+        <h4><i class="fas fa-calendar-check mr-2 text-success"></i>@(isDoctor ? "Lịch khám của tôi" : "Quản lý Lịch khám")</h4>
+        <p>@(isDoctor ? "Theo dõi các ca khám bệnh được phân công cho bạn" : "Danh sách toàn bộ lịch hẹn khám trong hệ thống")</p>
     </div>
-    <a asp-action="Create" class="btn btn-add">
-        <i class="fas fa-plus"></i> Tạo lịch khám
-    </a>
+    @if (!isDoctor)
+    {
+        <a asp-action="Create" class="btn btn-add"><i class="fas fa-plus"></i> Tạo lịch khám</a>
+    }
 </div>
+
+@* 🔥 KHU VỰC FIX LỖI KẸT TEMPDATA 🔥 *@
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" style="border-radius: 12px; border: none; box-shadow: 0 4px 15px rgba(28,200,138,.15);">
+        <i class="fas fa-check-circle mr-2"></i> <strong>Thành công!</strong> @TempData["Success"]
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert" style="border-radius: 12px; border: none; box-shadow: 0 4px 15px rgba(231,74,59,.15);">
+        <i class="fas fa-exclamation-triangle mr-2"></i> <strong>Lỗi!</strong> @TempData["Error"]
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+}
 
 <div class="data-card card mb-4">
     <div class="card-body">
@@ -213,7 +183,10 @@
             <thead>
                 <tr>
                     <th>Bệnh nhân</th>
-                    <th>Bác sĩ</th>
+                    @if (!isDoctor)
+                    {
+                        <th>Bác sĩ</th>
+                    }
                     <th>Ngày khám</th>
                     <th>Khung giờ</th>
                     <th>Trạng thái</th>
@@ -225,101 +198,75 @@
                 @foreach (var item in Model)
                 {
                     <tr>
-                        <td><span class="font-weight-bold">@(item.Patient?.FullName ?? item.PatientId)</span></td>
-                        <td>BS. @(item.Doctor?.User?.FullName ?? "Bác sĩ")</td>
+                        <td>
+                            <span class="font-weight-bold">@(item.Patient?.FullName ?? item.PatientId)</span><br />
+                            @if (item.IsVideoCall)
+                            {
+                                <span class="badge badge-info mt-1"><i class="fas fa-video"></i> Online</span>
+                            }
+                        </td>
+                        @if (!isDoctor)
+                        {
+                            <td>BS. @(item.Doctor?.User?.FullName ?? "Bác sĩ")</td>
+                        }
                         <td><span class="date-text">@item.Date.ToString("dd/MM/yyyy")</span></td>
                         <td><span class="timeslot-text"><i class="fas fa-clock mr-1"></i>@Html.DisplayFor(m => item.TimeSlot)</span></td>
                         <td>
                             @if (item.Status == AppointmentStatus.Pending)
                             {
-                                <span class="status-badge status-pending">
-                                    <i class="fas fa-hourglass-half mr-1"></i> Chờ duyệt
-                                </span>
+                                <span class="status-badge status-pending"><i class="fas fa-hourglass-half mr-1"></i> Chờ duyệt</span>
                             }
                             else if (item.Status == AppointmentStatus.Confirmed)
                             {
-                                <span class="status-badge status-confirmed">
-                                    <i class="fas fa-check-circle mr-1"></i> Xác nhận
-                                </span>
+
+                                <span class="status-badge status-confirmed"><i class="fas fa-check-circle mr-1"></i> Xác nhận</span>
                             }
                             else if (item.Status == AppointmentStatus.Cancelled)
                             {
-                                <span class="status-badge status-cancelled">
-                                    <i class="fas fa-times-circle mr-1"></i> Đã hủy
-                                </span>
+
+                                <span class="status-badge status-cancelled"><i class="fas fa-times-circle mr-1"></i> Đã hủy</span>
                             }
                             else
                             {
-                                <span class="status-badge" style="background:#e8edff;color:#4e73df;">
-                                    <i class="fas fa-info-circle mr-1"></i> @item.Status
-                                </span>
+
+                                <span class="status-badge" style="background:#e8edff;color:#4e73df;"><i class="fas fa-info-circle mr-1"></i> @item.Status</span>
                             }
                         </td>
-
                         <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="@item.Reason">
                             @(string.IsNullOrEmpty(item.Reason) ? "---" : item.Reason)
                         </td>
                         <td class="text-center">
+                            @* Nút Duyệt/Hủy - Chỉ Admin hoặc đúng Bác sĩ đó mới được thấy *@
                             @if (item.Status == AppointmentStatus.Pending)
                             {
                                 <form asp-action="UpdateStatus" method="post" style="display: inline-block;">
-                                    <input type="hidden" name="id" value="@item.Id" />
-                                    <input type="hidden" name="newStatus" value="Confirmed" />
-                                    <button type="submit" class="btn-action" style="background: #e8fdf5; color: #0a5f38; border: 1px solid #a3e9c6;" title="Xác nhận lịch">
-                                        <i class="fas fa-check"></i>
-                                    </button>
+                                    <input type="hidden" name="id" value="@item.Id" /><input type="hidden" name="newStatus" value="Confirmed" />
+                                    <button type="submit" class="btn-action" style="background: #e8fdf5; color: #0a5f38; border: 1px solid #a3e9c6;"><i class="fas fa-check"></i></button>
                                 </form>
-
                                 <form asp-action="UpdateStatus" method="post" style="display: inline-block;">
-                                    <input type="hidden" name="id" value="@item.Id" />
-                                    <input type="hidden" name="newStatus" value="Cancelled" />
-                                    <button type="submit" class="btn-action" style="background: #fde8e6; color: #842029; border: 1px solid #f5c2c7; margin-right: 5px;" title="Từ chối lịch">
-                                        <i class="fas fa-times"></i>
-                                    </button>
+                                    <input type="hidden" name="id" value="@item.Id" /><input type="hidden" name="newStatus" value="Cancelled" />
+                                    <button type="submit" class="btn-action" style="background: #fde8e6; color: #842029; border: 1px solid #f5c2c7;"><i class="fas fa-times"></i></button>
                                 </form>
                             }
+
                             @if (User.IsInRole("Admin"))
                             {
-                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action btn-action-edit"><i class="fas fa-edit"></i> Sửa</a>
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action btn-action-edit"><i class="fas fa-edit"></i></a>
                                 <a asp-action="Details" asp-route-id="@item.Id" class="btn-action btn-action-detail"><i class="fas fa-eye"></i></a>
                                 <a asp-action="Delete" asp-route-id="@item.Id" class="btn-action btn-action-delete"><i class="fas fa-trash"></i></a>
                             }
-                            else if (User.IsInRole("Doctor"))
+                            else if (isDoctor)
                             {
-                                <a asp-action="Details" asp-route-id="@item.Id" class="btn-action btn-action-detail" title="Chi tiết"><i class="fas fa-eye"></i></a>
-
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn-action btn-action-detail"><i class="fas fa-eye"></i></a>
                                 @if (item.Status == AppointmentStatus.Confirmed)
                                 {
-                                    // 1. CHƯA CÓ BỆNH ÁN -> HIỆN NÚT "KHÁM BỆNH"
-                                    if (item.MedicalRecord == null)
+                                    if (item.IsVideoCall)
                                     {
-                                        <a asp-controller="MedicalRecords" asp-action="Create" asp-route-appointmentId="@item.Id" class="btn-action btn-action-examine ms-1" title="Tiến hành khám bệnh">
-                                            <i class="fas fa-stethoscope mr-1"></i> Khám Bệnh
-                                        </a>
+                                        <span class="badge badge-info ms-1"><i class="fas fa-laptop-medical"></i> Chờ khám Online</span>
                                     }
-                                    // 2. ĐÃ CÓ BỆNH ÁN NHƯNG CHƯA CÓ ĐƠN THUỐC -> HIỆN NÚT "KÊ ĐƠN"
-                                    else if (item.MedicalRecord.Prescriptions == null || !item.MedicalRecord.Prescriptions.Any())
+                                    else if (item.MedicalRecord == null)
                                     {
-                                        <a asp-controller="Prescriptions" asp-action="Create" asp-route-medicalRecordId="@item.MedicalRecord.Id" class="btn-action bg-warning text-dark ms-1" title="Tiếp tục kê đơn thuốc">
-                                            <i class="fas fa-pills mr-1"></i> Kê Đơn Thuốc
-                                        </a>
-                                    }
-                                }
-                                // 3. NẾU TRẠNG THÁI LÀ COMPLETED (Khám & Kê thuốc xong hết rồi)
-                                else if (item.Status == AppointmentStatus.Completed)
-                                {
-                                    @if (item.MedicalRecord != null)
-                                    {
-                                        <a asp-controller="MedicalRecords" asp-action="Details" asp-route-id="@item.MedicalRecord.Id" class="btn-action bg-info text-white ms-1" title="Xem bệnh án">
-                                            <i class="fas fa-file-medical"></i> Xem Bệnh Án
-                                        </a>
-                                    }
-                                    else
-                                    {
-                                        // NẾU RỖNG: Hiển thị dòng cảnh báo chữ nhỏ thay vì làm sập cả hệ thống
-                                        <span class="badge badge-danger ms-1" title="Lỗi dữ liệu: Không tìm thấy bệnh án đính kèm">
-                                            <i class="fas fa-exclamation-triangle"></i> Lỗi B.Án
-                                        </span>
+                                        <a asp-controller="MedicalRecords" asp-action="Create" asp-route-appointmentId="@item.Id" class="btn-action btn-action-examine ms-1"><i class="fas fa-stethoscope mr-1"></i> Khám</a>
                                     }
                                 }
                             }
@@ -336,7 +283,8 @@
         $(document).ready(function () {
             $('#dataTable').DataTable({
                 "language": { "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Vietnamese.json" },
-                "dom": '<"d-flex justify-content-between align-items-center mb-3"lf>rt<"d-flex justify-content-between align-items-center"ip>'
+                "dom": '<"d-flex justify-content-between align-items-center mb-3"lf>rt<"d-flex justify-content-between align-items-center"ip>',
+                "order": [[ 2, "desc" ]]
             });
         });
     </script>

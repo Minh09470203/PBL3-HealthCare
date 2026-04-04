@@ -1,0 +1,173 @@
+﻿@model PBL3_HealthCare.ViewModels.DoctorScheduleVM
+@{
+    ViewData["Title"] = "Lịch Làm Việc Của Tôi";
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+}
+
+@section Styles {
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
+    <link rel="stylesheet" href="~/css/doctor/my-schedule.css" />
+}
+
+<div class="container-fluid mt-4">
+    <div class="schedule-page-header">
+        <h4>
+            <i class="fas fa-calendar-check text-primary mr-2"></i>
+            Lịch Làm Việc Chuyên Môn
+        </h4>
+    </div>
+
+    <div class="calendar-card card mb-4">
+        <div class="card-body">
+            <div id="calendar"></div>
+        </div>
+
+        @* Legend *@
+        <div class="calendar-legend">
+            <div class="legend-item">
+                <span class="legend-dot shift"></span>Ca trực
+            </div>
+            <div class="legend-item">
+                <span class="legend-dot medical"></span>Lịch khám
+            </div>
+            <div class="legend-item">
+                <span class="legend-dot vaccine"></span>Tiêm chủng
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Popup khi click event *@
+<div class="schedule-popup-overlay" id="popupOverlay" onclick="closePopup()"></div>
+<div class="schedule-popup" id="schedulePopup">
+    <div class="popup-header" id="popupHeader">
+        <h6 id="popupTitle">Chi tiết lịch khám</h6>
+        <button class="popup-close" onclick="closePopup()">×</button>
+    </div>
+    <div class="popup-body">
+        <div class="popup-row">
+            <i class="fas fa-user"></i>
+            <div>
+                <span class="popup-label">Bệnh nhân</span>
+                <span id="popupPatient">—</span>
+            </div>
+        </div>
+        <div class="popup-row">
+            <i class="fas fa-clock"></i>
+            <div>
+                <span class="popup-label">Thời gian</span>
+                <span id="popupTime">—</span>
+            </div>
+        </div>
+        <div class="popup-row">
+            <i class="fas fa-notes-medical"></i>
+            <div>
+                <span class="popup-label">Lý do khám</span>
+                <span id="popupReason">—</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var calendarEl = document.getElementById('calendar');
+            if (!calendarEl) return;
+
+            var eventsList = [];
+
+            // 1. CA TRỰC
+            var shifts = @Html.Raw(Json.Serialize(Model.WorkShifts.Select(s => new {
+                title = "🕒 Trực: " + s.Shift,
+                startDay = s.Date.ToString("yyyy-MM-dd"),
+                shiftType = s.Shift
+            })));
+
+            shifts.forEach(function (s) {
+                var start = "07:30", end = "17:00";
+                if (s.shiftType.includes("Sáng"))  { start = "07:30"; end = "11:30"; }
+                else if (s.shiftType.includes("Chiều")) { start = "13:30"; end = "17:00"; }
+                else if (s.shiftType.includes("Tối"))   { start = "17:30"; end = "23:30"; }
+                eventsList.push({
+                    title: s.title,
+                    start: s.startDay + 'T' + start,
+                    end:   s.startDay + 'T' + end,
+                    display: 'background',
+                    className: 'bg-work-shift'
+                });
+            });
+
+            // 2. LỊCH KHÁM
+            var appts = @Html.Raw(Json.Serialize(Model.PatientAppointments.Select(a => new {
+                id       = a.Id,
+                title    = "👤 " + (a.Patient.FullName ?? "BN Ẩn danh"),
+                start    = a.Date.ToString("yyyy-MM-dd") + "T" + a.TimeSlot.ToString(),
+                reason   = a.Reason,
+                patient  = a.Patient.FullName ?? "N/A",
+                isVaccine= a.Reason != null && a.Reason.Contains("[Tiêm Chủng]")
+            })));
+
+            appts.forEach(function (a) {
+                eventsList.push({
+                    id: a.id, title: a.title, start: a.start,
+                    className: a.isVaccine ? 'event-vaccine' : 'event-medical',
+                    extendedProps: { reason: a.reason, patient: a.patient, isVaccine: a.isVaccine }
+                });
+            });
+
+            // 3. KHỞI TẠO FULLCALENDAR
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'timeGridWeek',
+                headerToolbar: {
+                    left:   'prev,next today',
+                    center: 'title',
+                    right:  'dayGridMonth,timeGridWeek,listWeek'
+                },
+                locale: 'vi',
+                slotMinTime: '07:00:00',
+                slotMaxTime: '23:30:00',
+                allDaySlot: false,
+                nowIndicator: true,
+                slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+                eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+                events: eventsList,
+
+                eventClick: function (info) {
+                    if (info.event.display === 'background') return;
+                    var props = info.event.extendedProps;
+                    var start = info.event.start;
+                    var timeStr = start
+                        ? start.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+                            + ' — ' + start.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit' })
+                        : '—';
+
+                    document.getElementById('popupTitle').textContent =
+                        props.isVaccine ? '💉 Chi tiết tiêm chủng' : '🏥 Chi tiết lịch khám';
+                    document.getElementById('popupPatient').textContent = props.patient || '—';
+                    document.getElementById('popupTime').textContent    = timeStr;
+                    document.getElementById('popupReason').textContent  = props.reason || '—';
+
+                    var header = document.getElementById('popupHeader');
+                    header.className = 'popup-header ' + (props.isVaccine ? 'vaccine' : 'medical');
+
+                    document.getElementById('schedulePopup').classList.add('show');
+                    document.getElementById('popupOverlay').classList.add('show');
+                },
+
+                // Style ngày hiện tại
+                dayCellClassNames: function (arg) {
+                    return arg.isToday ? ['fc-day-today'] : [];
+                }
+            });
+
+            calendar.render();
+        });
+
+        function closePopup() {
+            document.getElementById('schedulePopup').classList.remove('show');
+            document.getElementById('popupOverlay').classList.remove('show');
+        }
+    </script>
+}

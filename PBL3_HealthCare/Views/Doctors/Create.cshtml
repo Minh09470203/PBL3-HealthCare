@@ -60,6 +60,14 @@
                         <span asp-validation-for="Price" class="text-danger"></span>
                     </div>
                 </div>
+                <div class="col-md-12 mt-3">
+                    <div class="custom-control custom-checkbox" style="padding-left: 2rem;">
+                        <input asp-for="IsVideoAvailable" class="custom-control-input" id="IsVideoAvailableCreate" style="cursor:pointer;" />
+                        <label class="custom-control-label font-weight-bold text-primary" for="IsVideoAvailableCreate" style="font-size: 1.05rem; cursor:pointer;">
+                            <i class="fas fa-video mr-1"></i> Cho phép Bác sĩ này nhận Khám trực tuyến (Video Call)
+                        </label>
+                    </div>
+                </div>
             </div>
 
             <p class="form-section-title blue mt-2"><i class="fas fa-align-left mr-1"></i>Mô tả & Hình ảnh</p>

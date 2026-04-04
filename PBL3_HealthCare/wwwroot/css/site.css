@@ -179,3 +179,23 @@ main {
         background: #004494;
         transform: translateY(-2px);
     }
+
+.topbar {
+    position: relative;
+    z-index: 9999;
+}
+
+.navbar {
+    position: relative;
+    z-index: 999;
+}
+
+.hero-wrap {
+    position: relative;
+    z-index: 1;
+}
+
+.topbar {
+    position: relative !important;
+    z-index: 9999 !important;
+}
