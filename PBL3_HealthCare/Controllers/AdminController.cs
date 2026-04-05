@@ -30,9 +30,22 @@ namespace PBL3_HealthCare.Controllers
         // ========================================================
         public async Task<IActionResult> Index()
         {
-            // 1. Đếm tổng số Bệnh nhân (Quét qua hệ thống Identity)
-            var patients = await _userManager.GetUsersInRoleAsync("Patient");
-            ViewBag.TotalPatients = patients.Count;
+            // 1. SỬA LẠI: Đếm tổng số Bệnh nhân THỰC SỰ (Đã từng đặt lịch)
+            // Lấy danh sách PatientId từ tất cả các bảng dịch vụ (loại bỏ trùng lặp bằng .Distinct)
+            var activePatientIdsFromAppointments = await _context.Appointments.Select(a => a.PatientId).ToListAsync();
+            var activePatientIdsFromPackages = await _context.PackageBookings.Select(p => p.PatientId).ToListAsync();
+            var activePatientIdsFromVaccines = await _context.VaccinationBookings.Select(v => v.PatientId).ToListAsync();
+            var activePatientIdsFromHomeCares = await _context.HomeServiceRequests.Select(h => h.PatientId).ToListAsync();
+
+            // Gộp tất cả ID lại và đếm những ID duy nhất
+            var totalActivePatients = activePatientIdsFromAppointments
+                .Concat(activePatientIdsFromPackages)
+                .Concat(activePatientIdsFromVaccines)
+                .Concat(activePatientIdsFromHomeCares)
+                .Distinct()
+                .Count();
+
+            ViewBag.TotalPatients = totalActivePatients;
 
             // 2. Đếm tổng số Bác sĩ (Lấy thẳng từ bảng Doctors cho lẹ)
             ViewBag.TotalDoctors = await _context.Doctors.CountAsync();
@@ -44,7 +57,7 @@ namespace PBL3_HealthCare.Controllers
             // Lưu ý: Đổi chữ InvoiceStatus.Paid thành Enum của sếp nếu đặt tên khác nhé
             ViewBag.MonthlyRevenue = await _context.Invoices
                 .Where(i => i.Status == InvoiceStatus.Paid
-                        && i.CreatedAt.Month == currentMonth // SỬA Ở ĐÂY
+                        && i.CreatedAt.Month == currentMonth
                         && i.CreatedAt.Year == currentYear)
                 .SumAsync(i => i.TotalAmount);
 

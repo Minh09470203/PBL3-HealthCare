@@ -51,6 +51,7 @@ namespace PBL3_HealthCare.Controllers
             var todayAppointments = await _context.Appointments
                 .Include(a => a.Patient)
                 .Include(a => a.MedicalRecord)
+                    .ThenInclude(m => m.Prescriptions)
                 .Where(a => a.DoctorId == doctor.Id && a.Date.Date == DateTime.Today.Date)
                 .OrderBy(a => a.TimeSlot)
                 .ToListAsync();

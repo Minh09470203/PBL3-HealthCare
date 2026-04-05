@@ -10,6 +10,8 @@ using PBL3_HealthCare.Data;
 using PBL3_HealthCare.Models;
 using PBL3_HealthCare.Services;
 using PBL3_HealthCare.ViewModels;
+using Microsoft.AspNetCore.SignalR; 
+using PBL3_HealthCare.Hubs;         
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -27,13 +29,16 @@ namespace PBL3_HealthCare.Controllers
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly NotificationService _notificationService;
         private readonly EmailService _emailService;
+        private readonly IHubContext<NotificationHub> _hubContext; // 🔥 3. Khai báo biến đường ống
+
         public HomeController(
             ILogger<HomeController> logger,
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
             IWebHostEnvironment webHostEnvironment,
             NotificationService notificationService,
-            EmailService emailService)
+            EmailService emailService,
+            IHubContext<NotificationHub> hubContext) // 🔥 4. Tiêm nó vào hàm tạo
         {
             _logger = logger;
             _context = context;
@@ -41,11 +46,12 @@ namespace PBL3_HealthCare.Controllers
             _webHostEnvironment = webHostEnvironment;
             _notificationService = notificationService;
             _emailService = emailService;
+            _hubContext = hubContext; // 🔥 5. Gán giá trị
         }
 
         public async Task<IActionResult> Index()
         {
-    ViewBag.TopSpecialties = await _context.Specialties.Take(6).ToListAsync();
+            ViewBag.TopSpecialties = await _context.Specialties.Take(6).ToListAsync();
             if (User.Identity.IsAuthenticated)
             {
                 // Kiểm tra xem ông này là Admin hay Bác sĩ
@@ -82,9 +88,6 @@ namespace PBL3_HealthCare.Controllers
         // GET: /Home/SpecialtyList
         public async Task<IActionResult> SpecialtyList()
         {
-            // Lấy toàn bộ danh sách khoa
-            // Mình Include thêm Doctors ở đây để phòng hờ lát nữa ra View, 
-            // bạn muốn hiển thị dòng chữ kiểu "Có 5 bác sĩ" dưới mỗi thẻ khoa cho đẹp.
             var specialties = await _context.Specialties
                 .Include(s => s.Doctors)
                 .ToListAsync();
@@ -104,14 +107,12 @@ namespace PBL3_HealthCare.Controllers
             {
                 query = query.Where(d => d.SpecialtyId == specialtyId);
 
-                // Sửa lại đoạn này: Lấy toàn bộ object Specialty thay vì chỉ lấy Name
                 var specialty = await _context.Specialties
                     .Where(s => s.Id == specialtyId)
                     .FirstOrDefaultAsync();
 
                 if (specialty != null)
                 {
-                    // Truyền tất cả thông tin cần thiết qua ViewBag
                     ViewBag.SpecialtyName = specialty.Name;
                     ViewBag.SpecialtyDescription = specialty.Description;
                     ViewBag.SpecialtyImage = specialty.Image;
@@ -120,17 +121,14 @@ namespace PBL3_HealthCare.Controllers
 
             if (isVideoCall)
             {
-                // Chỉ lấy những bác sĩ có IsVideoAvailable = true
                 query = query.Where(d => d.IsVideoAvailable == true);
-
-                // Truyền cờ này xuống View để FE biết đang ở chế độ lọc
                 ViewBag.IsVideoCall = true;
             }
 
             return View(await query.ToListAsync());
         }
 
-        // 2. LẤY THÔNG TIN CHI TIẾT & BẢNG GIỜ KHÁM (Dựa vào Schedule)
+        // 2. LẤY THÔNG TIN CHI TIẾT & BẢNG GIỜ KHÁM
         public async Task<IActionResult> DoctorInfo(int id, bool isVideoCall = false)
         {
             var doctor = await _context.Doctors
@@ -140,25 +138,17 @@ namespace PBL3_HealthCare.Controllers
 
             if (doctor == null) return NotFound();
 
-            // 1. LẤY DANH SÁCH CA LÀM VIỆC TỪ BẢNG SCHEDULE
-            // Lấy từ hôm nay trở đi và chỉ lấy những ca đang Mở (IsAvailable == true)
             var availableSchedules = await _context.Schedules
                 .Where(s => s.DoctorId == id && s.Date >= DateTime.Today && s.IsAvailable)
                 .OrderBy(s => s.Date)
                 .ToListAsync();
 
-            // Trích xuất ra danh sách các NGÀY để in ra màn hình cho bệnh nhân chọn
-            // Dùng Distinct() để lỡ 1 ngày bác sĩ trực 2 ca thì màn hình vẫn chỉ hiện 1 nút chọn ngày
             var availableDates = availableSchedules.Select(s => s.Date.Date).Distinct().Take(3).ToList();
-
-            // 2. TẠO TỪ ĐIỂN KHUNG GIỜ RIÊNG BIỆT CHO TỪNG NGÀY
             var timeSlotsByDate = new Dictionary<DateTime, List<string>>();
 
             foreach (var date in availableDates)
             {
                 var slotsForToday = new List<string>();
-
-                // Chỉ lấy các ca làm việc của đúng cái ngày đang xét
                 var schedulesForToday = availableSchedules.Where(s => s.Date.Date == date).ToList();
 
                 foreach (var schedule in schedulesForToday)
@@ -173,20 +163,17 @@ namespace PBL3_HealthCare.Controllers
                         slotsForToday.AddRange(new[] { "18:00", "19:00", "20:00", "21:00", "22:00", "23:00" });
                 }
 
-                // Lọc trùng, sắp xếp và cất vào "ngăn kéo" của ngày đó
                 timeSlotsByDate[date] = slotsForToday.Distinct().OrderBy(t => t).ToList();
             }
 
-            // 3. TÌM NHỮNG GIỜ ĐÃ BỊ ĐẶT MẤT ĐỂ LÀM MỜ NÚT BẤM
             var bookedAppointments = await _context.Appointments
                 .Where(a => a.DoctorId == id &&
                             a.Date >= DateTime.Today &&
                             a.Status != AppointmentStatus.Cancelled)
                 .ToListAsync();
 
-            // Truyền dữ liệu ra View
             ViewBag.Next3Days = availableDates;
-            ViewBag.TimeSlotsByDate = timeSlotsByDate; // Gửi cả cái Từ điển ra ngoài
+            ViewBag.TimeSlotsByDate = timeSlotsByDate;
             ViewBag.BookedAppointments = bookedAppointments;
             ViewBag.IsVideoCall = isVideoCall;
 
@@ -197,11 +184,8 @@ namespace PBL3_HealthCare.Controllers
         // KHU VỰC 2: XỬ LÝ ĐẶT LỊCH (BOOKING)
         // ==========================================
 
-        // GET: /Home/BookAppointment (Hứng data từ DoctorProfile)
-        // GET: /Home/BookAppointment (Hứng data từ DoctorProfile)
         [HttpGet]
         [Authorize(Roles = "Patient")]
-        // Sếp THÊM tham số isVideoCall vào đây nhé:
         public async Task<IActionResult> BookAppointment(int? doctorId, DateTime? date, string timeSlot, bool isVideoCall = false)
         {
             if (!User.Identity.IsAuthenticated)
@@ -226,19 +210,14 @@ namespace PBL3_HealthCare.Controllers
 
             ViewBag.DoctorName = $"BS. {doctor.User.FullName}";
             ViewBag.DisplayDate = date.Value.ToString("dd/MM/yyyy");
-
-            // DÒNG NÀY RẤT QUAN TRỌNG: Check xem url có chữ isVideoCall=true không, VÀ bác sĩ này có nhận khám online không!
             ViewBag.IsVideoCall = isVideoCall && doctor.IsVideoAvailable;
 
             return View(model);
         }
 
-        // POST: /Home/BookAppointment (Xử lý lưu vào Database)
-        // POST: /Home/BookAppointment (Xử lý lưu vào Database)
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Patient")]
-        // NHỚ THÊM IsVideoCall VÀO DÒNG BIND DƯỚI ĐÂY:
         public async Task<IActionResult> BookAppointment([Bind("DoctorId,Date,TimeSlot,Reason,IsVideoCall")] Appointment model)
         {
             ModelState.Remove("PatientId");
@@ -259,7 +238,6 @@ namespace PBL3_HealthCare.Controllers
                     return await ReloadViewOnError(model);
                 }
 
-                // Check trùng lịch
                 bool isConflict = await _context.Appointments.AnyAsync(a =>
                     a.DoctorId == model.DoctorId &&
                     a.Date == model.Date &&
@@ -272,24 +250,19 @@ namespace PBL3_HealthCare.Controllers
                     return await ReloadViewOnError(model);
                 }
 
-                // Lấy thông tin user
                 var user = await _userManager.GetUserAsync(User);
                 if (user == null)
                 {
                     return RedirectToPage("/Account/Login", new { area = "Identity" });
                 }
 
-                // LƯU VÀO DB
                 model.PatientId = user.Id;
                 model.Status = AppointmentStatus.Pending;
                 model.CreatedAt = DateTime.Now;
 
-                // 🔥 LOGIC KHÁM VIDEO Ở ĐÂY 🔥
                 if (model.IsVideoCall)
                 {
-                    // Sinh mã phòng ngẫu nhiên 8 ký tự
                     model.MeetingRoomId = "ROOM-" + Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper();
-                    // Đặt CallStatus cho phòng gọi (enum mà sếp vừa tạo đó)
                     model.CallStatus = CallStatus.Pending;
                 }
 
@@ -300,10 +273,13 @@ namespace PBL3_HealthCare.Controllers
                 var doctorInfo = await _context.Doctors.FindAsync(model.DoctorId);
                 if (doctorInfo != null)
                 {
-                    await _notificationService.CreateNotification(
-                        doctorInfo.UserId,
-                        $"Có bệnh nhân vừa đặt lịch khám với bạn vào lúc {model.TimeSlot} ngày {model.Date:dd/MM/yyyy}."
-                    );
+                    string msg = $"Có bệnh nhân vừa đặt lịch khám với bạn vào lúc {model.TimeSlot} ngày {model.Date:dd/MM/yyyy}.";
+
+                    // Lưu Database
+                    await _notificationService.CreateNotification(doctorInfo.UserId, msg);
+
+                    // 🔥 6. BẮN SÓNG REAL-TIME CHO BÁC SĨ NGAY LẬP TỨC 🔥
+                    await _hubContext.Clients.All.SendAsync("ReceiveNotification", doctorInfo.UserId, msg);
                 }
 
                 TempData["Success"] = "Đặt lịch thành công! Vui lòng chờ phòng khám xác nhận.";
@@ -313,7 +289,6 @@ namespace PBL3_HealthCare.Controllers
             return await ReloadViewOnError(model);
         }
 
-        // Hàm hỗ trợ nạp lại thông tin nếu Form bị lỗi (Chống màn hình trắng)
         private async Task<IActionResult> ReloadViewOnError(Appointment model)
         {
             var doctor = await _context.Doctors.Include(d => d.User).FirstOrDefaultAsync(d => d.Id == model.DoctorId);
@@ -326,7 +301,6 @@ namespace PBL3_HealthCare.Controllers
         // KHU VỰC 3: CÁC TRANG CÒN LẠI
         // ==========================================
 
-        // GET: /Home/MyHistory
         [HttpGet]
         public async Task<IActionResult> MyHistory()
         {
@@ -346,10 +320,10 @@ namespace PBL3_HealthCare.Controllers
                 .ToListAsync();
 
             ViewBag.PackageBookings = await _context.PackageBookings
-        .Include(p => p.HealthPackage)
-        .Where(p => p.PatientId == userId)
-        .OrderByDescending(p => p.CreatedAt)
-        .ToListAsync();
+                .Include(p => p.HealthPackage)
+                .Where(p => p.PatientId == userId)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
             return View(myAppointments);
         }
 
@@ -357,21 +331,18 @@ namespace PBL3_HealthCare.Controllers
         // QUẢN LÝ HỒ SƠ BỆNH NHÂN (PROFILE)
         // ==========================================
 
-        // GET: /Home/Profile
         [HttpGet]
         public async Task<IActionResult> Profile()
         {
-            // Lấy thông tin người dùng đang đăng nhập
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
             }
 
-            return View(user); // Truyền thẳng object User ra View
+            return View(user);
         }
 
-        // POST: /Home/Profile (Xử lý khi bấm nút Lưu)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Profile(string FullName, string PhoneNumber, DateTime? DOB, string Gender, string Address, string Email, IFormFile AvatarFile)
@@ -382,7 +353,6 @@ namespace PBL3_HealthCare.Controllers
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
             }
 
-            // Cập nhật các trường thông tin
             user.FullName = FullName;
             user.PhoneNumber = PhoneNumber;
             user.Gender = Gender;
@@ -392,27 +362,17 @@ namespace PBL3_HealthCare.Controllers
 
             if (AvatarFile != null && AvatarFile.Length > 0)
             {
-                // 1. Trỏ đường dẫn tới thư mục wwwroot/images/ (hoặc wwwroot/images/doctors)
                 string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "img");
-
-                // 2. Tạo tên file duy nhất (Chống trùng tên bằng Guid)
                 string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(AvatarFile.FileName);
-
-                // 3. Đường dẫn lưu file vật lý trên máy
                 string filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
-                // 4. Copy file từ luồng (stream) vào ổ cứng
                 using (var fileStream = new FileStream(filePath, FileMode.Create))
                 {
                     await AvatarFile.CopyToAsync(fileStream);
                 }
 
-                // 5. Cập nhật tên file vào thuộc tính của Model để lưu xuống Database (cột Image/Avatar)
-                user.Avatar = uniqueFileName; // Đảm bảo trong bảng User hoặc Doctor ông có cột này
+                user.Avatar = uniqueFileName;
             }
-            // LƯU Ý CHO MINH: Nếu trong bảng ApplicationUser của ông có thêm các cột 
-            // như Address (Địa chỉ), DOB (Ngày sinh)... thì ông bổ sung thêm tham số 
-            // vào hàm này và gán giá trị ở đây nhé. Ví dụ: user.Address = Address;
 
             var result = await _userManager.UpdateAsync(user);
             if (result.Succeeded)
@@ -425,14 +385,12 @@ namespace PBL3_HealthCare.Controllers
             return View(user);
         }
 
-        // GET: /Home/ChangePassword
         [HttpGet]
         public IActionResult ChangePassword()
         {
             return View();
         }
 
-        // POST: /Home/ChangePassword
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangePassword(string oldPassword, string newPassword, string confirmPassword)
@@ -457,11 +415,9 @@ namespace PBL3_HealthCare.Controllers
             if (result.Succeeded)
             {
                 TempData["Success"] = "Đổi mật khẩu thành công!";
-                // Đổi pass xong đá về trang Profile
                 return RedirectToAction(nameof(Profile));
             }
 
-            // Nếu mật khẩu cũ sai hoặc pass mới không đủ độ khó (chưa có chữ hoa, số...)
             foreach (var error in result.Errors)
             {
                 TempData["Error"] = "Lỗi: " + error.Description;
@@ -471,11 +427,6 @@ namespace PBL3_HealthCare.Controllers
             return View();
         }
 
-        // ==========================================
-        // HỒ SƠ BÁC SĨ (DOCTOR PROFILE)
-        // ==========================================
-
-        // GET: /Home/DoctorProfile
         [HttpGet]
         public async Task<IActionResult> DoctorProfile()
         {
@@ -483,7 +434,6 @@ namespace PBL3_HealthCare.Controllers
             if (user == null)
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
 
-            // Lấy hồ sơ Doctor kèm Specialty và User
             var doctor = await _context.Doctors
                 .Include(d => d.Specialty)
                 .Include(d => d.User)
@@ -508,27 +458,54 @@ namespace PBL3_HealthCare.Controllers
             });
         }
         // ==========================================
+        // QUẢN LÝ THÔNG BÁO (ALL NOTIFICATIONS)
+        // ==========================================
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> AllNotifications()
+        {
+            var userId = _userManager.GetUserId(User);
+            if (userId == null) return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            // 1. Lấy toàn bộ thông báo của User này, sắp xếp mới nhất lên đầu
+            var notifications = await _context.Notifications
+                .Where(n => n.ReceiverId == userId)
+                .OrderByDescending(n => n.CreatedAt)
+                .ToListAsync();
+
+            // 2. Tự động "Đánh dấu đã đọc" cho những thông báo chưa đọc
+            var unreadNotifs = notifications.Where(n => !n.IsRead).ToList();
+            if (unreadNotifs.Any())
+            {
+                foreach (var notif in unreadNotifs)
+                {
+                    notif.IsRead = true;
+                }
+                await _context.SaveChangesAsync();
+            }
+
+            return View(notifications);
+        }
+        // ==========================================
         // CỔNG THÔNG TIN BỆNH NHÂN (PORTAL)
         // ==========================================
 
-        // 1. Xem danh sách Bệnh án của tôi
         public async Task<IActionResult> MyMedicalRecords()
         {
             var userId = _userManager.GetUserId(User);
             if (userId == null) return RedirectToPage("/Account/Login", new { area = "Identity" });
 
-            // Bảo mật: Chỉ lấy bệnh án có PatientId trùng với người đang đăng nhập
             var records = await _context.MedicalRecords
-                .Include(m => m.Doctor)
-                    .ThenInclude(d => d.User)
-                .Where(m => m.Appointment.PatientId == userId) // <--- Rào chắn bảo mật quan trọng
+                .Include(m => m.Appointment)
+                    .ThenInclude(a => a.Doctor)
+                        .ThenInclude(d => d.User)
+                .Where(m => m.Appointment.PatientId == userId)
                 .OrderByDescending(m => m.CreatedAt)
                 .ToListAsync();
 
             return View(records);
         }
 
-        // GET: /Home/RecordDetails/5
         public async Task<IActionResult> RecordDetails(int? id)
         {
             if (id == null) return NotFound();
@@ -536,13 +513,11 @@ namespace PBL3_HealthCare.Controllers
             var userId = _userManager.GetUserId(User);
             if (userId == null) return RedirectToPage("/Account/Login", new { area = "Identity" });
 
-            // BẢO MẬT: Chỉ lấy bệnh án đúng ID và bắt buộc thuộc về user đang đăng nhập
             var record = await _context.MedicalRecords
                 .Include(m => m.Appointment)
                     .ThenInclude(a => a.Patient)
                 .Include(m => m.Doctor)
                     .ThenInclude(d => d.User)
-                // Lấy kèm đơn thuốc và chi tiết thuốc để hiển thị cho bệnh nhân xem
                 .Include(m => m.Prescriptions)
                     .ThenInclude(p => p.Details)
                         .ThenInclude(pd => pd.Medicine)
@@ -556,82 +531,36 @@ namespace PBL3_HealthCare.Controllers
             return View(record);
         }
 
-        // 2. Xem danh sách Đơn thuốc của tôi
         public async Task<IActionResult> MyPrescriptions()
         {
             var userId = _userManager.GetUserId(User);
             if (userId == null) return RedirectToPage("/Account/Login", new { area = "Identity" });
 
-            // Bảo mật: Lấy đơn thuốc thông qua Bệnh án của đúng bệnh nhân đó
             var prescriptions = await _context.Prescriptions
                 .Include(p => p.MedicalRecord)
                     .ThenInclude(m => m.Doctor)
                         .ThenInclude(d => d.User)
-                .Where(p => p.MedicalRecord.Appointment.PatientId == userId) // <--- Rào chắn bảo mật quan trọng
+                .Where(p => p.MedicalRecord.Appointment.PatientId == userId)
                 .OrderByDescending(p => p.CreatedDate)
                 .ToListAsync();
 
             return View(prescriptions);
         }
 
-        // 3. Xem danh sách Hóa đơn của tôi
         public async Task<IActionResult> MyInvoices()
         {
             var userId = _userManager.GetUserId(User);
             if (userId == null) return RedirectToPage("/Account/Login", new { area = "Identity" });
 
-            // Bảo mật: Lấy hóa đơn từ bệnh án của chính bệnh nhân
             var invoices = await _context.Invoices
                 .Include(i => i.MedicalRecord)
                     .ThenInclude(m => m.Doctor)
                         .ThenInclude(d => d.User)
-                .Where(i => i.MedicalRecord.Appointment.PatientId == userId) // <--- Rào chắn bảo mật quan trọng
+                .Where(i => i.MedicalRecord.Appointment.PatientId == userId)
                 .OrderByDescending(i => i.CreatedAt)
                 .ToListAsync();
 
             return View(invoices);
-        }
-
-        // ==========================================
-        // DASHBOARD CHO VIDEO CALL
-        // ==========================================
-
-        // 1. Dashboard Bệnh Nhân
-        [HttpGet]
-        [Authorize(Roles = "Patient")]
-        public async Task<IActionResult> PatientDashboard()
-        {
-            var userId = _userManager.GetUserId(User);
-
-            // Lấy các lịch khám từ hôm nay trở đi của bệnh nhân này
-            var myAppointments = await _context.Appointments
-                .Include(a => a.Doctor)
-                .ThenInclude(d => d.User)
-                .Where(a => a.PatientId == userId && a.Date.Date >= DateTime.Today.Date)
-                .OrderBy(a => a.Date).ThenBy(a => a.TimeSlot)
-                .ToListAsync();
-
-            return View(myAppointments);
-        }
-
-        // 2. Dashboard Bác Sĩ
-        [HttpGet]
-        [Authorize(Roles = "Doctor")]
-        public async Task<IActionResult> DoctorDashboard()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == user.Id);
-
-            if (doctor == null) return NotFound("Không tìm thấy hồ sơ Bác sĩ");
-
-            // Lấy các lịch hẹn CHỈ TRONG HÔM NAY của bác sĩ này
-            var todayAppointments = await _context.Appointments
-                .Include(a => a.Patient) // Lấy thông tin user bệnh nhân
-                .Where(a => a.DoctorId == doctor.Id && a.Date.Date == DateTime.Today.Date)
-                .OrderBy(a => a.TimeSlot)
-                .ToListAsync();
-
-            return View(todayAppointments);
         }
     }
 }

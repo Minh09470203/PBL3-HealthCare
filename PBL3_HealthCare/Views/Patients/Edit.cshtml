@@ -1,0 +1,118 @@
+﻿@model PBL3_HealthCare.Models.ApplicationUser
+
+@{
+    ViewData["Title"] = "Sửa hồ sơ Bệnh nhân";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    .edit-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    }
+
+    .form-control-custom {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        border: 1px solid #d1d3e2;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+        .form-control-custom:focus {
+            border-color: #4e73df;
+            box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+        }
+
+    .field-label {
+        font-weight: 600;
+        color: #4a3c8c; /* Màu tím đậm SB Admin */
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .req {
+        color: #e74a3b;
+    }
+    /* Dấu sao đỏ bắt buộc */
+</style>
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800"><i class="fas fa-user-edit text-primary mr-2"></i>Cập nhật thông tin</h1>
+    <a asp-action="Index" class="btn btn-sm btn-secondary shadow-sm">
+        <i class="fas fa-arrow-left fa-sm text-white-50 mr-1"></i> Quay lại danh sách
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-xl-8 col-lg-10">
+        <div class="card edit-card mb-4">
+            <div class="card-header bg-white py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Hồ sơ: @Model.FullName</h6>
+                <span class="badge badge-info px-3 py-2 rounded-pill">ID: @Model.Id.Substring(0, 8)...</span>
+            </div>
+
+            <div class="card-body p-4 p-md-5">
+                <form asp-action="Edit" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Id" />
+
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label class="field-label">Họ và tên <span class="req">*</span></label>
+                            <input asp-for="FullName" class="form-control form-control-custom" placeholder="Nhập họ và tên..." required />
+                            <span asp-validation-for="FullName" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6 mb-4">
+                            <label class="field-label">Email đăng nhập (Không thể đổi)</label>
+                            <input asp-for="Email" class="form-control form-control-custom bg-light" readonly title="Email dùng để đăng nhập, không thể thay đổi." />
+                        </div>
+
+                        <div class="col-md-6 mb-4">
+                            <label class="field-label">Số điện thoại</label>
+                            <input asp-for="PhoneNumber" type="tel" class="form-control form-control-custom" placeholder="VD: 0912..." />
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6 mb-4">
+                            <label class="field-label">Ngày sinh</label>
+                            <input asp-for="DateOfBirth" type="date" class="form-control form-control-custom" />
+                            <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6 mb-4">
+                            <label class="field-label">Giới tính</label>
+                            <select asp-for="Gender" class="form-control form-control-custom">
+                                <option value="">-- Chọn giới tính --</option>
+                                <option value="Nam">Nam</option>
+                                <option value="Nữ">Nữ</option>
+                                <option value="Khác">Khác</option>
+                            </select>
+                            <span asp-validation-for="Gender" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-12 mb-4">
+                            <label class="field-label">Địa chỉ cư trú</label>
+                            <input asp-for="Address" class="form-control form-control-custom" placeholder="Số nhà, đường, phường/xã, quận/huyện..." />
+                            <span asp-validation-for="Address" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="border-top pt-4 mt-2 text-right">
+                        <button type="reset" class="btn btn-light shadow-sm mr-2 px-4">Làm mới</button>
+                        <button type="submit" class="btn btn-primary shadow-sm px-5">
+                            <i class="fas fa-save mr-1"></i> Lưu thay đổi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

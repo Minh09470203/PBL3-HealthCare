@@ -1,0 +1,184 @@
+﻿@model PBL3_HealthCare.Models.ApplicationUser
+@{
+    ViewData["Title"] = "Hồ sơ 360: " + Model.FullName;
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var appointments = ViewBag.Appointments as IEnumerable<PBL3_HealthCare.Models.Appointment>;
+    var records = ViewBag.MedicalRecords as IEnumerable<PBL3_HealthCare.Models.MedicalRecord>;
+    var invoices = ViewBag.Invoices as IEnumerable<PBL3_HealthCare.Models.Invoice>;
+}
+
+<style>
+    .profile-card {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    }
+
+    .nav-tabs .nav-link {
+        color: #858796;
+        font-weight: 600;
+        border: none;
+        padding: 1rem 1.5rem;
+    }
+
+        .nav-tabs .nav-link.active {
+            color: #4e73df;
+            border-bottom: 3px solid #4e73df;
+            background: transparent;
+        }
+
+    .timeline-item {
+        border-left: 2px solid #e3e6f0;
+        padding-left: 20px;
+        position: relative;
+        margin-bottom: 20px;
+    }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 0;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4e73df;
+        }
+</style>
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800"><i class="fas fa-user-circle text-primary mr-2"></i>Hồ sơ Bệnh nhân</h1>
+    <a asp-action="Index" class="btn btn-sm btn-secondary shadow-sm"><i class="fas fa-arrow-left fa-sm text-white-50 mr-1"></i> Quay lại</a>
+</div>
+
+<div class="row">
+    <div class="col-xl-4 col-lg-5">
+        <div class="card profile-card mb-4 text-center">
+            <div class="card-body pt-5 pb-4">
+                <img src="/img/bchi.jpg" class="rounded-circle img-fluid shadow-sm mb-3" style="width: 120px; height: 120px; object-fit: cover;" alt="Avatar">
+                <h5 class="font-weight-bold text-dark mb-1">@Model.FullName</h5>
+                <p class="text-muted small mb-4">Tham gia: @Model.CreatedAt.ToString("dd/MM/yyyy")</p>
+
+                <ul class="list-group list-group-flush text-left">
+                    <li class="list-group-item px-0 border-top-0">
+                        <i class="fas fa-phone-alt text-primary mr-2 w-10"></i> <strong>SĐT:</strong> @(Model.PhoneNumber ?? "Chưa cập nhật")
+                    </li>
+                    <li class="list-group-item px-0">
+                        <i class="fas fa-envelope text-info mr-2 w-10"></i> <strong>Email:</strong> @Model.Email
+                    </li>
+                    <li class="list-group-item px-0">
+                        <i class="fas fa-birthday-cake text-warning mr-2 w-10"></i> <strong>Ngày sinh:</strong> @(Model.DateOfBirth?.ToString("dd/MM/yyyy") ?? "Chưa cập nhật")
+                    </li>
+                    <li class="list-group-item px-0">
+                        <i class="fas fa-venus-mars text-danger mr-2 w-10"></i> <strong>Giới tính:</strong> @(Model.Gender ?? "Chưa cập nhật")
+                    </li>
+                    <li class="list-group-item px-0 border-bottom-0">
+                        <i class="fas fa-map-marker-alt text-success mr-2 w-10"></i> <strong>Địa chỉ:</strong> @(Model.Address ?? "Chưa cập nhật")
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-8 col-lg-7">
+        <div class="card profile-card mb-4">
+            <div class="card-header bg-white p-0">
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="appt-tab" data-toggle="tab" href="#appt" role="tab"><i class="fas fa-calendar-check mr-1"></i> Lịch Khám (@appointments.Count())</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="record-tab" data-toggle="tab" href="#record" role="tab"><i class="fas fa-file-medical-alt mr-1"></i> Bệnh Án (@records.Count())</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="invoice-tab" data-toggle="tab" href="#invoice" role="tab"><i class="fas fa-file-invoice-dollar mr-1"></i> Hóa Đơn (@invoices.Count())</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="myTabContent">
+
+                    <div class="tab-pane fade show active" id="appt" role="tabpanel">
+                        @if (!appointments.Any())
+                        {
+                            <p class="text-muted text-center py-4">Bệnh nhân chưa có lịch khám nào.</p>
+                        }
+                        @foreach (var app in appointments)
+                        {
+                            <div class="timeline-item">
+                                <h6 class="font-weight-bold text-primary mb-1">
+                                    Ngày @app.Date.ToString("dd/MM/yyyy") - @app.TimeSlot.ToString(@"hh\:mm")
+                                    <span class="badge badge-light border ml-2 text-muted">@app.Status</span>
+                                </h6>
+                                <p class="mb-0 text-dark small"><i class="fas fa-user-md mr-1 text-muted"></i> BS. @(app.Doctor?.User?.FullName ?? "N/A")</p>
+                                <p class="mb-0 text-muted small"><i class="fas fa-comment-medical mr-1"></i> Lý do: @app.Reason</p>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="tab-pane fade" id="record" role="tabpanel">
+                        @if (!records.Any())
+                        {
+                            <p class="text-muted text-center py-4">Chưa có hồ sơ bệnh án.</p>
+                        }
+                        @foreach (var rec in records)
+                        {
+                            <div class="card bg-light border-left-info mb-3">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between">
+                                        <h6 class="font-weight-bold text-info mb-2">Khám ngày: @rec.CreatedAt.ToString("dd/MM/yyyy")</h6>
+                                        <small class="text-muted">BS. @(rec.Doctor?.User?.FullName ?? "N/A")</small>
+                                    </div>
+                                    <p class="mb-1 text-dark"><strong>Chẩn đoán:</strong> @rec.Diagnosis</p>
+                                    <p class="mb-0 text-muted small"><strong>Hướng điều trị:</strong> @rec.Treatment</p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="tab-pane fade" id="invoice" role="tabpanel">
+                        @if (!invoices.Any())
+                        {
+                            <p class="text-muted text-center py-4">Chưa phát sinh hóa đơn.</p>
+                        }
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Ngày lập</th>
+                                        <th>Mã HĐ</th>
+                                        <th>Tổng tiền</th>
+                                        <th>Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var inv in invoices)
+                                    {
+                                        <tr>
+                                            <td>@inv.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                            <td>#INV-@inv.Id.ToString("D4")</td>
+                                            <td class="font-weight-bold text-danger">@inv.TotalAmount.ToString("N0")đ</td>
+                                            <td>
+                                                @if (inv.Status == PBL3_HealthCare.Models.InvoiceStatus.Paid)
+                                                {
+                                                    <span class="badge badge-success">Đã thu</span>
+                                                }
+                                                else
+                                                {
+
+                                                    <span class="badge badge-warning">Chưa thu</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

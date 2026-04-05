@@ -91,46 +91,51 @@
                     {
                         <div class="day-panel @(i == 0 ? "" : "d-none")" id="panel-@i">
                             <div class="slots-grid">
-                                
-                                @{
-                                    // 1. Móc đúng "ngăn kéo" chứa giờ của ngày hôm nay
-                                    var currentDate = next3Days[i].Date;
-                                    var daySlots = timeSlotsByDate != null && timeSlotsByDate.ContainsKey(currentDate) 
-                                                    ? timeSlotsByDate[currentDate] 
-                                                    : new List<string>();
-                                }
+    @{
+        var currentDate = next3Days[i].Date;
+        var daySlots = timeSlotsByDate != null && timeSlotsByDate.ContainsKey(currentDate) 
+                        ? timeSlotsByDate[currentDate] 
+                        : new List<string>();
+        
+        // Khai báo thời gian hiện tại
+        var now = DateTime.Now;
+    }
 
-                                @* 2. Vòng lặp bây giờ phải chạy trên daySlots, KHÔNG DÙNG timeSlots NỮA *@
-                                @foreach (var slot in daySlots)
-                                {
-                                    bool isBooked = bookedAppointments.Any(a =>
-                                        a.Date.Date == currentDate && 
-                                        a.TimeSlot == TimeSpan.Parse(slot));
+    @foreach (var slot in daySlots)
+    {
+        // Kiểm tra xem giờ này đã có người đặt chưa
+        bool isBooked = bookedAppointments.Any(a =>
+            a.Date.Date == currentDate && 
+            a.TimeSlot == TimeSpan.Parse(slot));
 
-                                    if (isBooked)
-                                    {
-                                        <span class="slot-btn booked">@slot</span>
-                                    }
-                                    else
-                                    {
-                                        <a asp-controller="Home" asp-action="BookAppointment"
-                                           asp-route-doctorId="@Model.Id"
-                                           asp-route-date="@currentDate.ToString("yyyy-MM-dd")"
-                                           asp-route-timeSlot="@slot"
-                                           asp-route-isVideoCall="@(ViewBag.IsVideoCall == true ? "true" : "false")"
-                                           class="slot-btn">@slot</a>
-                                    }
-                                }
-                                
-                            </div>
+        // 🔥 LOGIC CHẶN GIỜ QUÁ KHỨ:
+        // Kiểm tra xem nếu đang xem lịch HÔM NAY và cái slot (giờ) đó đã trôi qua so với giờ hiện tại
+        bool isPastSlot = false;
+        if (currentDate.Date == now.Date)
+        {
+            var slotTime = TimeSpan.Parse(slot);
+            if (slotTime <= now.TimeOfDay)
+            {
+                isPastSlot = true;
+            }
+        }
 
-                            <div class="slot-hint">
-                                <div class="slot-legend">
-                                    <span><span class="legend-dot available"></span>Còn trống</span>
-                                    <span><span class="legend-dot booked"></span>Đã đặt</span>
-                                </div>
-                                Nhấn vào khung giờ còn trống để tiến hành đặt lịch khám.
-                            </div>
+        if (isBooked || isPastSlot)
+        {
+            // Nếu đã có người đặt HOẶC đã quá giờ -> Gắn class "booked" (hoặc class mới "past" tùy sếp)
+            <span class="slot-btn booked" title="@(isPastSlot ? "Đã qua giờ" : "Đã có người đặt")">@slot</span>
+        }
+        else
+        {
+            <a asp-controller="Home" asp-action="BookAppointment"
+               asp-route-doctorId="@Model.Id"
+               asp-route-date="@currentDate.ToString("yyyy-MM-dd")"
+               asp-route-timeSlot="@slot"
+               asp-route-isVideoCall="@(ViewBag.IsVideoCall == true ? "true" : "false")"
+               class="slot-btn">@slot</a>
+        }
+    }
+</div>
                         </div>
                     }
                 </div>

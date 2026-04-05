@@ -1,0 +1,95 @@
+﻿@model IEnumerable<PBL3_HealthCare.Models.Notification>
+@{
+    ViewData["Title"] = "Tất cả thông báo";
+
+    // TỰ ĐỘNG CHỌN LAYOUT DỰA THEO QUYỀN
+    if (User.IsInRole("Doctor") || User.IsInRole("Admin"))
+    {
+        Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_PatientLayout.cshtml";
+    }
+}
+
+<div class="container-fluid mt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-8">
+            <div class="card shadow-sm border-0" style="border-radius: 15px; overflow: hidden;">
+
+                <div class="card-header py-4 d-flex align-items-center bg-primary" style="background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);">
+                    <div class="icon-circle bg-white text-primary p-3 rounded-circle mr-3 shadow" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-bell fa-lg"></i>
+                    </div>
+                    <div>
+                        <h4 class="m-0 font-weight-bold text-white">Trung tâm Thông báo</h4>
+                        <p class="m-0 text-white-50 small">Quản lý tất cả các hoạt động và lịch hẹn của bạn</p>
+                    </div>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        @if (!Model.Any())
+                        {
+                            <div class="text-center py-5 text-muted">
+                                <i class="fas fa-box-open fa-4x mb-3 opacity-50"></i>
+                                <h5>Bạn chưa có thông báo nào.</h5>
+                                <p>Khi có hoạt động mới, thông báo sẽ xuất hiện ở đây.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            foreach (var notif in Model)
+                            {
+                                // Đổi màu icon tùy theo nội dung thông báo
+                                string iconClass = "fa-info-circle";
+                                string bgClass = "bg-info";
+
+                                if (notif.Content.Contains("HỦY"))
+                                {
+                                    iconClass = "fa-times-circle";
+                                    bgClass = "bg-danger";
+                                }
+                                else if (notif.Content.Contains("XÁC NHẬN") || notif.Content.Contains("thành công"))
+                                {
+                                    iconClass = "fa-check-circle";
+                                    bgClass = "bg-success";
+                                }
+
+                                <div class="list-group-item list-group-item-action d-flex align-items-start p-4 border-bottom hover-shadow transition-all">
+                                    <div class="mr-4 mt-1">
+                                        <div class="icon-circle @bgClass text-white rounded-circle shadow-sm" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas @iconClass fa-lg"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="badge badge-light text-muted border px-2 py-1">
+                                                <i class="far fa-clock mr-1"></i> @notif.CreatedAt.ToString("dd/MM/yyyy - HH:mm")
+                                            </span>
+                                        </div>
+                                        <h6 class="font-weight-bold text-dark mt-2" style="line-height: 1.5; font-size: 1.05rem;">
+                                            @notif.Content
+                                        </h6>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-shadow:hover {
+        background-color: #f8f9fc;
+        transform: translateX(5px);
+    }
+
+    .transition-all {
+        transition: all 0.2s ease-in-out;
+    }
+</style>

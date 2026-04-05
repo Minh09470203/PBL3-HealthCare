@@ -34,11 +34,29 @@
                 </div>
             </div>
 
-            @if (Model.ReExaminationDate.HasValue)
+            @* BẢNG THÔNG BÁO TÁI KHÁM (Có nút Đặt lịch ngay) *@
+            @if (Model.ReExaminationDate.HasValue && Model.ReExaminationDate.Value.Date >= DateTime.Today)
             {
-                <div class="alert alert-warning text-center">
-                    <i class="fas fa-calendar-check fa-lg mr-2"></i>
-                    <strong>Lịch tái khám:</strong> Vui lòng quay lại phòng khám vào ngày <strong class="text-danger">@Model.ReExaminationDate.Value.ToString("dd/MM/yyyy")</strong>.
+                <div class="card shadow-sm mt-4 mb-4" style="border-left: 5px solid #36b9cc; border-radius: 12px; background-color: #f8f9fc;">
+                    <div class="card-body d-flex flex-column flex-md-row align-items-center justify-content-between p-4">
+                        <div class="mb-3 mb-md-0">
+                            <h6 class="font-weight-bold text-info mb-1" style="font-size: 1.1rem;">
+                                <i class="fas fa-calendar-check mr-2"></i>Lịch hẹn tái khám
+                            </h6>
+                            <p class="mb-0 text-muted">
+                                Bác sĩ chỉ định bạn nên tái khám vào ngày
+                                <strong class="text-danger" style="font-size: 1.1rem;">@Model.ReExaminationDate.Value.ToString("dd/MM/yyyy")</strong>
+                                để kiểm tra lại tình trạng sức khỏe.
+                            </p>
+                        </div>
+
+                        <a asp-controller="Home" asp-action="DoctorInfo"
+                           asp-route-id="@(Model.Appointment?.DoctorId ?? Model.Doctor?.Id)"
+                           asp-route-date="@Model.ReExaminationDate.Value.ToString("yyyy-MM-dd")"
+                           class="btn btn-info shadow-sm rounded-pill px-4 py-2 font-weight-bold" style="white-space: nowrap;">
+                            <i class="fas fa-calendar-plus mr-1"></i> Đặt lịch ngay
+                        </a>
+                    </div>
                 </div>
             }
 

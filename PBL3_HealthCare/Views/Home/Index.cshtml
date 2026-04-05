@@ -417,16 +417,31 @@
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script>
         var swiper = new Swiper(".mySwiper", {
-            slidesPerView: 1, // Mặc định Mobile hiện 1 card
+            slidesPerView: 1,
+            slidesPerGroup: 1, // Mặc định trên Mobile chuyển từng cái
             spaceBetween: 20,
+            loop: true, // Bật loop để khi chuyển hết 8 card nó quay lại đầu cho mượt
+            speed: 800, // Chỉnh tốc độ trượt chậm lại một chút cho sang
             navigation: {
                 nextEl: ".swiper-button-next",
                 prevEl: ".swiper-button-prev",
             },
             breakpoints: {
-                640: { slidesPerView: 2, spaceBetween: 20 },
-                768: { slidesPerView: 3, spaceBetween: 30 },
-                1024: { slidesPerView: 4, spaceBetween: 30 }, // Màn hình PC hiện 4 card
+                640: {
+                    slidesPerView: 2,
+                    slidesPerGroup: 2, // Mobile ngang chuyển 2 cái
+                    spaceBetween: 20
+                },
+                768: {
+                    slidesPerView: 3,
+                    slidesPerGroup: 3, // Tablet chuyển 3 cái
+                    spaceBetween: 30
+                },
+                1024: {
+                    slidesPerView: 4,
+                    slidesPerGroup: 4, // 🔥 ĐÂY LÀ CHỖ SẾP CẦN: PC hiện 4 card và CHUYỂN 1 LẦN 4 CARD
+                    spaceBetween: 30
+                },
             },
         });
     </script>

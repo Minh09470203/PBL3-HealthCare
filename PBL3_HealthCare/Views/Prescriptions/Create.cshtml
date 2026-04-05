@@ -42,7 +42,7 @@
                                 </select>
                             </td>
                             <td>
-                                <input type="number" name="Details[0].Quantity" class="form-control textcenter" min="1" value="1" required />
+                                <input type="number" name="Details[0].Quantity" class="form-control text-center" min="1" value="1" required />
                             </td>
                             <td>
                                 <input type="text" name="Details[0].Instruction" class="form-control"
@@ -66,58 +66,61 @@
 </div>
 @section Scripts {
     <script>
-         $(document).ready(function () {
-         // Biến đếm index để BE map được vào List<PrescriptionDetailVM> (Bắt đầu từ 1 vì dòng
-        đầu là 0 rồi)
-         let medicineIndex = 1;
-         // CÁCH CHUẨN ĐỂ NHÂN BẢN DROPDOWN: Lấy toàn bộ thẻ <option> của cái select box
-        đầu tiên
-         let selectOptionsHtml = $("#medicineList tr:first .medicine-select").html();
-         // SỰ KIỆN: Bấm nút "Thêm Thuốc"
-         $("#btnAddMedicine").click(function () {
-         // Tạo ra HTML của 1 dòng mới. Chú ý cái name="Details[${medicineIndex}]..."
-         let newRow = `
-         <tr>
-         <td>
-         <select name="Details[${medicineIndex}].MedicineId" class="form-control
-        medicine-select" required>
-         ${selectOptionsHtml}
-         </select>
-         </td>
-         <td>
-         <input type="number" name="Details[${medicineIndex}].Quantity" class="formcontrol text-center" min="1" value="1" required />
-         </td>
-         <td>
-         <input type="text" name="Details[${medicineIndex}].Instruction" class="formcontrol" placeholder="VD: Sáng 1 viên, tối 1 viên sau ăn..." required />
-         </td>
-         <td class="text-center align-middle">
-         <button type="button" class="btn btn-danger btn-sm btn-remove" title="Xóa
-        thuốc này"><i class="fas fa-trash"></i></button>
-         </td>
-         </tr>
-         `;
-         // Nhét dòng mới vào cuối bảng
-         $("#medicineList").append(newRow);
-         medicineIndex++; // Tăng index lên cho lần bấm tiếp theo
-         });
-         // SỰ KIỆN: Bấm nút thùng rác "Xóa"
-         // (Phải dùng dạng $(document).on(...) vì đây là các phần tử HTML đẻ ra sau khi trang đã
-        load)
-         $(document).on('click', '.btn-remove', function () {
-         // Kiểm tra: Nếu chỉ còn đúng 1 dòng thì không cho xóa, bắt phải kê ít nhất 1 thuốc
-         if ($("#medicineList tr").length > 1) {
-         $(this).closest('tr').remove();
-         // Lưu ý cho Fun san: KHÔNG CẦN đánh lại số Index.
-         // ASP.NET Core BE 1 của sếp Minh rất thông minh, nhảy cóc Index (VD: 0, 2, 3) nó
-        vẫn bind đúng!
-         } else {
-         Swal.fire({
-         icon: 'warning',
-         title: 'Oops...',
-         text: 'Phải kê ít nhất 1 loại thuốc trong đơn!'
-         });
-         }
-         });
-         });
+        $(document).ready(function () {
+            // Biến đếm index để BE map được vào List. Bắt đầu từ 1 vì dòng đầu là 0 rồi
+            let medicineIndex = 1;
+
+            // Lấy toàn bộ thẻ <option> của cái select box đầu tiên để nhân bản
+            let selectOptionsHtml = $("#medicineList tr:first .medicine-select").html();
+
+            // SỰ KIỆN: Bấm nút "Thêm Thuốc"
+            $("#btnAddMedicine").click(function () {
+                // Tạo ra HTML của 1 dòng mới. Chú ý name="Details[${medicineIndex}]"
+                let newRow = `
+                    <tr>
+                        <td>
+                            <select name="Details[${medicineIndex}].MedicineId" class="form-control medicine-select" required>
+                                ${selectOptionsHtml}
+                            </select>
+                        </td>
+                        <td>
+                            <input type="number" name="Details[${medicineIndex}].Quantity" class="form-control text-center" min="1" value="1" required />
+                        </td>
+                        <td>
+                            <input type="text" name="Details[${medicineIndex}].Instruction" class="form-control" placeholder="VD: Sáng 1 viên, tối 1 viên sau ăn..." required />
+                        </td>
+                        <td class="text-center align-middle">
+                            <button type="button" class="btn btn-danger btn-sm btn-remove" title="Xóa thuốc này">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+
+                // Nhét dòng mới vào cuối bảng
+                $("#medicineList").append(newRow);
+                medicineIndex++; // Tăng index lên cho lần bấm tiếp theo
+            });
+
+            // SỰ KIỆN: Bấm nút thùng rác "Xóa"
+            $(document).on('click', '.btn-remove', function () {
+                // Kiểm tra: Nếu chỉ còn đúng 1 dòng thì không cho xóa
+                if ($("#medicineList tr").length > 1) {
+                    $(this).closest('tr').remove();
+                    // ASP.NET Core Model Binding rất thông minh, index bị nhảy cóc (VD: 0, 2, 3) nó vẫn nhận đúng!
+                } else {
+                    // Cảnh báo nếu xóa hết
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Oops...',
+                            text: 'Phải kê ít nhất 1 loại thuốc trong đơn!'
+                        });
+                    } else {
+                        alert('Phải kê ít nhất 1 loại thuốc trong đơn!');
+                    }
+                }
+            });
+        });
     </script>
 }

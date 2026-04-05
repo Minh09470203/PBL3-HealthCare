@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using PBL3_HealthCare.Data;
 using PBL3_HealthCare.Models;
 using PBL3_HealthCare.Services;
+using PBL3_HealthCare.Hubs; // 🔥 1. THÊM DÒNG NÀY ĐỂ GỌI THƯ MỤC HUBS
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +36,7 @@ builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<PBL3_HealthCare.Services.NotificationService>();
 builder.Services.AddScoped<PBL3_HealthCare.Services.InvoiceService>();
 builder.Services.AddScoped<ZegoTokenService>();
+
 // ✅ Chatbot services
 builder.Services.AddMemoryCache();
 builder.Services.AddSession(options =>
@@ -45,6 +47,9 @@ builder.Services.AddSession(options =>
 });
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<GeminiService>();
+
+// 🔥 2. THÊM DÒNG NÀY: KHỞI ĐỘNG DỊCH VỤ SIGNALR LÊN SERVER
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -90,5 +95,8 @@ app.MapControllerRoute(
 
 app.MapRazorPages()
    .WithStaticAssets();
+
+// 🔥 3. THÊM DÒNG NÀY: MỞ ĐƯỜNG ỐNG ROUTING CHO CÁI HUB CỦA ANH EM MÌNH
+app.MapHub<NotificationHub>("/notificationHub");
 
 app.Run();

@@ -20,7 +20,7 @@ namespace PBL3_HealthCare.Services
             {
                 ReceiverId = userId, 
                 Content = message,   
-                SenderInfo = "Hệ thống", // Điền thêm cho đủ cột của ông
+                SenderInfo = "Hệ thống", 
                 Type = "Info",
                 IsRead = false,
                 CreatedAt = DateTime.Now

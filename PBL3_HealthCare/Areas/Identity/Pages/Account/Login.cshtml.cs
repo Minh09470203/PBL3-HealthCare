@@ -139,15 +139,15 @@ namespace PBL3_HealthCare.Areas.Identity.Pages.Account
                     // 3. Nếu đăng nhập bình thường (không có ReturnUrl), chia đường theo Role
                     if (roles.Contains("Admin"))
                     {
-                        return LocalRedirect("~/Admin/Index"); // Admin thì vào quản lý
+                        return LocalRedirect("~/Admin/Index"); 
                     }
                     else if (roles.Contains("Doctor"))
                     {
-                        return LocalRedirect("~/DoctorPortal/Index"); // Bác sĩ thì vào xem lịch khám
+                        return LocalRedirect("~/DoctorPortal/Index"); 
                     }
                     else
                     {
-                        return LocalRedirect("~/Home/Index"); // Bệnh nhân (hoặc User thường) thì về Trang chủ
+                        return LocalRedirect("~/Home/Index"); 
                     }
                     // ==========================================
                 }

@@ -89,34 +89,28 @@ namespace PBL3_HealthCare.Controllers
         [Authorize(Roles = "Doctor")]
         public async Task<IActionResult> FinishCall([FromBody] FinishAppointmentViewModel model)
         {
-            // 1. Kiểm tra Model (Không được để trống)
-            if (model == null)
-            {
-                return BadRequest(new { success = false, message = "Dữ liệu gửi lên bị rỗng." });
-            }
+            // 1. Kiểm tra dữ liệu đầu vào (giữ nguyên)
+            if (model == null) return BadRequest(new { success = false, message = "Dữ liệu rỗng" });
 
-            if (string.IsNullOrEmpty(model.Symptoms) || string.IsNullOrEmpty(model.Diagnosis))
-            {
-                return BadRequest(new { success = false, message = "Vui lòng nhập đầy đủ Triệu chứng và Chẩn đoán." });
-            }
-
-            // 2. Tìm ca khám (Include thêm Doctor để lấy thông tin gán vào bệnh án)
+            // 2. TÌM LỊCH HẸN: Phải Include đầy đủ Doctor và Patient
             var appointment = await _context.Appointments
-                .Include(a => a.Doctor)
+                .Include(a => a.Doctor)    // <--- Lôi ông Bác sĩ ra
+                .Include(a => a.Patient)   // <--- Lôi ông Bệnh nhân ra
                 .FirstOrDefaultAsync(a => a.Id == model.AppointmentId);
 
-            if (appointment == null)
-            {
-                return NotFound(new { success = false, message = "Không tìm thấy thông tin ca khám này." });
-            }
+            if (appointment == null) return NotFound(new { success = false, message = "Không thấy lịch hẹn" });
 
             try
             {
-                // 3. TẠO BỆNH ÁN MỚI
+                // 3. TẠO BỆNH ÁN MỚI: Gán trực tiếp Object thay vì ID
                 var medicalRecord = new MedicalRecord
                 {
                     AppointmentId = appointment.Id,
-                                                     // Kết hợp triệu chứng và chẩn đoán vào cột Diagnosis
+
+                    // 🔥 TẬN DỤNG THUỘC TÍNH OBJECT TẠI ĐÂY 🔥
+                    Doctor = appointment.Doctor,           // Gán nguyên cả object Bác sĩ
+                    ApplicationUser = appointment.Patient, // Gán nguyên cả object Bệnh nhân (để hiện bên Patient Portal)
+
                     Diagnosis = $"Triệu chứng: {model.Symptoms} | Chẩn đoán: {model.Diagnosis}",
                     Treatment = model.DoctorNotes ?? "Không có dặn dò",
                     CreatedAt = DateTime.Now
@@ -124,31 +118,18 @@ namespace PBL3_HealthCare.Controllers
 
                 _context.MedicalRecords.Add(medicalRecord);
 
-                // 4. CẬP NHẬT TRẠNG THÁI LỊCH HẸN
+                // 4. Cập nhật trạng thái (giữ nguyên)
                 appointment.Status = AppointmentStatus.Completed;
                 appointment.CallStatus = CallStatus.Completed;
-
                 _context.Update(appointment);
 
-                // Lưu tất cả thay đổi vào DB
                 await _context.SaveChangesAsync();
 
-                // 🔥 TRẢ VỀ JSON CHUẨN ĐỂ JAVASCRIPT KHÔNG BỊ LỖI PARSE 🔥
-                return Ok(new
-                {
-                    success = true,
-                    message = "Lưu bệnh án thành công!",
-                    medicalRecordId = medicalRecord.Id
-                });
+                return Ok(new { success = true, medicalRecordId = medicalRecord.Id });
             }
             catch (Exception ex)
             {
-                // 🔥 NẾU LỖI CŨNG PHẢI TRẢ VỀ JSON 🔥
-                return StatusCode(500, new
-                {
-                    success = false,
-                    message = "Lỗi hệ thống: " + ex.Message
-                });
+                return StatusCode(500, new { success = false, message = "Lỗi lưu DB: " + ex.Message });
             }
         }
     }

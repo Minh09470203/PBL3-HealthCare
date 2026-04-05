@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using PBL3_HealthCare.Data;
 using PBL3_HealthCare.Models;
 using PBL3_HealthCare.Services;
+using PBL3_HealthCare.Hubs;
+using Microsoft.AspNetCore.SignalR; 
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,18 +21,21 @@ namespace PBL3_HealthCare.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly NotificationService _notificationService;
-        private readonly EmailService _emailService; // 🔥 ĐÃ THÊM
+        private readonly EmailService _emailService; 
+        private readonly IHubContext<NotificationHub> _hubContext;
 
         public AppointmentsController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
             NotificationService notificationService,
-            EmailService emailService) // 🔥 TIÊM EMAIL SERVICE VÀO
+            EmailService emailService,
+            IHubContext<NotificationHub> hubContext) 
         {
             _context = context;
             _userManager = userManager;
             _notificationService = notificationService;
             _emailService = emailService;
+            _hubContext = hubContext;
         }
 
         // ==========================================
@@ -62,7 +67,7 @@ namespace PBL3_HealthCare.Controllers
             var query = _context.Appointments
                 .Include(a => a.Patient)
                 .Include(a => a.Doctor).ThenInclude(d => d.User)
-                .Include(a => a.MedicalRecord)
+                .Include(a => a.MedicalRecord).ThenInclude(m => m.Prescriptions)
                 .AsQueryable();
 
             if (isDoctor)
@@ -208,6 +213,7 @@ namespace PBL3_HealthCare.Controllers
                 : $"Lịch khám ngày {appointment.Date:dd/MM/yyyy} của bạn đã BỊ HỦY.";
 
             await _notificationService.CreateNotification(appointment.PatientId, msg);
+            await _hubContext.Clients.All.SendAsync("ReceiveNotification", appointment.PatientId, msg);
 
             // 🔥 3. LOGIC GỬI EMAIL CHỨA LINK KHI ADMIN BẤM XÁC NHẬN LỊCH ONLINE 🔥
             if (newStatus == AppointmentStatus.Confirmed && appointment.IsVideoCall && appointment.Patient != null && !string.IsNullOrEmpty(appointment.Patient.Email))

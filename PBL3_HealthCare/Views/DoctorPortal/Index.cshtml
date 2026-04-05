@@ -181,30 +181,33 @@
                                         <span class="badge badge-success shadow-sm" style="padding: 6px 12px;"><i class="fas fa-hospital mr-1"></i> Tại chỗ</span>
                                     }
                                 </td>
+                                @* 1. CỘT TRẠNG THÁI *@
                                 <td>
-                                    @if (item.Status == AppointmentStatus.Completed)
-                                    {
-                                        <span class="status-badge status-confirmed">Đã khám xong</span>
-                                    }
-                                    else if (item.Status == AppointmentStatus.Confirmed)
-                                    {
-                                        <span class="status-badge status-confirmed" style="background-color: #ebf8ff; color: #2b6cb0;">Đã duyệt</span>
-                                    }
-                                    else if (item.Status == AppointmentStatus.Pending)
+                                    @if (item.Status == AppointmentStatus.Pending)
                                     {
                                         <span class="status-badge status-pending">Chờ duyệt</span>
                                     }
+                                    else if (item.MedicalRecord == null)
+                                    {
+                                        <span class="status-badge status-confirmed" style="background-color: #ebf8ff; color: #2b6cb0;">Chưa ghi bệnh án</span>
+                                    }
+                                    else if (item.MedicalRecord.Prescriptions == null || !item.MedicalRecord.Prescriptions.Any())
+                                    {
+                                        <span class="status-badge" style="background-color: #fff3cd; color: #856404;">Chờ kê thuốc</span>
+                                    }
                                     else
                                     {
-                                        <span class="status-badge bg-light text-muted">@item.Status</span>
+                                        <span class="status-badge status-confirmed">Đã hoàn tất</span>
                                     }
                                 </td>
+
+                                @* 2. CỘT HÀNH ĐỘNG (QUY TRÌNH 3 BƯỚC) *@
                                 <td class="text-center pr-4">
                                     @if (item.Status == AppointmentStatus.Pending)
                                     {
-                                        <span class="text-warning small font-italic"><i class="fas fa-exclamation-circle mr-1"></i>Đang đợi Admin duyệt...</span>
+                                        <span class="text-warning small font-italic"><i class="fas fa-exclamation-circle mr-1"></i>Đang đợi duyệt...</span>
                                     }
-                                    else if (item.Status == AppointmentStatus.Confirmed)
+                                    else if (item.MedicalRecord == null)
                                     {
                                         @if (item.IsVideoCall)
                                         {
@@ -220,25 +223,23 @@
                                         {
                                             <a asp-controller="MedicalRecords" asp-action="Create" asp-route-appointmentId="@item.Id"
                                                class="btn btn-success btn-sm rounded-pill px-4">
-                                                <i class="fas fa-stethoscope mr-1"></i> Bắt đầu khám
+                                                <i class="fas fa-stethoscope mr-1"></i> Ghi bệnh án
                                             </a>
                                         }
                                     }
-                                    else if (item.Status == AppointmentStatus.Completed)
+                                    else if (item.MedicalRecord.Prescriptions == null || !item.MedicalRecord.Prescriptions.Any())
                                     {
-                                        if (item.MedicalRecord != null) // Kiểm tra xem có bệnh án thật không
-                                        {
-                                            <a asp-controller="MedicalRecords"
-                                               asp-action="Details"
-                                               asp-route-id="@item.MedicalRecord.Id"
-                                               class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-                                                <i class="fas fa-eye mr-1"></i> Bệnh án
-                                            </a>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge badge-warning">Lỗi: Chưa tạo BA</span>
-                                        }
+                                        <a asp-controller="Prescriptions" asp-action="Create" asp-route-medicalRecordId="@item.MedicalRecord.Id"
+                                           class="btn btn-warning btn-sm rounded-pill px-4 text-dark font-weight-bold">
+                                            <i class="fas fa-pills mr-1"></i> Kê thuốc
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <a asp-controller="MedicalRecords" asp-action="Details" asp-route-id="@item.MedicalRecord.Id"
+                                           class="btn btn-outline-secondary btn-sm rounded-pill px-4">
+                                            <i class="fas fa-eye mr-1"></i> Bệnh án
+                                        </a>
                                     }
                                 </td>
                             </tr>

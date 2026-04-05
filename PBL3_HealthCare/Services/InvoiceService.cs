@@ -91,7 +91,7 @@ namespace PBL3_HealthCare.Services
             // Nhắc bệnh nhân ra quầy
             await _notificationService.CreateNotification(
                 appointment.PatientId,
-                $"Hệ thống vừa tạo một hóa đơn mới trị giá {totalAmount:N0} VNĐ. Vui lòng đến quầy thu ngân để thanh toán."
+                $"Hệ thống vừa tạo một hóa đơn mới trị giá {totalAmount:N0} VNĐ. Vui lòng thanh toán."
             );
         }
 
