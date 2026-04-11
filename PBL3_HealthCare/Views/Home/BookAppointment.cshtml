@@ -101,14 +101,24 @@
                                 </div>
                             </div>
 
-                            <div class="form-floating-custom">
+                            <div class="form-floating-custom" style="margin-bottom: 1.25rem;">
                                 <label>
-                                    Triệu chứng / Lý do khám
+                                    Lý do khám
                                     <span style="color:#c92a2a;">*</span>
                                 </label>
-                                <textarea asp-for="Reason" class="form-control" rows="4" required
-                                          placeholder="Ví dụ: Đau đầu kéo dài, sốt cao, cần tư vấn nhổ răng khôn..."></textarea>
-                                <div class="form-hint">Mô tả rõ triệu chứng giúp bác sĩ chẩn đoán sơ bộ tốt hơn.</div>
+                                <textarea asp-for="Reason" class="form-control" rows="2" required
+                                          placeholder="Ví dụ: Khám tổng quát, Đau dạ dày, Tái khám..."></textarea>
+                                <div class="form-hint">Nhập lý do ngắn gọn để phòng khám nắm thông tin cơ bản.</div>
+                            </div>
+
+                            <div class="form-floating-custom">
+                                <label>
+                                    Triệu chứng chi tiết
+                                    <span style="color:#6c757d; font-weight: normal; font-size: 0.85rem;">(Có thể bỏ qua)</span>
+                                </label>
+                                <textarea asp-for="Symptoms" class="form-control" rows="3"
+                                          placeholder="Ví dụ: Đau đầu kéo dài 3 ngày, sốt cao 39 độ, buồn nôn..."></textarea>
+                                <div class="form-hint">Mô tả rõ triệu chứng giúp bác sĩ chẩn đoán sơ bộ tốt hơn. Nếu không có, bạn có thể để trống.</div>
                             </div>
 
                             <div style="margin-top:1.5rem;">
@@ -128,3 +138,19 @@
         </div>
     </div>
 </section>
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Lắng nghe sự kiện khi form được submit
+            $('form').on('submit', function () {
+                var $btn = $(this).find('button[type="submit"]');
+
+                // Vô hiệu hóa nút bấm
+                $btn.prop('disabled', true);
+
+                // Đổi chữ thành Đang xử lý để người dùng biết
+                $btn.html('<i class="fas fa-spinner fa-spin mr-2"></i> Đang xử lý...');
+            });
+        });
+    </script>
+}

@@ -218,7 +218,7 @@ namespace PBL3_HealthCare.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Patient")]
-        public async Task<IActionResult> BookAppointment([Bind("DoctorId,Date,TimeSlot,Reason,IsVideoCall")] Appointment model)
+        public async Task<IActionResult> BookAppointment([Bind("DoctorId,Date,TimeSlot,Reason,Symptoms,IsVideoCall")] Appointment model)
         {
             ModelState.Remove("PatientId");
             ModelState.Remove("Status");

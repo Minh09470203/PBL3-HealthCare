@@ -1,6 +1,9 @@
 /* ============================================================
    booking.css — Trang xác nhận đặt lịch khám
    ============================================================ */
+body {
+    background-color: #f4f6ff !important;
+}
 
 .booking-page {
     background: #f4f6ff;
