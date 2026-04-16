@@ -143,7 +143,7 @@ namespace PBL3_HealthCare.Controllers
                 .OrderBy(s => s.Date)
                 .ToListAsync();
 
-            var availableDates = availableSchedules.Select(s => s.Date.Date).Distinct().Take(3).ToList();
+            var availableDates = availableSchedules.Select(s => s.Date.Date).Distinct().Take(5).ToList();
             var timeSlotsByDate = new Dictionary<DateTime, List<string>>();
 
             foreach (var date in availableDates)
@@ -324,6 +324,19 @@ namespace PBL3_HealthCare.Controllers
                 .Where(p => p.PatientId == userId)
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
+
+            ViewBag.VaccinationBookings = await _context.VaccinationBookings
+                .Include(v => v.Vaccine)
+                .Where(v => v.PatientId == userId)
+                .OrderByDescending(v => v.CreatedAt)
+                .ToListAsync();
+
+            ViewBag.HomeServiceRequests = await _context.HomeServiceRequests
+                .Include(h => h.HomeService)
+                .Where(h => h.PatientId == userId)
+                .OrderByDescending(h => h.CreatedAt)
+                .ToListAsync();
+
             return View(myAppointments);
         }
 

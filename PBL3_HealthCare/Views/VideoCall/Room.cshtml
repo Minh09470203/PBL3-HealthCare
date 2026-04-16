@@ -42,7 +42,7 @@
         const serverSecret = "@ViewBag.ServerSecret";
         const roomID = "@ViewBag.RoomId";
         const userID = "@ViewBag.UserId";
-        const userName = "@ViewBag.UserName";
+        const userName = "@Html.Raw(ViewBag.UserName)";
         const role = "@ViewBag.Role"; // "Host" (Bác sĩ) hoặc "Audience" (Bệnh nhân)
 
         // Sinh Token Test Mode (Sếp Minh đã duyệt cách này)

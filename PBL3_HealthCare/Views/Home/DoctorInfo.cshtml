@@ -3,7 +3,7 @@
     ViewData["Title"] = "Hồ sơ Bác sĩ";
     Layout = "~/Views/Shared/_Layout.cshtml";
 
-    var next3Days = ViewBag.Next3Days as List<DateTime>;
+    var next5Days = ViewBag.Next3Days as List<DateTime>;
     // Bắt buộc phải là biến này, xóa cái var timeSlots cũ đi:
     var timeSlotsByDate = ViewBag.TimeSlotsByDate as Dictionary<DateTime, List<string>>; 
     var bookedAppointments = ViewBag.BookedAppointments as List<PBL3_HealthCare.Models.Appointment>;
@@ -67,12 +67,12 @@
 
                     @* Day tabs *@
                     <div class="day-tabs">
-                        @for (int i = 0; i < next3Days.Count; i++)
+                        @for (int i = 0; i < next5Days.Count; i++)
                         {
                             <a class="day-tab @(i == 0 ? "active" : "")"
                                href="#"
                                onclick="switchDay(@i, this); return false;">
-                                @(next3Days[i].Date == DateTime.Today ? "Hôm nay" : next3Days[i].DayOfWeek switch {
+                                @(next5Days[i].Date == DateTime.Today ? "Hôm nay" : next5Days[i].DayOfWeek switch {
                                     DayOfWeek.Monday    => "Thứ Hai",
                                     DayOfWeek.Tuesday   => "Thứ Ba",
                                     DayOfWeek.Wednesday => "Thứ Tư",
@@ -81,18 +81,18 @@
                                     DayOfWeek.Saturday  => "Thứ Bảy",
                                     _                   => "Chủ Nhật"
                                 })
-                                <span class="tab-date">@next3Days[i].ToString("dd/MM")</span>
+                                <span class="tab-date">@next5Days[i].ToString("dd/MM")</span>
                             </a>
                         }
                     </div>
 
                     @* Slot panels *@
-                    @for (int i = 0; i < next3Days.Count; i++)
+                    @for (int i = 0; i < next5Days.Count; i++)
                     {
                         <div class="day-panel @(i == 0 ? "" : "d-none")" id="panel-@i">
                             <div class="slots-grid">
     @{
-        var currentDate = next3Days[i].Date;
+        var currentDate = next5Days[i].Date;
         var daySlots = timeSlotsByDate != null && timeSlotsByDate.ContainsKey(currentDate) 
                         ? timeSlotsByDate[currentDate] 
                         : new List<string>();

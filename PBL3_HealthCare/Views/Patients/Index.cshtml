@@ -106,7 +106,15 @@
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <div class="avatar-circle shadow-sm mr-3" style="background-color: @bgColor">@initial</div>
+                                    @if (!string.IsNullOrEmpty(item.Avatar))
+                                    {
+                                        <img src="/img/@item.Avatar" class="shadow-sm mr-3" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" alt="Avatar">
+                                    }
+                                    else
+                                    {
+                                        <div class="avatar-circle shadow-sm mr-3" style="background-color: @bgColor">@initial</div>
+                                    }
+
                                     <div>
                                         <h6 class="mb-0 font-weight-bold text-dark">@item.FullName</h6>
                                         <small class="text-muted">ID: @item.Id.Substring(0, 8)...</small>

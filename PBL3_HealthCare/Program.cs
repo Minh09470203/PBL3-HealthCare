@@ -5,6 +5,7 @@ using PBL3_HealthCare.Data;
 using PBL3_HealthCare.Models;
 using PBL3_HealthCare.Services;
 using PBL3_HealthCare.Hubs; // 🔥 1. THÊM DÒNG NÀY ĐỂ GỌI THƯ MỤC HUBS
+using Microsoft.AspNetCore.HttpOverrides; // 👉 THÊM DÒNG NÀY CHO NGROK (1)
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,6 +53,16 @@ builder.Services.AddScoped<GeminiService>();
 builder.Services.AddSignalR();
 
 var app = builder.Build();
+
+// 👉 THÊM NGUYÊN KHỐI NÀY ĐỂ FIX TẬN GỐC LỖI NGROK + GOOGLE LOGIN (2)
+var forwardedHeadersOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost
+};
+forwardedHeadersOptions.KnownNetworks.Clear();
+forwardedHeadersOptions.KnownProxies.Clear();
+app.UseForwardedHeaders(forwardedHeadersOptions);
+
 
 using (var scope = app.Services.CreateScope())
 {

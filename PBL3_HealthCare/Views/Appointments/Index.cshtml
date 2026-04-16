@@ -13,6 +13,26 @@
     {
         Layout = "~/Views/Shared/_DoctorLayout.cshtml";
     }
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" style="border-radius: 12px; border: none; box-shadow: 0 4px 15px rgba(28,200,138,.15);">
+            <i class="fas fa-check-circle mr-2"></i> <strong>Thành công!</strong> @TempData["Success"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert" style="border-radius: 12px; border: none; box-shadow: 0 4px 15px rgba(231,74,59,.15);">
+            <i class="fas fa-exclamation-triangle mr-2"></i> <strong>Lỗi!</strong> @TempData["Error"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
 }
 
 @section Styles {
@@ -212,6 +232,10 @@
                         <td><span class="date-text">@item.Date.ToString("dd/MM/yyyy")</span></td>
                         <td><span class="timeslot-text"><i class="fas fa-clock mr-1"></i>@Html.DisplayFor(m => item.TimeSlot)</span></td>
                         <td>
+                            @{
+                                bool isSvc = item.Reason.Contains("Gói Khám") || item.Reason.Contains("Tại Nhà") || item.Reason.Contains("Tiêm Chủng");
+                            }
+
                             @if (item.Status == AppointmentStatus.Pending)
                             {
                                 <span class="status-badge status-pending"><i class="fas fa-hourglass-half mr-1"></i> Chờ duyệt</span>
@@ -224,16 +248,17 @@
                             {
                                 <span class="status-badge status-confirmed"><i class="fas fa-check-circle mr-1"></i> Xác nhận</span>
                             }
-                            else if (item.MedicalRecord.Prescriptions == null || !item.MedicalRecord.Prescriptions.Any())
+                            @* 🔥 BỔ SUNG: Dịch vụ xong bệnh án = Hoàn tất *@
+                            else if (isSvc || (item.MedicalRecord.Prescriptions != null && item.MedicalRecord.Prescriptions.Any()))
                             {
-                                <span class="status-badge" style="background:#fff3cd; color:#856404; border: 1.5px solid #ffeeba;">
-                                    <i class="fas fa-notes-medical mr-1"></i> Chờ kê thuốc
+                                <span class="status-badge" style="background:#e8edff; color:#4e73df; border: 1.5px solid #b8caff;">
+                                    <i class="fas fa-clipboard-check mr-1"></i> Đã hoàn tất
                                 </span>
                             }
                             else
                             {
-                                <span class="status-badge" style="background:#e8edff; color:#4e73df; border: 1.5px solid #b8caff;">
-                                    <i class="fas fa-clipboard-check mr-1"></i> Đã hoàn tất
+                                <span class="status-badge" style="background:#fff3cd; color:#856404; border: 1.5px solid #ffeeba;">
+                                    <i class="fas fa-notes-medical mr-1"></i> Chờ kê thuốc
                                 </span>
                             }
                         </td>
@@ -262,10 +287,11 @@
                             }
                             else if (isDoctor)
                             {
-                                @* Nút xem thông tin lịch khám (luôn hiện) *@
+                                bool isSvcDoc = item.Reason.Contains("[Gói Khám]") || item.Reason.Contains("[Tại Nhà]") || item.Reason.Contains("[Tiêm Chủng]");
+
                                 <a asp-action="Details" asp-route-id="@item.Id" class="btn-action btn-action-detail" title="Chi tiết lịch khám"><i class="fas fa-info-circle"></i></a>
 
-                                @if (item.Status == AppointmentStatus.Confirmed)
+                                if (item.Status == AppointmentStatus.Confirmed)
                                 {
                                     if (item.MedicalRecord == null)
                                     {
@@ -280,18 +306,19 @@
                                             </a>
                                         }
                                     }
-                                    else if (item.MedicalRecord.Prescriptions == null || !item.MedicalRecord.Prescriptions.Any())
-                                    {
-                                        <a asp-controller="Prescriptions" asp-action="Create" asp-route-medicalRecordId="@item.MedicalRecord.Id"
-                                           class="btn-action ms-1" style="background: #f6c23e; color: #fff;" title="Kê thuốc">
-                                            <i class="fas fa-pills mr-1"></i> Kê thuốc
-                                        </a>
-                                    }
-                                    else
+                                    @* 🔥 BỔ SUNG: Dịch vụ thì hiện nút Bệnh án, Khám thường thì hiện Kê thuốc *@
+                                    else if (isSvcDoc || (item.MedicalRecord.Prescriptions != null && item.MedicalRecord.Prescriptions.Any()))
                                     {
                                         <a asp-controller="MedicalRecords" asp-action="Details" asp-route-id="@item.MedicalRecord.Id"
                                            class="btn-action ms-1" style="background: #858796; color: #fff;" title="Xem Bệnh án">
                                             <i class="fas fa-file-medical mr-1"></i> Bệnh án
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <a asp-controller="Prescriptions" asp-action="Create" asp-route-medicalRecordId="@item.MedicalRecord.Id"
+                                           class="btn-action ms-1" style="background: #f6c23e; color: #fff;" title="Kê thuốc">
+                                            <i class="fas fa-pills mr-1"></i> Kê thuốc
                                         </a>
                                     }
                                 }

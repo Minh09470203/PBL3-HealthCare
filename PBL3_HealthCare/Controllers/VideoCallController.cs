@@ -113,6 +113,7 @@ namespace PBL3_HealthCare.Controllers
 
                     Diagnosis = $"Triệu chứng: {model.Symptoms} | Chẩn đoán: {model.Diagnosis}",
                     Treatment = model.DoctorNotes ?? "Không có dặn dò",
+                    ReExaminationDate = model.ReExaminationDate,
                     CreatedAt = DateTime.Now
                 };
 

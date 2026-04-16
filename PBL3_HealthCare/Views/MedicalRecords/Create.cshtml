@@ -27,11 +27,11 @@
                 <p><strong>Giờ khám:</strong> @(appointment?.TimeSlot.ToString() ?? "")</p>
                 <hr />
                 <p><strong>Lý do khám:</strong></p>
-                <div class="alert alert-warning">
+                <div class="alert-info">
                     @(appointment?.Reason ?? "Không có ghi chú")
                 </div>
                 <p><strong>Triệu chứng ban đầu:</strong></p>
-                <div class="alert alert-danger">
+                <div class="alert-secondary">
                     @(appointment?.Symptoms ?? "Không có ghi chú")
                 </div>
             </div>

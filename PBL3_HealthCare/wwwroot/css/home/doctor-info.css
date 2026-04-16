@@ -105,6 +105,9 @@
     margin-bottom: 1.5rem;
     border-bottom: 2px solid #eef0ff;
     padding-bottom: 0;
+    display: flex;
+    overflow-x: auto; 
+    white-space: nowrap;
 }
 .day-tab {
     padding: .55rem 1.1rem;
@@ -118,6 +121,9 @@
     white-space: nowrap;
     text-decoration: none;
     border-radius: 3px 3px 0 0;
+}
+.day-tabs::-webkit-scrollbar {
+    display: none;
 }
 .day-tab:hover { color: #3d5ee1; text-decoration: none; }
 .day-tab.active {

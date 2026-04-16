@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace PBL3_HealthCare.ViewModels
 {
@@ -16,10 +17,10 @@ namespace PBL3_HealthCare.ViewModels
         [Required(ErrorMessage = "Vui lòng nhập kết luận chẩn đoán")]
         public string Diagnosis { get; set; }
 
-        // 4. Kê đơn thuốc (Có thể cho phép null nếu ca đó chỉ cần tư vấn, không cần thuốc)
-        public string? Prescription { get; set; }
-
-        // 5. Lời dặn dò của Bác sĩ (Kiêng ăn gì, chườm đá...)
+        // 4. Lời dặn dò của Bác sĩ (Kiêng ăn gì, chườm đá...)
         public string? DoctorNotes { get; set; }
+
+        // 5. Ngày tái khám (Nếu có)
+        public DateTime? ReExaminationDate { get; set; }
     }
 }

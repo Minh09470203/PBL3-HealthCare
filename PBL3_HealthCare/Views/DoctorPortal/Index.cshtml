@@ -5,6 +5,26 @@
     ViewData["Title"] = "Bảng điều khiển Bác sĩ";
     Layout = "~/Views/Shared/_DoctorLayout.cshtml";
 
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" style="border-radius: 12px; border: none; box-shadow: 0 4px 15px rgba(28,200,138,.15);">
+        <i class="fas fa-check-circle mr-2"></i> <strong>Thành công!</strong> @TempData["Success"]
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert" style="border-radius: 12px; border: none; box-shadow: 0 4px 15px rgba(231,74,59,.15);">
+        <i class="fas fa-exclamation-triangle mr-2"></i> <strong>Lỗi!</strong> @TempData["Error"]
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+}
+
     int totalToday = Model.Count();
     int completedToday = Model.Count(a => a.Status == AppointmentStatus.Completed);
     int onlineToday = Model.Count(a => a.IsVideoCall);
@@ -183,6 +203,9 @@
                                 </td>
                                 @* 1. CỘT TRẠNG THÁI *@
                                 <td>
+                                    @{
+                                        bool isServiceAppt = item.Reason.Contains("[Gói Khám]") || item.Reason.Contains("[Tại Nhà]") || item.Reason.Contains("[Tiêm Chủng]");
+                                    }
                                     @if (item.Status == AppointmentStatus.Pending)
                                     {
                                         <span class="status-badge status-pending">Chờ duyệt</span>
@@ -191,25 +214,32 @@
                                     {
                                         <span class="status-badge status-confirmed" style="background-color: #ebf8ff; color: #2b6cb0;">Chưa ghi bệnh án</span>
                                     }
-                                    else if (item.MedicalRecord.Prescriptions == null || !item.MedicalRecord.Prescriptions.Any())
+                                    @* 🔥 Nếu là Dịch vụ mà đã có Bệnh án -> Hoàn tất luôn *@
+                                    else if (isServiceAppt || (item.MedicalRecord.Prescriptions != null && item.MedicalRecord.Prescriptions.Any()))
                                     {
-                                        <span class="status-badge" style="background-color: #fff3cd; color: #856404;">Chờ kê thuốc</span>
+                                        <span class="status-badge status-confirmed">Đã hoàn tất</span>
                                     }
                                     else
                                     {
-                                        <span class="status-badge status-confirmed">Đã hoàn tất</span>
+                                        <span class="status-badge" style="background-color: #fff3cd; color: #856404;">Chờ kê thuốc</span>
                                     }
                                 </td>
 
                                 @* 2. CỘT HÀNH ĐỘNG (QUY TRÌNH 3 BƯỚC) *@
                                 <td class="text-center pr-4">
+                                    @{
+                                        // Nhận diện ca dịch vụ
+                                        bool isService = item.Reason.Contains("Gói Khám") || item.Reason.Contains("Tại Nhà") || item.Reason.Contains("[Tiêm Chủng]");
+                                    }
+
                                     @if (item.Status == AppointmentStatus.Pending)
                                     {
                                         <span class="text-warning small font-italic"><i class="fas fa-exclamation-circle mr-1"></i>Đang đợi duyệt...</span>
                                     }
                                     else if (item.MedicalRecord == null)
                                     {
-                                        @if (item.IsVideoCall)
+                                        @* --- GIỮ NGUYÊN VIDEO CALL CỦA SẾP TẠI ĐÂY --- *@
+                                        if (item.IsVideoCall)
                                         {
                                             var appointmentDateTime = item.Date.ToString("yyyy-MM-dd") + "T" + item.TimeSlot.ToString();
                                             <a href="/VideoCall/Room?roomId=@item.MeetingRoomId"
@@ -227,18 +257,20 @@
                                             </a>
                                         }
                                     }
-                                    else if (item.MedicalRecord.Prescriptions == null || !item.MedicalRecord.Prescriptions.Any())
-                                    {
-                                        <a asp-controller="Prescriptions" asp-action="Create" asp-route-medicalRecordId="@item.MedicalRecord.Id"
-                                           class="btn btn-warning btn-sm rounded-pill px-4 text-dark font-weight-bold">
-                                            <i class="fas fa-pills mr-1"></i> Kê thuốc
-                                        </a>
-                                    }
-                                    else
+                                    @* --- LOGIC DÀNH RIÊNG CHO DỊCH VỤ HOẶC ĐÃ XONG --- *@
+                                    else if (isService || (item.MedicalRecord.Prescriptions != null && item.MedicalRecord.Prescriptions.Any()))
                                     {
                                         <a asp-controller="MedicalRecords" asp-action="Details" asp-route-id="@item.MedicalRecord.Id"
                                            class="btn btn-outline-secondary btn-sm rounded-pill px-4">
                                             <i class="fas fa-eye mr-1"></i> Bệnh án
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        @* Chỉ Khám thường mà chưa có đơn thuốc mới hiện nút này *@
+                                        <a asp-controller="Prescriptions" asp-action="Create" asp-route-medicalRecordId="@item.MedicalRecord.Id"
+                                           class="btn btn-warning btn-sm rounded-pill px-4 text-dark font-weight-bold">
+                                            <i class="fas fa-pills mr-1"></i> Kê thuốc
                                         </a>
                                     }
                                 </td>

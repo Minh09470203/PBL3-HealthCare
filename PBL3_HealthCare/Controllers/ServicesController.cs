@@ -120,7 +120,7 @@ namespace PBL3_HealthCare.Controllers
                 await _context.SaveChangesAsync();
 
                 TempData["Success"] = "Đăng ký tiêm chủng thành công! Vui lòng đến đúng giờ.";
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("MyHistory", "Home");
             }
 
             // 🔥 FIX LỖI "NÃO CÁ VÀNG": Nạp lại ViewBag nếu form bị lỗi nhập liệu
@@ -191,7 +191,7 @@ namespace PBL3_HealthCare.Controllers
                 await _context.SaveChangesAsync();
 
                 TempData["Success"] = "Gửi yêu cầu thành công! Lễ tân sẽ gọi điện xác nhận sớm nhất.";
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("MyHistory", "Home");
             }
 
             // 🔥 BƯỚC 2: FIX LỖI "NÃO CÁ VÀNG" - NẠP LẠI VIEWBAG KHI FORM BỊ LỖI

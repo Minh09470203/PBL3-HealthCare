@@ -56,7 +56,10 @@
     <div class="col-xl-4 col-lg-5">
         <div class="card profile-card mb-4 text-center">
             <div class="card-body pt-5 pb-4">
-                <img src="/img/bchi.jpg" class="rounded-circle img-fluid shadow-sm mb-3" style="width: 120px; height: 120px; object-fit: cover;" alt="Avatar">
+                <img src="/img/@(string.IsNullOrEmpty(Model.Avatar) ? "default-avatar.png" : Model.Avatar)"
+                     class="rounded-circle img-fluid shadow-sm mb-3"
+                     style="width: 120px; height: 120px; object-fit: cover;"
+                     alt="Avatar của @Model.FullName">
                 <h5 class="font-weight-bold text-dark mb-1">@Model.FullName</h5>
                 <p class="text-muted small mb-4">Tham gia: @Model.CreatedAt.ToString("dd/MM/yyyy")</p>
 

@@ -22,6 +22,11 @@
                         <label class="form-label fw-bold">Lời dặn dò (Hướng điều trị):</label>
                         <textarea class="form-control" name="DoctorNotes" id="DoctorNotes" rows="2" placeholder="Ví dụ: Uống nhiều nước, kiêng đồ lạnh..."></textarea>
                     </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-primary"><i class="fas fa-calendar-check"></i> Ngày tái khám (Nếu có):</label>
+                        <input type="date" class="form-control" name="ReExaminationDate" id="ReExaminationDate" />
+                    </div>
                 </form>
 
                 <div id="alertMessage" class="alert d-none mt-2"></div>
@@ -43,7 +48,7 @@
             Symptoms: document.getElementById('Symptoms').value,
             Diagnosis: document.getElementById('Diagnosis').value,
             DoctorNotes: document.getElementById('DoctorNotes').value,
-            Prescription: "" // Có thể làm thêm form kê thuốc nếu cần
+            ReExaminationDate: document.getElementById('ReExaminationDate').value ? document.getElementById('ReExaminationDate').value : null,
         };
 
         if(!data.Symptoms || !data.Diagnosis) {
