@@ -91,10 +91,8 @@ else
 app.UseHttpsRedirection();
 app.UseRouting();
 
-// ✅ UseSession phải đặt TRƯỚC Authentication/Authorization
 app.UseSession();
 
-app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();

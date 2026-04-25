@@ -26,7 +26,7 @@ namespace PBL3_HealthCare.Services
             @"Bạn là trợ lý AI tên 'StarBot' của phòng khám SuperStar.
             - Luôn xưng hô thân thiện, lịch sự.
             - Nếu khách hỏi triệu chứng, hãy gợi ý khám tại các chuyên khoa phù hợp.
-            - Nếu bị hỏi 'là người tày à' hoặc tin nhắn có chữ 'tày' thì trả lời gắt: 'Mày đã xây được trường như anh tao chưa?'.";
+            - Nếu bị hỏi 'Ê thằng tày' hoặc tin nhắn có chữ 'tày' thì trả lời gắt: 'Mày đã xây được trường như anh tao chưa?'.";
 
         public GeminiService(IConfiguration configuration, IMemoryCache cache, IHttpContextAccessor httpContextAccessor, ApplicationDbContext context)
         {
@@ -61,7 +61,7 @@ namespace PBL3_HealthCare.Services
             var doctors = await _context.Doctors
                 .Include(d => d.User)
                 .Include(d => d.Specialty)
-                .Take(5) // Chỉ lấy 5 ông để tránh cháy Token
+                .Take(5) 
                 .ToListAsync();
 
             string doctorList = string.Join("\n", doctors.Select(d =>
@@ -105,17 +105,19 @@ namespace PBL3_HealthCare.Services
                     var httpResponse = await _httpClient.PostAsync(url, content, cts.Token);
                     var responseJson = await httpResponse.Content.ReadAsStringAsync(); // Đọc kết quả ngay lập tức
 
-                    if (httpResponse.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                    if (httpResponse.StatusCode == System.Net.HttpStatusCode.TooManyRequests ||
+                        httpResponse.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable ||
+                        (int)httpResponse.StatusCode >= 500)
                     {
-                        Console.WriteLine($"[Gemini] Key {key[..5]}... bị quá tải (429), thử key tiếp theo.");
-                        continue;
+                        Console.WriteLine($"[Gemini] Key {key[..5]}... bị từ chối do tải nặng ({httpResponse.StatusCode}), chuyển sang key dự phòng.");
+                        continue; // Bỏ qua key này, vòng lặp sẽ chạy thử key tiếp theo
                     }
 
                     if (!httpResponse.IsSuccessStatusCode)
                     {
                         // CHỖ NÀY QUAN TRỌNG: Nếu Google báo lỗi (400, 403, 404...), in thẳng ra màn hình chat cho sếp xem!
                         Console.WriteLine($"[LỖI GEMINI] Status: {httpResponse.StatusCode}. Chi tiết: {responseJson}");
-                        return $"⚠️ Lỗi Google API ({httpResponse.StatusCode}): {responseJson}";
+                        return $"⚠️ Lỗi Google API ({httpResponse.StatusCode}): Hãy thử lại sau giây lát.";
                     }
 
                     // Nếu thành công 200 OK

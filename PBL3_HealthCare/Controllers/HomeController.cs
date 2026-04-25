@@ -428,7 +428,23 @@ namespace PBL3_HealthCare.Controllers
             if (result.Succeeded)
             {
                 TempData["Success"] = "Đổi mật khẩu thành công!";
-                return RedirectToAction(nameof(Profile));
+
+                // 🔥 KIỂM TRA ROLE ĐỂ TRẢ VỀ ĐÚNG TRANG PROFILE 🔥
+                var roles = await _userManager.GetRolesAsync(user);
+
+                if (roles.Contains("Admin"))
+                {
+                    return RedirectToAction("Profile", "Admin");
+                }
+                else if (roles.Contains("Doctor"))
+                {
+                    return RedirectToAction("Profile", "DoctorPortal");
+                }
+                else
+                {
+                    // Mặc định là Bệnh nhân (Patient)
+                    return RedirectToAction(nameof(Profile), "Home");
+                }
             }
 
             foreach (var error in result.Errors)
@@ -440,22 +456,7 @@ namespace PBL3_HealthCare.Controllers
             return View();
         }
 
-        [HttpGet]
-        public async Task<IActionResult> DoctorProfile()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
-                return RedirectToPage("/Account/Login", new { area = "Identity" });
-
-            var doctor = await _context.Doctors
-                .Include(d => d.Specialty)
-                .Include(d => d.User)
-                .FirstOrDefaultAsync(d => d.UserId == user.Id);
-
-            if (doctor == null) return NotFound();
-
-            return View(doctor);
-        }
+       
 
         public IActionResult Privacy()
         {

@@ -10,6 +10,9 @@ using PBL3_HealthCare.Services;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.IO;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Hosting;
 
 namespace PBL3_HealthCare.Controllers
 {
@@ -24,20 +27,22 @@ namespace PBL3_HealthCare.Controllers
         // 🔥 1. KHAI BÁO THÊM 2 BỘ MÁY PHÁT SÓNG
         private readonly NotificationService _notificationService;
         private readonly IHubContext<NotificationHub> _hubContext;
-
+        private readonly IWebHostEnvironment _webHostEnvironment;
         // 🔥 2. TIÊM VÀO CONSTRUCTOR
         public AdminController(
             ApplicationDbContext context, 
             UserManager<ApplicationUser> userManager, 
             InvoiceService invoiceService,
             NotificationService notificationService,
-            IHubContext<NotificationHub> hubContext)
+            IHubContext<NotificationHub> hubContext,
+            IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
             _userManager = userManager;
             _invoiceService = invoiceService;
             _notificationService = notificationService;
             _hubContext = hubContext;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         // ========================================================
@@ -397,6 +402,60 @@ namespace PBL3_HealthCare.Controllers
                 TempData["Success"] = "Đã phân công nhân sự, tạo Lịch hẹn và Hóa đơn thành công!";
             }
             return RedirectToAction("PendingHomeCare");
+        }
+
+        // ========================================================
+        // 3. QUẢN LÝ HỒ SƠ CÁ NHÂN (ADMIN PROFILE)
+        // ========================================================
+        [HttpGet]
+        public async Task<IActionResult> Profile()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            // Trả thẳng ApplicationUser ra View vì Admin không có bảng riêng như Doctor
+            return View(user);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Profile(string FullName, string Email, string PhoneNumber, string Address, IFormFile AvatarFile)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return NotFound();
+
+            // 1. Cập nhật thông tin cơ bản
+            user.FullName = FullName;
+            user.Email = Email;
+            user.PhoneNumber = PhoneNumber;
+            user.Address = Address;
+
+            // 2. Xử lý ảnh đại diện (Nếu bảng ApplicationUser của sếp có cột lưu tên ảnh, ví dụ: Avatar hoặc Image)
+            // Nếu có, sếp bỏ comment đoạn dưới đây và sửa lại tên thuộc tính cho đúng (user.Avatar)
+            
+            if (AvatarFile != null && AvatarFile.Length > 0)
+            {
+                // Thay vì _webHostEnvironment, sếp có thể tiêm IWebHostEnvironment vào constructor của AdminController
+                // hoặc dùng cách lưu trữ tương tự.
+                string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "img", "admins");
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+                string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(AvatarFile.FileName);
+                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await AvatarFile.CopyToAsync(fileStream);
+                }
+
+                user.Avatar = uniqueFileName; // Gán tên file vào thuộc tính của user
+            }
+            
+
+            await _userManager.UpdateAsync(user);
+
+            TempData["Success"] = "Cập nhật hồ sơ thành công!";
+            return RedirectToAction(nameof(Profile));
         }
     }
 }
