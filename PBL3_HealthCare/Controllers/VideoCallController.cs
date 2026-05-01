@@ -4,7 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PBL3_HealthCare.Data;
 using PBL3_HealthCare.Models;
-using PBL3_HealthCare.ViewModels; // Nhớ check lại namespace này
+using PBL3_HealthCare.ViewModels;
+using PBL3_HealthCare.Services; // 🔥 THÊM DÒNG NÀY ĐỂ GỌI ZEGOTOKENSERVICE
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Linq;
@@ -18,12 +19,19 @@ namespace PBL3_HealthCare.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _configuration;
+        private readonly ZegoTokenService _zegoTokenService; // 🔥 KHAI BÁO SERVICE
 
-        public VideoCallController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IConfiguration configuration)
+        // 🔥 TIÊM SERVICE VÀO CONSTRUCTOR
+        public VideoCallController(
+            ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager,
+            IConfiguration configuration,
+            ZegoTokenService zegoTokenService)
         {
             _context = context;
             _userManager = userManager;
             _configuration = configuration;
+            _zegoTokenService = zegoTokenService;
         }
 
         // =====================================
@@ -68,9 +76,12 @@ namespace PBL3_HealthCare.Controllers
                 await _context.SaveChangesAsync();
             }
 
-            // 🔑 CẤP "CHÌA KHÓA" ZEGOCLOUD CHO FRONTEND
-            ViewBag.AppId = _configuration.GetValue<string>("ZegoCloud:AppId");
-            ViewBag.ServerSecret = _configuration.GetValue<string>("ZegoCloud:ServerSecret");
+            // 🔑 SINH TOKEN BẢO MẬT BẰNG THUẬT TOÁN 3
+            string secureToken = _zegoTokenService.GenerateToken(currentUser.Id, roomId);
+
+            // CẤP DỮ LIỆU CHO FRONTEND (TUYỆT ĐỐI KHÔNG TRUYỀN SERVER SECRET)
+            ViewBag.AppId = _configuration.GetValue<uint>("ZegoCloud:AppId"); // Sửa thành uint cho đúng kiểu AppId
+            ViewBag.ZegoToken = secureToken; // 🔥 TRUYỀN TOKEN ĐÃ MÃ HÓA XUỐNG VIEW
 
             // Phân vai trò rõ ràng
             ViewBag.Role = isDoctor ? "Host" : "Audience";

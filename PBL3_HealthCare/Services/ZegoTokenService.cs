@@ -3,9 +3,10 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Collections.Generic; // Thêm thư viện này để dùng Dictionary
 using Microsoft.Extensions.Configuration;
 
-namespace PBL3_HealthCare.Services // Đổi tên Namespace nếu cần
+namespace PBL3_HealthCare.Services
 {
     public class ZegoTokenService
     {
@@ -32,7 +33,24 @@ namespace PBL3_HealthCare.Services // Đổi tên Namespace nếu cần
             long expireTime = createTime + effectiveTimeInSeconds;
             long nonce = new Random().Next();
 
-            // 2. Tạo gói dữ liệu JSON theo chuẩn cấu trúc của ZegoCloud
+            // 2. TẠO PAYLOAD CẤP QUYỀN VÀO ĐÚNG PHÒNG (ROOM PRIVILEGE)
+            var privilegeDict = new Dictionary<string, int>
+            {
+                { "1", 1 }, // Quyền số 1: Cho phép đăng nhập vào phòng (1 là Cho phép, 0 là Cấm)
+                { "2", 1 }  // Quyền số 2: Cho phép phát luồng âm thanh/hình ảnh
+            };
+
+            var payloadData = new
+            {
+                room_id = roomId, // Ép dính Token này với đúng roomId được truyền vào
+                privilege = privilegeDict,
+                stream_id_list = Array.Empty<string>() // Rỗng = cho phép mọi stream
+            };
+
+            // Ép cục payload này thành chuỗi JSON
+            string payloadJsonStr = JsonSerializer.Serialize(payloadData);
+
+            // 3. Tạo gói dữ liệu JSON tổng theo chuẩn ZegoCloud
             var tokenInfo = new
             {
                 app_id = appId,
@@ -40,19 +58,19 @@ namespace PBL3_HealthCare.Services // Đổi tên Namespace nếu cần
                 nonce = nonce,
                 ctime = createTime,
                 expire = expireTime,
-                payload = "" // Không dùng cho project cơ bản
+                payload = payloadJsonStr // Gắn chuỗi quyền vào đây!
             };
 
             string jsonBody = JsonSerializer.Serialize(tokenInfo);
             byte[] plaintext = Encoding.UTF8.GetBytes(jsonBody);
 
-            // 3. Tạo 16 bytes ngẫu nhiên làm Vector Khởi tạo (IV)
+            // 4. Tạo 16 bytes ngẫu nhiên làm Vector Khởi tạo (IV)
             string ivStr = Guid.NewGuid().ToString("N").Substring(0, 16);
             byte[] iv = Encoding.UTF8.GetBytes(ivStr);
             byte[] key = Encoding.UTF8.GetBytes(serverSecret);
             byte[] ciphertext;
 
-            // 4. Mã hóa AES-256-CBC
+            // 5. Mã hóa AES-256-CBC
             using (Aes aes = Aes.Create())
             {
                 aes.Key = key;
@@ -72,33 +90,28 @@ namespace PBL3_HealthCare.Services // Đổi tên Namespace nếu cần
                 }
             }
 
-            // 5. Đóng gói dữ liệu thành Byte Array theo chuẩn Big-Endian
+            // 6. Đóng gói dữ liệu thành Byte Array theo chuẩn Big-Endian
             using (var ms = new MemoryStream())
             {
-                // Thời gian hết hạn (8 bytes)
                 byte[] expireBytes = BitConverter.GetBytes(expireTime);
                 if (BitConverter.IsLittleEndian) Array.Reverse(expireBytes);
                 ms.Write(expireBytes, 0, expireBytes.Length);
 
-                // Độ dài IV (2 bytes)
                 byte[] ivLenBytes = BitConverter.GetBytes((ushort)iv.Length);
                 if (BitConverter.IsLittleEndian) Array.Reverse(ivLenBytes);
                 ms.Write(ivLenBytes, 0, ivLenBytes.Length);
 
-                // IV (16 bytes)
                 ms.Write(iv, 0, iv.Length);
 
-                // Độ dài bản mã (2 bytes)
                 byte[] cipherLenBytes = BitConverter.GetBytes((ushort)ciphertext.Length);
                 if (BitConverter.IsLittleEndian) Array.Reverse(cipherLenBytes);
                 ms.Write(cipherLenBytes, 0, cipherLenBytes.Length);
 
-                // Bản mã
                 ms.Write(ciphertext, 0, ciphertext.Length);
 
                 byte[] assembledBytes = ms.ToArray();
 
-                // 6. Trả về Token hoàn chỉnh (Bắt đầu bằng "04" + Encode Base64)
+                // 7. Trả về Token hoàn chỉnh
                 return "04" + Convert.ToBase64String(assembledBytes);
             }
         }
