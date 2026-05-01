@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="~/mediplus-master/css/icomoon.css">
     <link rel="stylesheet" href="~/css/site.css">
     <link rel="stylesheet" href="~/mediplus-master/css/style.css">
-    @await RenderSectionAsync("Styles", required: false)    @* ← chuyển lên đây *@
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
     <!-- TOP BAR -->
@@ -184,6 +184,8 @@
             <div class="collapse navbar-collapse" id="ftco-nav">
                 <ul class="navbar-nav ml-auto">
                     <li class="nav-item"><a href="#home-section" class="nav-link">Trang chủ</a></li>
+                    @* 🔥 CHỈ THÊM DỊCH VỤ VÀO ĐÂY, GIỮ NGUYÊN href CŨ ĐỂ CUỘN CHO MƯỢT 🔥 *@
+                    <li class="nav-item"><a href="#services-section" class="nav-link">Dịch vụ</a></li>
                     <li class="nav-item"><a href="#about-section" class="nav-link">Giới thiệu</a></li>
                     <li class="nav-item"><a href="#department-section" class="nav-link">Khoa</a></li>
                     <li class="nav-item"><a href="#doctor-section" class="nav-link">Bác sĩ</a></li>
@@ -238,6 +240,8 @@
                         <h2 style="font-size:.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:1.1rem;">Liên kết</h2>
                         <ul class="list-unstyled" style="margin:0;padding:0;">
                             <li style="margin-bottom:.45rem;"><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><a href="#home-section" style="color:rgba(255,255,255,.65);font-size:.83rem;text-decoration:none;">Trang chủ</a></li>
+                            @* 🔥 THÊM LINK DỊCH VỤ VÀO ĐÂY NỮA LÀ ĐẸP 🔥 *@
+                            <li style="margin-bottom:.45rem;"><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><a href="#services-section" style="color:rgba(255,255,255,.65);font-size:.83rem;text-decoration:none;">Dịch vụ</a></li>
                             <li style="margin-bottom:.45rem;"><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><a href="#about-section" style="color:rgba(255,255,255,.65);font-size:.83rem;text-decoration:none;">Giới thiệu</a></li>
                             <li style="margin-bottom:.45rem;"><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><a href="#department-section" style="color:rgba(255,255,255,.65);font-size:.83rem;text-decoration:none;">Khoa</a></li>
                             <li style="margin-bottom:.45rem;"><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><a href="#doctor-section" style="color:rgba(255,255,255,.65);font-size:.83rem;text-decoration:none;">Bác sĩ</a></li>
@@ -314,7 +318,7 @@
     <script src="~/mediplus-master/js/jquery.animateNumber.min.js"></script>
     <script src="~/mediplus-master/js/scrollax.min.js"></script>
     <script src="~/mediplus-master/js/main.js"></script>
-    @await RenderSectionAsync("Scripts", required: false)   @* ← thêm dòng này *@
+    @await RenderSectionAsync("Scripts", required: false)
 
     @if (TempData["Success"] != null)
     {
