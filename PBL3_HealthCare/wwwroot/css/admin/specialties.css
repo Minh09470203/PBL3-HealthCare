@@ -127,7 +127,7 @@ table.dataTable tbody tr:last-child td {
     background: #ffe3e3;
     color: #c92a2a;
 }
-
+/* fix build action */
 .btn-action-delete {
     background: #ffe3e3;
     color: #a61e1e;
