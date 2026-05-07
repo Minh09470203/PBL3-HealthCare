@@ -69,6 +69,18 @@ namespace PBL3_HealthCare.Controllers
                 return isDoctor ? RedirectToAction("DoctorDashboard", "Home") : RedirectToAction("MyHistory", "Home");
             }
 
+            // ✅ CHẶN 3 (MỚI): PHÒNG ĐÃ ĐÓNG — Sau 45 phút kể từ giờ khám chính thức
+            // Ví dụ: Đặt lịch 9:00 → Phòng đóng lúc 9:45
+            DateTime closeTime = appointmentTime.AddMinutes(45);
+            if (DateTime.Now > closeTime)
+            {
+                TempData["Error"] = $"Phiên khám đã kết thúc lúc {closeTime:HH:mm}. " +
+                                    $"Vui lòng đặt lịch mới nếu cần tư vấn thêm.";
+                return isDoctor
+                    ? RedirectToAction("Index", "DoctorPortal")
+                    : RedirectToAction("MyHistory", "Home");
+            }
+
             // Đổi trạng thái sang InProgress nếu chưa đổi
             if (appointment.CallStatus == CallStatus.Pending)
             {

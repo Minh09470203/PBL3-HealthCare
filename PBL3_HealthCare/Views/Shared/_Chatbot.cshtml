@@ -1,14 +1,19 @@
-﻿<link rel="stylesheet" href="~/css/home/chatbot.css" />
+﻿@{
+    bool isAuth = User.Identity?.IsAuthenticated ?? false;
+    string uid = User.FindFirst(
+        System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
+}
+<link rel="stylesheet" href="~/css/home/chatbot.css" />
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-@* Preview bubble — tự hiện sau 3 giây, tự mất sau 5 giây *@
+@* Preview bubble *@
 <div class="chatbot-preview-bubble" id="preview-bubble">
     <button class="bubble-close" onclick="dismissBubble()" title="Đóng">×</button>
     <div class="bubble-name">🤖 Trợ lý AI SuperStar</div>
     Xin chào! Tôi có thể giúp bạn đặt lịch khám hoặc tư vấn sức khỏe.
 </div>
 
-@* Toggle button với pulse + online dot *@
+@* Toggle button *@
 <button class="chatbot-toggler" onclick="toggleChatbot()" title="Trợ lý AI">
     <span class="online-dot"></span>
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -18,11 +23,13 @@
     </svg>
 </button>
 
-@* Chatbot window — giữ nguyên toàn bộ HTML gốc *@
+@* Chatbot window *@
 <div class="chatbot-window" id="chatbot-window">
+
+    @* Header *@
     <div class="chatbot-header">
         <div class="chatbot-header-avatar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z" />
                 <circle cx="9" cy="14" r="1.2" fill="#fff" stroke="none" />
                 <circle cx="15" cy="14" r="1.2" fill="#fff" stroke="none" />
@@ -32,12 +39,21 @@
             <p class="name">Trợ lý AI Y Tế</p>
             <p class="status"><span class="status-dot"></span> Đang hoạt động</p>
         </div>
-        <button class="btn-header-action" onclick="clearChatHistory()" title="Bắt đầu đoạn chat mới">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                <path d="M3 3v5h5" />
-            </svg>
-        </button>
+        @if (isAuth)
+        {
+            <button class="btn-header-action" onclick="showSessions()" title="Lịch sử trò chuyện">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                </svg>
+            </button>
+            <button class="btn-header-action" onclick="newSession()" title="Cuộc trò chuyện mới">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                    <path d="M3 3v5h5" />
+                </svg>
+            </button>
+        }
         <button class="btn-header-action" onclick="toggleFullscreen()" id="btn-fullscreen" title="Phóng to">
             <svg id="icon-maximize" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="15 3 21 3 21 9" />
@@ -53,132 +69,216 @@
             </svg>
         </button>
         <button class="btn-header-action" onclick="document.body.classList.remove('show-chatbot')" title="Đóng">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <line x1="18" y1="6" x2="6" y2="18" />
                 <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
         </button>
     </div>
 
-    <div class="chatbot-body" id="chatbot-body">
-        <div class="msg-ai">
-            <div class="msg-ai-icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z" />
-                    <circle cx="9" cy="14" r="1.2" fill="#fff" stroke="none" />
-                    <circle cx="15" cy="14" r="1.2" fill="#fff" stroke="none" />
+    @if (!isAuth)
+    {
+        @* ── AUTH GATE ── *@
+        <div class="chatbot-auth-gate">
+            <div class="auth-gate-icon">🔒</div>
+            <h3>Đăng nhập để tiếp tục</h3>
+            <p>Vui lòng đăng nhập để sử dụng trợ lý AI và lưu lại lịch sử tư vấn của bạn.</p>
+            <a href="/Identity/Account/Login?ReturnUrl=/" class="btn-login-gate">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                    <polyline points="10 17 15 12 10 7" />
+                    <line x1="15" y1="12" x2="3" y2="12" />
                 </svg>
+                Đăng nhập ngay
+            </a>
+            <p class="auth-note">
+                Chưa có tài khoản?
+                <a href="/Identity/Account/Register">Đăng ký miễn phí</a>
+            </p>
+        </div>
+    }
+    else
+    {
+        @* ── SESSION SIDEBAR(ẩn mặc định) ── *@
+        <div class="session-sidebar" id="session-sidebar">
+            <div class="session-sidebar-header">
+                <span>Lịch sử trò chuyện</span>
+                <button onclick="hideSessions()">×</button>
             </div>
-            <div>
-                <div class="msg-ai-bubble">
-                    Xin chào! Tôi là trợ lý AI của <strong>Phòng Khám SuperStar</strong>. Bạn cần hỗ trợ gì ạ?
+            <button class="btn-new-session" onclick="newSession()">
+                + Cuộc trò chuyện mới
+            </button>
+            <div class="session-list" id="session-list">
+                <div class="session-loading">Đang tải...</div>
+            </div>
+        </div>
+
+        @* ── CHAT BODY ── *@
+        <div class="chatbot-body" id="chatbot-body">
+            <div class="msg-ai">
+                <div class="msg-ai-icon">
+                    @* ĐÃ SỬA: Phục hồi Icon Robot cho tin nhắn chào mừng *@
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z" />
+                        <circle cx="9" cy="14" r="1.2" fill="#fff" stroke="none" />
+                        <circle cx="15" cy="14" r="1.2" fill="#fff" stroke="none" />
+                    </svg>
                 </div>
-                <div class="suggest-chips">
-                    <span class="suggest-chip" onclick="sendSuggest('Đặt lịch khám')">Đặt lịch khám</span>
-                    <span class="suggest-chip" onclick="sendSuggest('Hỏi triệu chứng')">Hỏi triệu chứng</span>
-                    <span class="suggest-chip" onclick="sendSuggest('Tra cứu bác sĩ')">Tra cứu bác sĩ</span>
+                <div>
+                    <div class="msg-ai-bubble">
+                        Xin chào! Tôi là trợ lý AI của
+                        <strong>Phòng Khám SuperStar</strong>.
+                        Bạn cần hỗ trợ gì ạ?
+                    </div>
+                    <div class="suggest-chips">
+                        <span class="suggest-chip" onclick="sendSuggest('Đặt lịch khám')">
+                            Đặt lịch khám
+                        </span>
+                        <span class="suggest-chip" onclick="sendSuggest('Hỏi triệu chứng')">
+                            Hỏi triệu chứng
+                        </span>
+                        <span class="suggest-chip" onclick="sendSuggest('Tra cứu bác sĩ')">
+                            Tra cứu bác sĩ
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="chatbot-footer">
-        <input type="text" id="chatbot-input" placeholder="Nhập câu hỏi của bạn..." onkeydown="if(event.key==='Enter') sendMessage()" />
-        <button class="btn-send" id="chatbot-send-btn" onclick="sendMessage()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="22" y1="2" x2="11" y2="13" />
-                <polygon points="22 2 15 22 11 13 2 9 22 2" />
-            </svg>
-        </button>
-    </div>
+        @* ── FOOTER ── *@
+        <div class="chatbot-footer">
+            <input type="text" id="chatbot-input"
+                   placeholder="Nhập câu hỏi của bạn..."
+                   onkeydown="if(event.key==='Enter') sendMessage()" />
+            <button class="btn-send" id="chatbot-send-btn" onclick="sendMessage()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                     stroke="#fff" stroke-width="2.2">
+                    <line x1="22" y1="2" x2="11" y2="13" />
+                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                </svg>
+            </button>
+        </div>
+    }
 </div>
 
 <script>
+    const IS_AUTH     = @(isAuth ? "true" : "false");
+    const CURRENT_UID = "@uid";
+
+    // ── Biến trạng thái ──────────────────────────────────────────
     const chatBody   = document.getElementById('chatbot-body');
     const chatInput  = document.getElementById('chatbot-input');
     const chatWindow = document.getElementById('chatbot-window');
     const btnSend    = document.getElementById('chatbot-send-btn');
     let isAITyping   = false;
+    let currentSessionId = getCookie('chatSessionId') || null;
 
-    const robotIconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/>
+    // ── Robot SVG ───────────────────────────────────────────────
+    const robotIconSvg = `<svg width="14" height="14" viewBox="0 0 24 24"
+        fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round">
+        <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1
+         a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1
+         H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73
+         c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/>
         <circle cx="9" cy="14" r="1.2" fill="#fff" stroke="none"/>
         <circle cx="15" cy="14" r="1.2" fill="#fff" stroke="none"/>
     </svg>`;
 
-    let bubbleDismissed = false; // Cờ đánh dấu: Khách chê, không thèm nhìn
+    // ── Cookie helper ────────────────────────────────────────────
+    function getCookie(name) {
+        const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+        return v ? v[2] : null;
+    }
 
-        function showPreviewBubble() {
-            // Nếu khách đã tự tay bấm X, hoặc khung chat đang mở -> Tuyệt đối không làm phiền
-            if (bubbleDismissed || document.body.classList.contains('show-chatbot')) return;
+    // ── Preview bubble ───────────────────────────────────────────
+    let bubbleDismissed = false;
+    function showPreviewBubble() {
+        if (bubbleDismissed || document.body.classList.contains('show-chatbot')) return;
+        const bubble = document.getElementById('preview-bubble');
+        bubble.classList.add('visible');
+        setTimeout(() => bubble.classList.remove('visible'), 5000);
+    }
+    function dismissBubble() {
+        bubbleDismissed = true;
+        document.getElementById('preview-bubble').classList.remove('visible');
+    }
+    setTimeout(showPreviewBubble, 5000);
+    setInterval(showPreviewBubble, 20000);
 
-            const bubble = document.getElementById('preview-bubble');
-            bubble.classList.add('visible');
-
-            // Tự động mờ đi sau 5 giây (Nhưng KHÔNG khóa vĩnh viễn)
-            setTimeout(() => {
-                if (bubble.classList.contains('visible')) {
-                    bubble.classList.remove('visible');
-                }
-            }, 5000); // 5000ms = 5 giây
-        }
-
-        function dismissBubble() {
-            bubbleDismissed = true; // Khóa vĩnh viễn không bao giờ hiện lại
-            document.getElementById('preview-bubble').classList.remove('visible');
-        }
-        setTimeout(showPreviewBubble, 5000);
-
-        setInterval(showPreviewBubble, 20000);
-
-    // ── Toggle chatbot: ẩn bubble khi mở chat ──
+    // ── Toggle chatbot ───────────────────────────────────────────
     function toggleChatbot() {
         document.body.classList.toggle('show-chatbot');
-        // Ẩn bubble khi người dùng click nút
         dismissBubble();
+        // Load lại messages khi mở nếu đã đăng nhập
+        if (IS_AUTH && document.body.classList.contains('show-chatbot')) {
+            loadCurrentSession();
+        }
     }
 
+    // ── Fullscreen ───────────────────────────────────────────────
     function toggleFullscreen() {
-        const isNowFullscreen = chatWindow.classList.toggle('is-fullscreen');
-        document.getElementById('icon-maximize').style.display = isNowFullscreen ? 'none' : 'block';
-        document.getElementById('icon-minimize').style.display = isNowFullscreen ? 'block' : 'none';
-        document.getElementById('btn-fullscreen').title = isNowFullscreen ? 'Thu nhỏ' : 'Phóng to';
-        setTimeout(() => { chatBody.scrollTop = chatBody.scrollHeight; }, 350);
+        const isNow = chatWindow.classList.toggle('is-fullscreen');
+        document.getElementById('icon-maximize').style.display = isNow ? 'none' : 'block';
+        document.getElementById('icon-minimize').style.display = isNow ? 'block' : 'none';
+        setTimeout(() => { if(chatBody) chatBody.scrollTop = chatBody.scrollHeight; }, 350);
     }
 
+    // ── Lock UI khi AI đang gõ ───────────────────────────────────
     function toggleLockUI(isLocked) {
         isAITyping = isLocked;
+        if (!chatInput || !btnSend) return;
         chatInput.disabled = isLocked;
         btnSend.disabled   = isLocked;
         chatInput.style.opacity = isLocked ? '0.6' : '1';
-        document.querySelectorAll('.suggest-chip').forEach(chip => {
-            chip.style.opacity       = isLocked ? '0.5' : '1';
-            chip.style.pointerEvents = isLocked ? 'none' : 'auto';
+        document.querySelectorAll('.suggest-chip').forEach(c => {
+            c.style.opacity = isLocked ? '0.5' : '1';
+            c.style.pointerEvents = isLocked ? 'none' : 'auto';
         });
         if (!isLocked) chatInput.focus();
     }
 
+    // ── Render message ───────────────────────────────────────────
     function appendMsg(text, isUser) {
+        if (!chatBody) return;
         const msgDiv = document.createElement('div');
         msgDiv.className = isUser ? 'msg-user' : 'msg-ai';
+
         if (isUser) {
             msgDiv.innerHTML = `<div class="msg-user-bubble"></div>`;
             msgDiv.querySelector('.msg-user-bubble').textContent = text;
         } else {
-            let htmlText = typeof marked !== 'undefined' ? marked.parse(text) : text;
-            let finalText = htmlText.replace(/\[BOOKING:(\d+)\|([^\|\]]+)(?:\|([^\]]+))?\]/g, function(match, doctorId, doctorName, doctorImg) {
-                const defaultAvatar = 'https://cdn-icons-png.flaticon.com/512/3774/3774299.png';
-                let imgSrc = doctorImg ? doctorImg.trim() : '';
-                if (!imgSrc || imgSrc === 'null') { imgSrc = defaultAvatar; }
-                else { imgSrc = '/img/doctors/' + imgSrc.split('/').pop(); }
-                let cleanName = doctorName.replace(/(BS\.?|Bác sĩ)\s*/gi, '').trim();
-                return `<div class="doctor-suggestion-card mt-2 mb-2" style="background:#fff;border-radius:10px;border:1px solid #dee2e6;display:flex;align-items:center;gap:10px;padding:10px;box-shadow:0 2px 4px rgba(0,0,0,.05);">
-                    <img src="${imgSrc}" onerror="this.onerror=null;this.src='${defaultAvatar}';" alt="${cleanName}" style="width:45px;height:45px;border-radius:50%;object-fit:cover;border:1px solid #3B5BDB;">
-                    <div style="flex:1;"><div style="font-size:13px;font-weight:bold;color:#333;">BS. ${cleanName}</div>
-                    <a href="/Home/DoctorInfo/${doctorId}" style="font-size:11px;color:#3B5BDB;text-decoration:none;font-weight:600;"><i class="fas fa-calendar-alt"></i> Xem lịch & Đặt ngay</a></div></div>`;
-            });
-            msgDiv.innerHTML = `<div class="msg-ai-icon">${robotIconSvg}</div><div class="msg-ai-bubble" style="width:100%;">${finalText}</div>`;
+            let html = typeof marked !== 'undefined' ? marked.parse(text) : text;
+
+            // Xử lý card Bác sĩ (ĐÃ PHỤC HỒI CSS ÉP KÍCH THƯỚC ẢNH)
+            html = html.replace(
+                /\[BOOKING:(\d+)\|([^\|\]]+)(?:\|([^\]]+))?\]/g,
+                (_, id, name, img) => {
+                    const def = 'https://cdn-icons-png.flaticon.com/512/3774/3774299.png';
+                    let src = (img && img !== 'null') ? '/img/doctors/' + img.trim().split('/').pop() : def;
+                    let cleanName = name.replace(/(BS\.?|Bác sĩ)\s*/gi,'').trim();
+
+                    return `<div class="doctor-suggestion-card mt-2 mb-2" style="background:#fff;border-radius:10px;border:1px solid #dee2e6;display:flex;align-items:center;gap:12px;padding:10px;box-shadow:0 2px 8px rgba(0,0,0,.04);">
+                        <img src="${src}" onerror="this.onerror=null;this.src='${def}';" alt="${cleanName}" style="width:45px;height:45px;border-radius:50%;object-fit:cover;border:1px solid #3B5BDB;flex-shrink:0;">
+                        <div style="flex:1;">
+                            <div style="font-size:13px;font-weight:bold;color:#333;margin-bottom:4px;">BS. ${cleanName}</div>
+                            <a href="/Home/DoctorInfo/${id}" style="font-size:11px;color:#3B5BDB;text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:4px;">
+                                📅 Xem lịch & Đặt ngay
+                            </a>
+                        </div>
+                    </div>`;
+                }
+            );
+
+            // Bổ sung luôn xử lý 3 dịch vụ mở rộng (Gói khám, Tiêm chủng, Tại nhà) - Không dùng ảnh cho gọn
+            html = html.replace(/\[PACKAGE:(\d+)\|([^\]]+)\]/g, (_, id, name) => `<div class="doctor-suggestion-card mt-2 mb-2" style="background:#fff;border-radius:10px;border:1px solid #dee2e6;display:flex;align-items:center;gap:12px;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,.04);"><div style="flex:1;"><div style="font-size:10px;color:#858796;font-weight:800;text-transform:uppercase;">Gói khám</div><div style="font-size:13px;font-weight:bold;color:#333;margin-bottom:4px;">${name}</div><a href="/Home/PackageInfo/${id}" style="font-size:11px;color:#36b9cc;text-decoration:none;font-weight:600;">📅 Đặt lịch ngay</a></div></div>`)
+                       .replace(/\[VACCINE:(\d+)\|([^\]]+)\]/g, (_, id, name) => `<div class="doctor-suggestion-card mt-2 mb-2" style="background:#fff;border-radius:10px;border:1px solid #dee2e6;display:flex;align-items:center;gap:12px;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,.04);"><div style="flex:1;"><div style="font-size:10px;color:#858796;font-weight:800;text-transform:uppercase;">Tiêm chủng</div><div style="font-size:13px;font-weight:bold;color:#333;margin-bottom:4px;">${name}</div><a href="/Home/VaccineInfo/${id}" style="font-size:11px;color:#f6c23e;text-decoration:none;font-weight:600;">📅 Đặt lịch ngay</a></div></div>`)
+                       .replace(/\[HOMESERVICE:(\d+)\|([^\]]+)\]/g, (_, id, name) => `<div class="doctor-suggestion-card mt-2 mb-2" style="background:#fff;border-radius:10px;border:1px solid #dee2e6;display:flex;align-items:center;gap:12px;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,.04);"><div style="flex:1;"><div style="font-size:10px;color:#858796;font-weight:800;text-transform:uppercase;">Tại nhà</div><div style="font-size:13px;font-weight:bold;color:#333;margin-bottom:4px;">${name}</div><a href="/Home/HomeServiceInfo/${id}" style="font-size:11px;color:#e74a3b;text-decoration:none;font-weight:600;">📅 Đặt lịch ngay</a></div></div>`);
+
+            msgDiv.innerHTML = `
+                <div class="msg-ai-icon">${robotIconSvg}</div>
+                <div class="msg-ai-bubble" style="width:100%;">${html}</div>`;
         }
+
         chatBody.appendChild(msgDiv);
         chatBody.scrollTop = chatBody.scrollHeight;
     }
@@ -188,15 +288,18 @@
         div.className = 'msg-ai typing-container';
         div.innerHTML = `<div class="msg-ai-icon">${robotIconSvg}</div>
             <div class="typing-indicator">
-                <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
             </div>`;
         chatBody.appendChild(div);
         chatBody.scrollTop = chatBody.scrollHeight;
         return div;
     }
 
+    // ── Gửi tin nhắn ─────────────────────────────────────────────
     function sendMessage() {
-        if (isAITyping) return;
+        if (isAITyping || !IS_AUTH) return;
         const text = chatInput.value.trim();
         if (!text) return;
         chatInput.value = '';
@@ -205,34 +308,126 @@
         toggleLockUI(true);
         $.ajax({
             url: '/Chat/AskAI', type: 'POST', data: { message: text },
-            success: function(response) {
+            success: function(res) {
                 typingEl.remove();
-                appendMsg(response.data || response, false);
+                appendMsg(res.data || res, false);
+                // Reload session list để cập nhật tiêu đề
+                refreshSessionList();
+                // Cập nhật sessionId từ cookie (server set sau AskAI)
+                currentSessionId = getCookie('chatSessionId');
             },
-            error: function(xhr) {
+            error: function() {
                 typingEl.remove();
-                console.error("Chi tiết lỗi:", xhr.responseText);
-                appendMsg("Mất kết nối với máy chủ AI rồi sếp ơi! Kiểm tra Console để xem chi tiết.", false);
+                appendMsg("Mất kết nối với máy chủ AI. Vui lòng thử lại.", false);
             },
             complete: function() { toggleLockUI(false); }
         });
     }
 
     function sendSuggest(text) {
-        if (isAITyping) return;
+        if (isAITyping || !IS_AUTH) return;
         chatInput.value = text;
         sendMessage();
     }
 
-    function clearChatHistory() {
-        $.ajax({
-            url: '/Chat/ResetChat', type: 'POST',
-            success: function(response) {
-                if (response.success) {
-                    chatBody.innerHTML = '';
-                    appendMsg("Trí nhớ của tôi đã được dọn dẹp! Chào mừng bạn đến với ca tư vấn mới. Bạn cần hỗ trợ gì ạ?", false);
-                }
-            }
+    // ── Session management ────────────────────────────────────────
+    function loadCurrentSession() {
+        if (!currentSessionId || !chatBody) return;
+        // Xóa welcome message mặc định trước khi load
+        $.get('/Chat/GetMessages?sessionId=' + currentSessionId, function(msgs) {
+            if (!msgs || msgs.length === 0) return;
+            // Có messages → clear rồi render lại
+            chatBody.innerHTML = '';
+            msgs.forEach(m => appendMsg(m.content, m.role === 'user'));
         });
+    }
+
+    function showSessions() {
+        document.getElementById('session-sidebar').classList.add('visible');
+        refreshSessionList();
+    }
+
+    function hideSessions() {
+        document.getElementById('session-sidebar').classList.remove('visible');
+    }
+
+    function refreshSessionList() {
+        const list = document.getElementById('session-list');
+        if (!list) return;
+        $.get('/Chat/GetSessions', function(sessions) {
+            if (!sessions || sessions.length === 0) {
+                list.innerHTML = '<div class="session-empty">Chưa có cuộc trò chuyện nào.</div>';
+                return;
+            }
+            list.innerHTML = sessions.map(s => `
+                <div class="session-item ${s.id === currentSessionId ? 'active' : ''}"
+                     onclick="loadSession('${s.id}', this)">
+                    <div class="session-title">${s.title}</div>
+                    <div class="session-meta">${formatTime(s.time)}</div>
+                </div>
+            `).join('');
+        });
+    }
+
+    function loadSession(sessionId, el) {
+        currentSessionId = sessionId;
+        document.querySelectorAll('.session-item').forEach(i => i.classList.remove('active'));
+        el.classList.add('active');
+        hideSessions();
+
+        // Load messages của session đó
+        $.get('/Chat/GetMessages?sessionId=' + sessionId, function(msgs) {
+            chatBody.innerHTML = '';
+            if (!msgs || msgs.length === 0) {
+                chatBody.innerHTML = '<div class="session-empty-msg">Chưa có tin nhắn.</div>';
+                return;
+            }
+            msgs.forEach(m => appendMsg(m.content, m.role === 'user'));
+        });
+
+        // Gọi server để switch session (reset Gemini context)
+        $.post('/Chat/SwitchSession', { sessionId: sessionId });
+    }
+
+    function newSession() {
+        // Xóa cookie để tạo session mới
+        document.cookie = 'chatSessionId=; Max-Age=0; path=/';
+        currentSessionId = null;
+        hideSessions();
+        // Reset về welcome screen
+        chatBody.innerHTML = `
+            <div class="msg-ai">
+                <div class="msg-ai-icon">${robotIconSvg}</div>
+                <div>
+                    <div class="msg-ai-bubble">
+                        Xin chào! Tôi là trợ lý AI của
+                        <strong>Phòng Khám SuperStar</strong>.
+                        Bạn cần hỗ trợ gì ạ?
+                    </div>
+                    <div class="suggest-chips">
+                        <span class="suggest-chip" onclick="sendSuggest('Đặt lịch khám')">Đặt lịch khám</span>
+                        <span class="suggest-chip" onclick="sendSuggest('Hỏi triệu chứng')">Hỏi triệu chứng</span>
+                        <span class="suggest-chip" onclick="sendSuggest('Tra cứu bác sĩ')">Tra cứu bác sĩ</span>
+                    </div>
+                </div>
+            </div>`;
+        // Reset Gemini context trên server
+        $.post('/Chat/ResetChat');
+    }
+
+    function formatTime(timeStr) {
+        const d = new Date(timeStr);
+        const now = new Date();
+        const diff = now - d;
+        if (diff < 60000) return 'Vừa xong';
+        if (diff < 3600000) return Math.floor(diff/60000) + ' phút trước';
+        if (diff < 86400000) return Math.floor(diff/3600000) + ' giờ trước';
+        return d.toLocaleDateString('vi-VN');
+    }
+
+    // ── Tự load session hiện tại khi trang load ──────────────────
+    if (IS_AUTH && currentSessionId) {
+        // Delay nhỏ để DOM ready
+        setTimeout(loadCurrentSession, 300);
     }
 </script>

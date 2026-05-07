@@ -44,8 +44,8 @@
         const userName = "@Html.Raw(ViewBag.UserName)";
         const role = "@ViewBag.Role"; // "Host" (Bác sĩ) hoặc "Audience" (Bệnh nhân)
 
-        // 🔥 NHẬN TOKEN ĐÃ MÃ HÓA TỪ SERVER (Không còn ServerSecret)
-        const serverGeneratedToken = "@ViewBag.ZegoToken";
+        // 🔥 NHẬN TOKEN ĐÃ MÃ HÓA TỪ SERVER 
+        const serverGeneratedToken = "@Html.Raw(ViewBag.ZegoToken)";
 
         // 🔥 DÙNG HÀM PRODUCTION CỦA ZEGOCLOUD (Truyền Token vào tham số thứ 2)
         const kitToken = ZegoUIKitPrebuilt.generateKitTokenForProduction(
