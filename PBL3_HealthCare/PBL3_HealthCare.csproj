@@ -8,26 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="wwwroot\css\home\home.css" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="wwwroot\css\home\home.css" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="9.0.8" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.0.11" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.12" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="9.0.12" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.12" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.12" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.12">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.12" />
-    <PackageReference Include="Mscc.GenerativeAI" Version="3.1.0" />
-  </ItemGroup>
+    </ItemGroup>
 
 </Project>
