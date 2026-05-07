@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Authentication.Google;
-using Microsoft.AspNetCore.HttpOverrides; // 👉 THÊM DÒNG NÀY CHO NGROK (1)
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PBL3_HealthCare.Data;
-using PBL3_HealthCare.Hubs; // 🔥 1. THÊM DÒNG NÀY ĐỂ GỌI THƯ MỤC HUBS
 using PBL3_HealthCare.Models;
 using PBL3_HealthCare.Services;
+using PBL3_HealthCare.Hubs; // 🔥 1. THÊM DÒNG NÀY ĐỂ GỌI THƯ MỤC HUBS
+using Microsoft.AspNetCore.HttpOverrides; // 👉 THÊM DÒNG NÀY CHO NGROK (1)
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -67,10 +67,6 @@ app.UseForwardedHeaders(forwardedHeadersOptions);
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    var context = services.GetRequiredService<ApplicationDbContext>();
-
-    // 3. Bây giờ mới chạy lệnh Migrate được
-    context.Database.Migrate();
     try
     {
         await DbSeeder.SeedDataAsync(services);
