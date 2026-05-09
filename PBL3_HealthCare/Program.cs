@@ -2,8 +2,9 @@ using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.HttpOverrides; // ✅ 1. THÊM THƯ VIỆN NÀY
 using PBL3_HealthCare.Data;
-using PBL3_HealthCare.Hubs; // 🔥 1. THÊM DÒNG NÀY ĐỂ GỌI THƯ MỤC HUBS
+using PBL3_HealthCare.Hubs;
 using PBL3_HealthCare.Models;
 using PBL3_HealthCare.Services;
 
@@ -24,6 +25,15 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
+// ✅ 2. THÊM ĐOẠN NÀY: CẤU HÌNH NHẬN DIỆN HTTPS TỪ PROXY CỦA RENDER
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    // Xóa rào cản IP proxy vì Render dùng IP động, không clear là nó chặn
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = IdentityConstants.ApplicationScheme;
@@ -34,12 +44,11 @@ builder.Services.AddAuthentication(options =>
     IConfigurationSection googleAuthNSection = builder.Configuration.GetSection("Authentication:Google");
     options.ClientId = googleAuthNSection["ClientId"];
     options.ClientSecret = googleAuthNSection["ClientSecret"];
-    // ✅ THÊM: Fix cookie trên môi trường HTTPS proxy
-    options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.None; // ← ĐỔI Always → None
-    options.CorrelationCookie.SameSite = SameSiteMode.Lax;        // ← ĐỔI None → Lax
+    // ✅ Fix cookie trên môi trường HTTPS proxy
+    options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.None;
+    options.CorrelationCookie.SameSite = SameSiteMode.Lax;
     options.CorrelationCookie.HttpOnly = true;
 });
-
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<EmailService>();
@@ -58,10 +67,10 @@ builder.Services.AddSession(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<GeminiService>();
 
-// 🔥 2. THÊM DÒNG NÀY: KHỞI ĐỘNG DỊCH VỤ SIGNALR LÊN SERVER
+// 🔥 KHỞI ĐỘNG DỊCH VỤ SIGNALR LÊN SERVER
 builder.Services.AddSignalR();
 
-// ✅ THÊM: Fix Data Protection cho môi trường deploy (Fix theo Claude cho Render)
+// ✅ Fix Data Protection cho môi trường deploy
 var isDevelopment = builder.Environment.IsDevelopment();
 var keysPath = isDevelopment
     ? Path.Combine(builder.Environment.ContentRootPath, "DataProtection-Keys")
@@ -73,6 +82,8 @@ builder.Services.AddDataProtection()
 
 var app = builder.Build();
 
+// ✅ 3. THÊM DÒNG NÀY: KÍCH HOẠT NHẬN DIỆN HTTPS (Bắt buộc phải nằm ngay sau Build)
+app.UseForwardedHeaders();
 
 using (var scope = app.Services.CreateScope())
 {
@@ -99,7 +110,6 @@ else
     app.UseHsts();
 }
 
-
 app.UseRouting();
 
 app.UseSession();
@@ -117,7 +127,7 @@ app.MapControllerRoute(
 app.MapRazorPages()
    .WithStaticAssets();
 
-// 🔥 3. THÊM DÒNG NÀY: MỞ ĐƯỜNG ỐNG ROUTING CHO CÁI HUB CỦA ANH EM MÌNH
+// 🔥 MỞ ĐƯỜNG ỐNG ROUTING CHO CÁI HUB
 app.MapHub<NotificationHub>("/notificationHub");
 
 app.Run();
