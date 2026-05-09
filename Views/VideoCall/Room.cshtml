@@ -1,0 +1,77 @@
+﻿@{
+    ViewData["Title"] = "Phòng Khám Trực Tuyến";
+    Layout = null; // Bỏ layout chung để full màn hình video
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Phòng Khám Video</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body, html {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a;
+        }
+
+        #root {
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    @if (ViewBag.Role == "Host")
+    {
+        <partial name="_FinishCallModal" />
+    }
+
+    <script src="https://unpkg.com/@@zegocloud/zego-uikit-prebuilt/zego-uikit-prebuilt.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Nhận dữ liệu từ Backend Fun San truyền xuống
+        const appID = @ViewBag.AppId;
+        const serverSecret = "@ViewBag.ServerSecret";
+        const roomID = "@ViewBag.RoomId";
+        const userID = "@ViewBag.UserId";
+        const userName = "@Html.Raw(ViewBag.UserName)";
+        const role = "@ViewBag.Role"; // "Host" (Bác sĩ) hoặc "Audience" (Bệnh nhân)
+
+        // Sinh Token Test Mode (Sếp Minh đã duyệt cách này)
+        const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(appID, serverSecret, roomID, userID, userName);
+
+        // Khởi tạo ZegoCloud
+        const zp = ZegoUIKitPrebuilt.create(kitToken);
+
+        zp.joinRoom({
+            container: document.querySelector('#root'),
+            scenario: {
+                mode: ZegoUIKitPrebuilt.OneONoneCall // Chế độ gọi 1-1
+            },
+            turnOnMicrophoneWhenJoining: true,
+            turnOnCameraWhenJoining: true,
+            showPreJoinView: true,
+
+            // SỰ KIỆN KHI BẤM NÚT GÁC MÁY ĐỎ CỦA ZEGO
+            onLeaveRoom: () => {
+                if (role === "Host") {
+                    // Nếu là Bác sĩ: Bật cái Popup nhập bệnh án lên
+                    var myModal = new bootstrap.Modal(document.getElementById('finishCallModal'));
+                    myModal.show();
+                } else {
+                    // Nếu là Bệnh nhân: Đá về trang Dashboard
+                    window.location.href = '/Home/MyHistory';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

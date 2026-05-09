@@ -1,0 +1,82 @@
+﻿@model PBL3_HealthCare.Models.MedicalRecord
+@{
+    ViewData["Title"] = "Khám Bệnh";
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    // Giả sử sếp truyền cục Appointment qua ViewBag để hiện info bên trái
+    var appointment = ViewBag.Appointment as PBL3_HealthCare.Models.Appointment;
+}
+@if (appointment == null)
+{
+    <div class="alert alert-danger">
+        Không có dữ liệu lịch khám!
+    </div>
+    return;
+}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card shadow border-left-primary mb-4">
+            <div class="card-header bg-white font-weight-bold text-primary">
+                <i class="fas fa-user-injured mr-2"></i> Thông Tin Bệnh Nhân
+            </div>
+            <div class="card-body">
+                <p><strong>Họ tên:</strong> @(appointment?.Patient?.FullName ?? "N/A")</p>
+                <p>
+                    <strong>Ngày khám:</strong> @(appointment?.Date.ToString("dd/MM/yyyy") ??
+                                        "")
+                </p>
+                <p><strong>Giờ khám:</strong> @(appointment?.TimeSlot.ToString() ?? "")</p>
+                <hr />
+                <p><strong>Lý do khám:</strong></p>
+                <div class="alert-info">
+                    @(appointment?.Reason ?? "Không có ghi chú")
+                </div>
+                <p><strong>Triệu chứng ban đầu:</strong></p>
+                <div class="alert-secondary">
+                    @(appointment?.Symptoms ?? "Không có ghi chú")
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white font-weight-bold">
+                <i class="fas fa-stethoscope mr-2"></i> Kết Luận Khám Bệnh
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <input type="hidden" asp-for="AppointmentId" value="@appointment?.Id" />
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold text-dark">Chẩn Đoán Bệnh<span class="text-danger">*</span>
+                        </label>
+                        <textarea asp-for="Diagnosis" class="form-control" rows="3" placeholder="Nhập kết luận bệnh lý..." required></textarea>
+                        <span asp-validation-for="Diagnosis" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold text-dark">
+                            Hướng Điều Trị
+                            (Treatment)
+                        </label>
+                        <textarea asp-for="Treatment" class="form-control" rows="3" placeholder="Ghi chú thêm cho bệnh nhân..."></textarea>
+                    </div>
+                    <div class="form-group mb-4">
+                        <label class="font-weight-bold text-dark">Ngày Tái Khám (Nếu có)</label>
+                        <input asp-for="ReExaminationDate" type="date" class="form-control" />
+                    </div>
+                    <div class="text-right">
+                        <a asp-controller="Appointments" asp-action="Index" class="btn btn-secondary mr-2">Quay Lại</a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Lưu
+                            Bệnh Án
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

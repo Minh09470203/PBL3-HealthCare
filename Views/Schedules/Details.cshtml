@@ -1,0 +1,57 @@
+﻿@model PBL3_HealthCare.Models.Schedule
+
+@{
+    ViewData["Title"] = "Chi tiết Ca làm việc";
+    Layout = "_AdminLayout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/schedules.css" />
+}
+
+<a asp-action="Index" class="btn btn-light btn-sm mb-3" style="border-radius:8px;"><i class="fas fa-arrow-left mr-1"></i>Quay lại</a>
+
+<div class="detail-card card mb-4">
+    <div class="detail-header">
+        <h5><i class="fas fa-calendar-check mr-2"></i>Ca làm việc #@Model?.Id</h5>
+        <p>Thông tin chi tiết ca trực</p>
+    </div>
+    <div class="detail-body">
+        <div class="info-item">
+            <div class="info-label"><i class="fas fa-user-md mr-1"></i>Bác sĩ phụ trách</div>
+            <div class="info-value">@(Model?.Doctor?.User?.FullName ?? "—")</div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="info-item yellow">
+                    <div class="info-label"><i class="fas fa-calendar mr-1"></i>Ngày làm việc</div>
+                    <div class="info-value">@Model?.Date.ToString("dd/MM/yyyy")</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-clock mr-1"></i>Ca làm</div>
+                    <div class="info-value">@(Model?.Shift ?? "—")</div>
+                </div>
+            </div>
+        </div>
+        <div class="info-item green">
+            <div class="info-label"><i class="fas fa-door-open mr-1"></i>Trạng thái</div>
+            <div class="info-value">
+                @if (Model?.IsAvailable == true)
+                {
+                    <span class="avail-badge avail-yes"><i class="fas fa-check-circle mr-1"></i>Còn trống</span>
+                }
+                else
+                {
+
+                    <span class="avail-badge avail-no"><i class="fas fa-times-circle mr-1"></i>Đã kín</span>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="action-bar">
+        <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-edit-action"><i class="fas fa-edit mr-1"></i>Chỉnh sửa</a>
+        <a asp-action="Index" class="btn btn-back-action ml-auto"><i class="fas fa-list mr-1"></i>Danh sách</a>
+    </div>
+</div>

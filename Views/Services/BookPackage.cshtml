@@ -1,0 +1,191 @@
+﻿@model PBL3_HealthCare.Models.PackageBooking
+
+@{
+    ViewData["Title"] = "Đăng ký Gói Khám";
+    Layout = "~/Views/Shared/_Layout.cshtml"; // Dùng layout khách hàng
+}
+
+@section Styles {
+    <style>
+        /* CSS FORM ĐẶT LỊCH ĐỒNG BỘ GIAO DIỆN */
+        .booking-card {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid #f0f2f5;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            margin-bottom: 50px;
+        }
+
+        .booking-header {
+            background-color: #f0f9ff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 25px 30px;
+            text-align: center;
+        }
+
+        .booking-title {
+            color: #1a202c;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .booking-body {
+            padding: 40px;
+        }
+
+        /* Khung thông tin gói khám */
+        .package-info-box {
+            background: #ffffff;
+            border: 1px dashed #00b5f1;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+            /* Icon cái ghim giấy trang trí */
+            .package-info-box::before {
+                content: "\f0c6";
+                font-family: "Font Awesome 5 Free";
+                font-weight: 900;
+                position: absolute;
+                top: -15px;
+                left: 20px;
+                font-size: 24px;
+                color: #00b5f1;
+                background: white;
+                padding: 0 5px;
+            }
+
+        /* Input bo tròn mượt mà */
+        .form-control-booking {
+            border-radius: 8px;
+            padding: 12px 15px;
+            border: 1.5px solid #e2e8f0;
+            transition: all 0.3s;
+            height: auto;
+        }
+
+            .form-control-booking:focus {
+                border-color: #00b5f1;
+                box-shadow: 0 0 0 4px rgba(0, 181, 241, 0.1);
+            }
+
+        /* Nút bấm tinh tế, loại bỏ bóng Glow AI */
+        .btn-booking {
+            border-radius: 50px;
+            padding: 12px 35px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+            border: none;
+        }
+
+        .btn-cyan {
+            background-color: #00b5f1;
+            color: white;
+        }
+
+            .btn-cyan:hover {
+                background-color: #0099cc;
+                color: white;
+                transform: translateY(-1px);
+            }
+
+        .btn-cancel {
+            background-color: #f1f5f9;
+            color: #64748b;
+        }
+
+            .btn-cancel:hover {
+                background-color: #e2e8f0;
+                color: #475569;
+            }
+    </style>
+}
+
+<div class="container mt-5 pt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+
+            <div class="booking-card">
+                <div class="booking-header">
+                    <h3 class="booking-title">ĐĂNG KÝ GÓI KHÁM</h3>
+                    <p class="text-muted mb-0 mt-2">Vui lòng chọn thời gian bạn muốn đến phòng khám</p>
+                </div>
+
+                <div class="booking-body">
+                    <div class="package-info-box">
+                        <h5 class="font-weight-bold" style="color: #2b3452;">@ViewBag.PackageName</h5>
+                        <p class="mb-0 mt-2 text-muted">Chi phí dự kiến: <strong class="text-danger" style="font-size: 1.2rem;">@ViewBag.PackagePrice.ToString("N0") VNĐ</strong></p>
+                    </div>
+
+                    <form asp-action="BookPackage" method="post">
+                        <div asp-validation-summary="All" class="text-danger mb-3 small"></div>
+                        <input type="hidden" asp-for="HealthPackageId" />
+
+                        <div class="form-group mb-5">
+                            <label asp-for="BookingDate" class="font-weight-bold" style="color: #4a5568;">Chọn ngày giờ đến khám <span class="text-danger">*</span></label>
+
+                            <input asp-for="BookingDate" id="bookingDateTime" class="form-control form-control-booking" type="datetime-local" required />
+
+                            <span asp-validation-for="BookingDate" class="text-danger small mt-1 d-block"></span>
+                            <small class="form-text text-muted mt-2"><i class="fas fa-info-circle mr-1"></i> Lễ tân sẽ dựa vào thời gian này để sắp xếp lịch trình cho bạn.</small>
+                        </div>
+
+                        <div class="text-center mt-2 pt-3 border-top" style="border-color: #f0f2f5 !important;">
+                            <button type="submit" class="btn btn-booking btn-cyan mr-2">
+                                Gửi Yêu Cầu
+                            </button>
+                            <a asp-action="Packages" class="btn btn-booking btn-cancel">Quay lại</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // SCRIPT CHẶN CHỌN NGÀY TRONG QUÁ KHỨ VÀ CHẶN LUÔN CẢ PHÚT TRONG QUÁ KHỨ
+        document.addEventListener('DOMContentLoaded', function () {
+            var inputDate = document.getElementById('bookingDateTime');
+
+            if (inputDate) {
+                // Lấy thời gian hiện tại
+                var now = new Date();
+
+                // Cộng thêm 1 tiếng (Giả sử yêu cầu phải đặt lịch trước ít nhất 1 tiếng)
+                // Sếp có thể bỏ dòng này đi nếu muốn đặt lịch sát giờ luôn
+                now.setHours(now.getHours() + 1);
+
+                // Format lại ngày giờ theo chuẩn của thẻ <input type="datetime-local"> là yyyy-MM-ddThh:mm
+                var year = now.getFullYear();
+                var month = (now.getMonth() + 1).toString().padStart(2, '0');
+                var day = now.getDate().toString().padStart(2, '0');
+                var hours = now.getHours().toString().padStart(2, '0');
+                var minutes = now.getMinutes().toString().padStart(2, '0');
+
+                var minDateTimeString = `${year}-${month}-${day}T${hours}:${minutes}`;
+
+                // Set thuộc tính 'min' cho input
+                inputDate.min = minDateTimeString;
+
+                // Nếu người dùng cố tình nhập tay (gõ phím) một ngày trong quá khứ, tự động reset
+                inputDate.addEventListener('change', function() {
+                    if (this.value < minDateTimeString) {
+                        alert('Vui lòng chọn thời gian trong tương lai (Cách hiện tại ít nhất 1 tiếng).');
+                        this.value = minDateTimeString; // Trả về thời gian hợp lệ gần nhất
+                    }
+                });
+            }
+        });
+    </script>
+}

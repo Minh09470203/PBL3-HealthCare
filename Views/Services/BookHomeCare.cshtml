@@ -1,0 +1,201 @@
+﻿@model PBL3_HealthCare.Models.HomeServiceRequest
+@{
+    ViewData["Title"] = "Yêu Cầu Y Tế Tại Nhà";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        /* CSS FORM Y TẾ TẠI NHÀ ĐỒNG BỘ */
+        .booking-card {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid #f0f2f5;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            margin-bottom: 50px;
+        }
+
+        .booking-header {
+            /* Tông xanh nhạt đồng bộ với trang Gói Khám */
+            background-color: #f0f9ff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 25px 30px;
+            text-align: center;
+        }
+
+        .booking-title {
+            color: #1a202c;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .booking-body {
+            padding: 40px;
+        }
+
+        /* Khung thông tin Dịch vụ */
+        .homecare-info-box {
+            background: #ffffff;
+            border: 1px dashed #00b5f1;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+            .homecare-info-box::before {
+                content: "\f015"; /* Icon Ngôi nhà (Home) */
+                font-family: "Font Awesome 5 Free";
+                font-weight: 900;
+                position: absolute;
+                top: -15px;
+                left: 20px;
+                font-size: 24px;
+                color: #00b5f1;
+                background: white;
+                padding: 0 5px;
+            }
+
+        /* Input bo tròn, bóng đổ nhẹ khi focus */
+        .form-control-booking {
+            border-radius: 8px;
+            padding: 12px 15px;
+            border: 1.5px solid #e2e8f0;
+            transition: all 0.3s;
+            height: auto;
+        }
+
+            .form-control-booking:focus {
+                border-color: #00b5f1;
+                box-shadow: 0 0 0 4px rgba(0, 181, 241, 0.1);
+            }
+
+        /* Riêng cho textarea cần bo góc mềm mại hơn một chút */
+        textarea.form-control-booking {
+            border-radius: 12px;
+        }
+
+        /* Nút bấm tinh tế (Ghost Shadow) */
+        .btn-booking {
+            border-radius: 50px;
+            padding: 12px 35px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+            border: none;
+        }
+
+        .btn-cyan {
+            background-color: #00b5f1;
+            color: white;
+        }
+
+            .btn-cyan:hover {
+                background-color: #0099cc;
+                color: white;
+                transform: translateY(-1px);
+            }
+
+        .btn-cancel {
+            background-color: #f1f5f9;
+            color: #64748b;
+        }
+
+            .btn-cancel:hover {
+                background-color: #e2e8f0;
+                color: #475569;
+                text-decoration: none;
+            }
+    </style>
+}
+
+<div class="container mt-5 pt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+
+            <div class="booking-card">
+                <div class="booking-header">
+                    <h3 class="booking-title">ĐĂNG KÝ Y TẾ TẠI NHÀ</h3>
+                    <p class="text-muted mb-0 mt-2">Chăm sóc sức khỏe tận nơi, an tâm và tiện lợi</p>
+                </div>
+
+                <div class="booking-body">
+                    <div class="homecare-info-box">
+                        <h5 class="font-weight-bold" style="color: #2b3452;">@ViewBag.ServiceName</h5>
+                        <p class="mb-0 mt-2 text-muted">
+                            <i class="fas fa-money-bill-wave mr-1" style="color: #00b5f1;"></i> Chi phí dự kiến: <strong class="text-danger" style="font-size: 1.2rem;">@ViewBag.Price.ToString("N0") VNĐ</strong>
+                        </p>
+                    </div>
+
+                    <form asp-action="BookHomeCare" method="post">
+                        <div asp-validation-summary="All" class="text-danger mb-3 small"></div>
+                        <input type="hidden" asp-for="HomeServiceId" />
+
+                        <div class="form-group mb-4">
+                            <label asp-for="RequestDate" class="font-weight-bold" style="color: #4a5568;">Thời gian mong muốn <span class="text-danger">*</span></label>
+                            <input asp-for="RequestDate" id="bookingDateTime" type="datetime-local" class="form-control form-control-booking" required />
+                            <small class="form-text text-muted mt-2"><i class="fas fa-info-circle mr-1"></i> Vui lòng đặt trước ít nhất 2 tiếng để nhân viên y tế kịp di chuyển.</small>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label asp-for="Phone" class="font-weight-bold" style="color: #4a5568;">Số điện thoại liên hệ <span class="text-danger">*</span></label>
+                            <input asp-for="Phone" type="text" class="form-control form-control-booking" required placeholder="Nhập số điện thoại để Y tá gọi xác nhận..." />
+                        </div>
+
+                        <div class="form-group mb-5">
+                            <label asp-for="Address" class="font-weight-bold" style="color: #4a5568;">Địa chỉ nhà chi tiết <span class="text-danger">*</span></label>
+                            <textarea asp-for="Address" class="form-control form-control-booking" rows="3" required placeholder="VD: Số nhà 123, Đường X, Phường Y... Bấm chuông cổng màu xanh."></textarea>
+                        </div>
+
+                        <div class="text-center mt-2 pt-3 border-top" style="border-color: #f0f2f5 !important;">
+                            <button type="submit" class="btn btn-booking btn-cyan mr-2">
+                                <i class="fas fa-paper-plane mr-1"></i> Gửi Yêu Cầu
+                            </button>
+                            <a asp-controller="Home" asp-action="HomeCare" class="btn btn-booking btn-cancel">Hủy</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // SCRIPT CHẶN THỜI GIAN QUÁ KHỨ VÀ CỘNG THÊM 2 TIẾNG DI CHUYỂN
+        document.addEventListener('DOMContentLoaded', function () {
+            var inputDate = document.getElementById('bookingDateTime');
+
+            if (inputDate) {
+                var now = new Date();
+
+                // CỘNG THÊM 2 TIẾNG CHO THỜI GIAN DI CHUYỂN CỦA Y TẾ
+                now.setHours(now.getHours() + 2);
+
+                var year = now.getFullYear();
+                var month = (now.getMonth() + 1).toString().padStart(2, '0');
+                var day = now.getDate().toString().padStart(2, '0');
+                var hours = now.getHours().toString().padStart(2, '0');
+                var minutes = now.getMinutes().toString().padStart(2, '0');
+
+                var minDateTimeString = `${year}-${month}-${day}T${hours}:${minutes}`;
+
+                inputDate.min = minDateTimeString;
+
+                inputDate.addEventListener('change', function() {
+                    if (this.value < minDateTimeString) {
+                        alert('Vui lòng chọn thời gian cách hiện tại ít nhất 2 tiếng để Y tá/Bác sĩ kịp thời gian di chuyển.');
+                        this.value = minDateTimeString;
+                    }
+                });
+            }
+        });
+    </script>
+}

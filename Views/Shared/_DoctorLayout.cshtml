@@ -1,0 +1,131 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using PBL3_HealthCare.Models
+@using PBL3_HealthCare.Data
+@inject UserManager<ApplicationUser> UserManager
+@inject ApplicationDbContext Context
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>@ViewData["Title"] - Doctor Portal</title>
+
+    <link href="~/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+
+    <link href="~/css/sb-admin-2.min.css" rel="stylesheet">
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+        <ul class="navbar-nav bg-gradient-info sidebar sidebar-dark accordion" id="accordionSidebar">
+
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" asp-controller="Home" asp-action="Index">
+                <div class="sidebar-brand-icon">
+                    <i class="fas fa-stethoscope"></i>
+                </div>
+                <div class="sidebar-brand-text mx-3">Doctor Portal</div>
+            </a>
+
+            <hr class="sidebar-divider my-0">
+
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="DoctorPortal" asp-action="Index">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>Tổng quan</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider my-0">
+
+            <div class="sidebar-heading mt-3">Chuyên môn y tế</div>
+
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="Appointments" asp-action="Index">
+                    <i class="fas fa-fw fa-calendar-check"></i>
+                    <span>Lịch khám của tôi</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="DoctorPortal" asp-action="MySchedule">
+                    <i class="fas fa-fw fa-calendar-alt"></i>
+                    <span>Lịch làm việc của tôi</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Cá nhân</div>
+
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="DoctorPortal" asp-action="Profile">
+                    <i class="fas fa-fw fa-id-badge"></i>
+                    <span>Hồ sơ công tác</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider d-none d-md-block">
+            <div class="text-center d-none d-md-inline">
+                <button class="rounded-circle border-0" id="sidebarToggle"></button>
+            </div>
+        </ul>
+
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars"></i>
+                    </button>
+
+                    <ul class="navbar-nav ml-auto">
+                        <partial name="_NotificationBell" />
+                        <div class="topbar-divider d-none d-sm-block"></div>
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">BS. @(User.Identity.Name)</span>
+                                @{
+                                    // Lấy ID của tài khoản đang đăng nhập
+                                    var userId = UserManager.GetUserId(User);
+                                    // Chui vào bảng Doctor tìm đúng ông bác sĩ đó
+                                    var doctor = Context.Doctors.FirstOrDefault(d => d.UserId == userId);
+                                    // Lấy tên file ảnh (nếu chưa có ảnh thì dùng ảnh mặc định)
+                                    var imageName = (doctor != null && !string.IsNullOrEmpty(doctor.Image)) ? doctor.Image : "undraw_profile.svg";
+                                }
+
+                                <img class="img-profile rounded-circle" style="object-fit: cover;" src="~/img/doctors/@imageName">
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                                <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/" method="post">
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i> Đăng xuất
+                                    </button>
+                                </form>
+                            </div>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="container-fluid">
+                    @RenderBody()
+                </div>
+            </div>
+
+            <footer class="sticky-footer bg-white">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>Copyright &copy; SuperStar Medical Center 2026</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script src="~/vendor/jquery/jquery.min.js"></script>
+    <script src="~/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="~/js/sb-admin-2.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

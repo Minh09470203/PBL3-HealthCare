@@ -1,0 +1,57 @@
+﻿@model PBL3_HealthCare.Models.Specialty
+
+@{
+    ViewData["Title"] = "Xóa Chuyên khoa";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/specialties.css" />
+}
+
+<a asp-action="Index" class="btn btn-light btn-sm mb-3" style="border-radius:8px;"><i class="fas fa-arrow-left mr-1"></i>Quay lại danh sách</a>
+
+<div class="delete-card card mb-4">
+    <div class="danger-header">
+        <div class="danger-icon"><i class="fas fa-stethoscope"></i></div>
+        <h5>Xóa Chuyên khoa</h5>
+        <p>Hành động này không thể hoàn tác</p>
+    </div>
+    <div class="delete-body">
+        <div class="specialty-preview">
+            <div class="preview-icon-wrap"><i class="fas fa-stethoscope"></i></div>
+            <div>
+                <div class="preview-name">@Model?.Name</div>
+                <div class="preview-meta"><i class="fas fa-fingerprint mr-1"></i>ID: #@Model?.Id</div>
+            </div>
+        </div>
+
+        <div class="info-row">
+            <span class="label">Tên chuyên khoa</span>
+            <span class="value">@Model?.Name</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Mô tả</span>
+            <span class="value">
+                @(string.IsNullOrWhiteSpace(Model?.Description) ? "—" : (Model.Description.Length > 60 ? Model.Description.Substring(0, 60) + "..." : Model.Description))
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="label">Hình ảnh</span>
+            <span class="value">@(string.IsNullOrWhiteSpace(Model?.Image) ? "—" : "Có ảnh đại diện")</span>
+        </div>
+
+        <div class="warning-box">
+            <i class="fas fa-exclamation-triangle mr-2"></i>
+            <strong>Cảnh báo:</strong> Xóa chuyên khoa này sẽ ảnh hưởng đến tất cả bác sĩ đang thuộc chuyên khoa. Hãy kiểm tra kỹ trước khi xác nhận.
+        </div>
+
+        <form asp-action="Delete">
+            <input type="hidden" asp-for="Id" />
+            <div class="d-flex" style="gap:.75rem">
+                <button type="submit" class="btn btn-confirm-delete"><i class="fas fa-trash mr-1"></i>Xác nhận xóa</button>
+                <a asp-action="Index" class="btn btn-cancel-soft"><i class="fas fa-ban mr-1"></i>Hủy bỏ</a>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,116 @@
+﻿@model PBL3_HealthCare.Models.Invoice
+
+@{
+    Layout = "~/Views/Shared/_PrintLayout.cshtml";
+    ViewData["Title"] = "Hóa Đơn #" + Model.Id;
+}
+@{
+    // Tự động xác định đường dẫn về dựa trên Role
+    string returnUrl = Url.Action("Index", "Home"); // Mặc định về trang chủ nếu có lỗi
+
+    if (User.IsInRole("Admin"))
+    {
+        // Admin thì về trang quản lý lịch khám chung (hoặc trang Dashboard Admin của sếp)
+        returnUrl = Url.Action("Index", "Appointments");
+    }
+    else if (User.IsInRole("Doctor"))
+    {
+        // Bác sĩ thì về Portal riêng
+        returnUrl = Url.Action("Index", "DoctorPortal");
+    }
+}
+<div class="no-print text-end mb-4 border-bottom pb-3">
+    <button onclick="window.print()" class="btn btn-primary btn-lg"><i class="fas fa-print"></i> In Hóa Đơn</button>
+    <a href="@returnUrl" class="btn btn-secondary btn-lg">
+        <i class="fas fa-times"></i> Đóng
+    </a>
+</div>
+
+<div class="text-center mb-4">
+    <h2 class="text-uppercase fw-bold">PHÒNG KHÁM SUPERSTAR</h2>
+    <p class="mb-0">Địa chỉ: 120 Yên Lãng, Hà Nội</p>
+    <p class="mb-0">Hotline: 0123.456.789</p>
+
+    <h4 class="mt-4 fw-bold">HÓA ĐƠN THANH TOÁN TIỀN KHÁM BỆNH</h4>
+    <p class="fst-italic">
+        <strong>Mã HĐ:</strong> #@Model.Id |
+        <strong>Ngày lập:</strong> @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+    </p>
+</div>
+
+<div class="row mb-4">
+    <div class="col-sm-6">
+        <p class="mb-1"><strong>Tên bệnh nhân:</strong> @(Model.Appointment?.Patient?.FullName ?? "Khách lẻ")</p>
+    </div>
+    <div class="col-sm-6 text-end">
+        <p class="mb-1"><strong>Bác sĩ khám:</strong> BS. @(Model.Appointment?.Doctor?.User?.FullName ?? "N/A")</p>
+    </div>
+</div>
+
+<table class="table table-custom w-100">
+    <thead>
+        <tr>
+            <th class="text-center" width="50px">STT</th>
+            <th>Nội Dung</th>
+            <th class="text-center" width="100px">Số Lượng</th>
+            <th class="text-end" width="150px">Đơn Giá</th>
+            <th class="text-end" width="150px">Thành Tiền</th>
+        </tr>
+    </thead>
+    <tbody>
+        @{
+            int stt = 1;
+        }
+        @if (Model.Details != null && Model.Details.Any())
+        {
+            foreach (var item in Model.Details)
+            {
+                <tr>
+                    <td class="text-center">@(stt++)</td>
+                    <td>@item.Content</td>
+                    <td class="text-center">@item.Quantity</td>
+                    <td class="text-end">@item.UnitPrice.ToString("N0")</td>
+                    <td class="text-end fw-bold">@((item.Quantity * item.UnitPrice).ToString("N0"))</td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="5" class="text-center fst-italic text-muted">Không có chi tiết dữ liệu.</td>
+            </tr>
+        }
+    </tbody>
+    <tfoot>
+        <tr>
+            <td colspan="4" class="text-end fw-bold fs-5">TỔNG CỘNG TIỀN THANH TOÁN:</td>
+            <td class="text-end fw-bold fs-5 text-danger">@Model.TotalAmount.ToString("N0") VNĐ</td>
+        </tr>
+    </tfoot>
+</table>
+
+<div class="row mt-5 text-center">
+    <div class="col-sm-6">
+        <p class="fw-bold mb-0">Bệnh Nhân</p>
+        <p class="fst-italic text-muted">(Ký và ghi rõ họ tên)</p>
+        <br /><br /><br />
+        <p class="fw-bold">@(Model.Appointment?.Patient?.FullName ?? "........................")</p>
+    </div>
+    <div class="col-sm-6">
+        <p class="fw-bold mb-0">Người Lập Phiếu</p>
+        <p class="fst-italic text-muted">(Ký và ghi rõ họ tên)</p>
+        <br /><br /><br />
+        <p class="fw-bold">Thu Ngân</p>
+    </div>
+</div>
+
+<div class="text-center mt-5 fst-italic text-muted pt-3 border-top">
+    Cảm ơn quý khách đã tin tưởng và sử dụng dịch vụ của phòng khám!
+</div>
+
+@section Scripts {
+    <script>
+        // Mở comment dòng dưới nếu muốn vừa load trang xong là máy in tự bật lên luôn
+        // window.onload = function() { window.print(); }
+    </script>
+}

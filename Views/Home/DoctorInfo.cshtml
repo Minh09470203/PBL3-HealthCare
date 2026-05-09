@@ -1,0 +1,157 @@
+﻿@model PBL3_HealthCare.Models.Doctor
+@{
+    ViewData["Title"] = "Hồ sơ Bác sĩ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var next5Days = ViewBag.Next3Days as List<DateTime>;
+    // Bắt buộc phải là biến này, xóa cái var timeSlots cũ đi:
+    var timeSlotsByDate = ViewBag.TimeSlotsByDate as Dictionary<DateTime, List<string>>; 
+    var bookedAppointments = ViewBag.BookedAppointments as List<PBL3_HealthCare.Models.Appointment>;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/home/doctor-info.css" />
+}
+
+<section class="profile-page">
+    <div class="container">
+        <div class="row">
+
+            @* LEFT: Doctor profile *@
+            <div class="col-md-4 mb-4 mb-md-0">
+                <div class="profile-left">
+                    <img src="/img/doctors/@(Model.Image ?? "default.jpg")"
+                         alt="@Model.User?.FullName"
+                         class="profile-avatar"
+                         onerror="this.src='/img/doctors/default.jpg'" />
+
+                    <div class="profile-name">BS. @Model.User?.FullName</div>
+                    <span class="profile-specialty">@Model.Specialty?.Name</span>
+
+                    <p class="profile-bio">
+                        @(string.IsNullOrWhiteSpace(Model.Bio)
+                            ? $"Bác sĩ chuyên khoa {Model.Specialty?.Name} với nhiều năm kinh nghiệm tại các bệnh viện lớn. Luôn tận tâm, nhiệt tình và đặt sức khỏe bệnh nhân lên hàng đầu."
+                            : Model.Bio)
+                    </p>
+
+                    <div class="profile-meta">
+                        <div class="profile-meta-row">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <div>
+                                <span class="meta-label">Địa chỉ</span>
+                                Phòng khám SuperStar, 120 Yên Lãng
+                            </div>
+                        </div>
+                        <div class="profile-meta-row">
+                            <i class="fas fa-graduation-cap"></i>
+                            <div>
+                                <span class="meta-label">Bằng cấp</span>
+                                @(Model.Degree ?? "—")
+                            </div>
+                        </div>
+                        <div class="profile-meta-row">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <div>
+                                <span class="meta-label">Giá khám</span>
+                                <span class="meta-price">@string.Format("{0:N0}", Model.Price)đ</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* RIGHT: Schedule *@
+            <div class="col-md-8">
+                <div class="schedule-panel">
+                    <p class="schedule-heading"><i class="fas fa-calendar-alt mr-2"></i>Chọn lịch khám</p>
+
+                    @* Day tabs *@
+                    <div class="day-tabs">
+                        @for (int i = 0; i < next5Days.Count; i++)
+                        {
+                            <a class="day-tab @(i == 0 ? "active" : "")"
+                               href="#"
+                               onclick="switchDay(@i, this); return false;">
+                                @(next5Days[i].Date == DateTime.Today ? "Hôm nay" : next5Days[i].DayOfWeek switch {
+                                    DayOfWeek.Monday    => "Thứ Hai",
+                                    DayOfWeek.Tuesday   => "Thứ Ba",
+                                    DayOfWeek.Wednesday => "Thứ Tư",
+                                    DayOfWeek.Thursday  => "Thứ Năm",
+                                    DayOfWeek.Friday    => "Thứ Sáu",
+                                    DayOfWeek.Saturday  => "Thứ Bảy",
+                                    _                   => "Chủ Nhật"
+                                })
+                                <span class="tab-date">@next5Days[i].ToString("dd/MM")</span>
+                            </a>
+                        }
+                    </div>
+
+                    @* Slot panels *@
+                    @for (int i = 0; i < next5Days.Count; i++)
+                    {
+                        <div class="day-panel @(i == 0 ? "" : "d-none")" id="panel-@i">
+                            <div class="slots-grid">
+    @{
+        var currentDate = next5Days[i].Date;
+        var daySlots = timeSlotsByDate != null && timeSlotsByDate.ContainsKey(currentDate) 
+                        ? timeSlotsByDate[currentDate] 
+                        : new List<string>();
+        
+        // Khai báo thời gian hiện tại
+        var now = DateTime.Now;
+    }
+
+    @foreach (var slot in daySlots)
+    {
+        // Kiểm tra xem giờ này đã có người đặt chưa
+        bool isBooked = bookedAppointments.Any(a =>
+            a.Date.Date == currentDate && 
+            a.TimeSlot == TimeSpan.Parse(slot));
+
+        // 🔥 LOGIC CHẶN GIỜ QUÁ KHỨ:
+        // Kiểm tra xem nếu đang xem lịch HÔM NAY và cái slot (giờ) đó đã trôi qua so với giờ hiện tại
+        bool isPastSlot = false;
+        if (currentDate.Date == now.Date)
+        {
+            var slotTime = TimeSpan.Parse(slot);
+            if (slotTime <= now.TimeOfDay)
+            {
+                isPastSlot = true;
+            }
+        }
+
+        if (isBooked || isPastSlot)
+        {
+            // Nếu đã có người đặt HOẶC đã quá giờ -> Gắn class "booked" (hoặc class mới "past" tùy sếp)
+            <span class="slot-btn booked" title="@(isPastSlot ? "Đã qua giờ" : "Đã có người đặt")">@slot</span>
+        }
+        else
+        {
+            <a asp-controller="Home" asp-action="BookAppointment"
+               asp-route-doctorId="@Model.Id"
+               asp-route-date="@currentDate.ToString("yyyy-MM-dd")"
+               asp-route-timeSlot="@slot"
+               asp-route-isVideoCall="@(ViewBag.IsVideoCall == true ? "true" : "false")"
+               class="slot-btn">@slot</a>
+        }
+    }
+</div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        function switchDay(index, el) {
+            document.querySelectorAll('.day-panel').forEach(p => p.classList.add('d-none'));
+            document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('panel-' + index).classList.remove('d-none');
+            el.classList.add('active');
+        }
+    </script>
+}

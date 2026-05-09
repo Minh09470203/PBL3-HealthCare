@@ -1,0 +1,150 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using PBL3_HealthCare.Models
+@using PBL3_HealthCare.Data
+@using Microsoft.EntityFrameworkCore
+@inject UserManager<ApplicationUser> UserManager
+@inject ApplicationDbContext _context
+
+@if (User.Identity.IsAuthenticated)
+{
+    // LẤY DATA THÔNG BÁO TỪ DATABASE LÊN ĐÂY SẾP
+    var userId = UserManager.GetUserId(User);
+
+    // Đếm số lượng chưa đọc (để hiển thị nốt ruồi đỏ)
+    var unreadCount = await _context.Notifications.CountAsync(n => n.ReceiverId == userId && !n.IsRead);
+
+    // Lấy 5 thông báo mới nhất chưa đọc ra để hiển thị
+    var latestNotifications = await _context.Notifications
+        .Where(n => n.ReceiverId == userId && !n.IsRead)
+        .OrderByDescending(n => n.CreatedAt)
+        .Take(5)
+        .ToListAsync();
+
+    <li class="nav-item dropdown no-arrow mx-1">
+        <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <i class="fas fa-bell fa-fw text-warning fa-lg"></i>
+
+            <span id="notificationBadge" class="badge bg-danger badge-counter" style="@(unreadCount == 0 ? "display:none;" : "") position: absolute; top: 5px; right: 0;">
+                @(unreadCount > 9 ? "9+" : unreadCount.ToString())
+            </span>
+        </a>
+
+        <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="alertsDropdown">
+            <h6 class="dropdown-header bg-primary text-white p-2">
+                Thông Báo Mới
+            </h6>
+
+            <div id="notificationList">
+                @if (latestNotifications.Any())
+                {
+                    foreach (var notif in latestNotifications)
+                    {
+                        <a class="dropdown-item d-flex align-items-center" href="#">
+                            <div class="mr-3">
+                                <div class="icon-circle bg-info text-white p-2 rounded-circle">
+                                    <i class="fas fa-info-circle"></i>
+                                </div>
+                            </div>
+                            <div class="ms-2">
+                                <div class="small text-gray-500">@notif.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                                <span class="font-weight-bold">@notif.Content</span>
+                            </div>
+                        </a>
+                    }
+                }
+                else
+                {
+                    <a id="noNotifMsg" class="dropdown-item text-center small text-gray-500 py-3" href="#">
+                        Bạn không có thông báo nào mới.
+                    </a>
+                }
+            </div>
+
+            <a class="dropdown-item text-center small text-gray-500 mt-2" asp-controller="Home" asp-action="AllNotifications">Xem tất cả thông báo</a>
+        </div>
+    </li>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.12/signalr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Chỉ chạy nếu connection chưa được khởi tạo (tránh lỗi duplicate khi load nhiều partial)
+        if (typeof window.notificationConnection === 'undefined') {
+
+            const currentUserId = '@userId'; // Lấy ID của người đang đăng nhập
+
+            // 1. Tạo đường ống
+            window.notificationConnection = new signalR.HubConnectionBuilder()
+                .withUrl("/notificationHub")
+                .withAutomaticReconnect() // Tự kết nối lại nếu mạng rớt
+                .build();
+
+            // 2. Bật radio dò sóng chờ lệnh "ReceiveNotification" từ Server bắn xuống
+            window.notificationConnection.on("ReceiveNotification", function (targetUserId, message) {
+
+                // Nếu tiếng gọi này đích danh gọi mình thì mới nghe
+                if (currentUserId === targetUserId) {
+
+                    // --- A. BẬT POPUP SWEETALERT2 GÓC MÀN HÌNH ---
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'info',
+                            title: 'Ting Ting! 🔔',
+                            text: message,
+                            showConfirmButton: false,
+                            timer: 5000,
+                            timerProgressBar: true
+                        });
+                    }
+
+                    // --- B. TĂNG SỐ Ở CÁI CHUÔNG ĐỎ ---
+                    let badge = document.getElementById('notificationBadge');
+                    if(badge) {
+                        badge.style.display = 'inline-block'; // Hiện nốt ruồi đỏ lên
+                        let currentText = badge.innerText.replace('+', '').trim();
+                        let count = currentText ? parseInt(currentText) : 0;
+                        count++;
+                        badge.innerText = count > 9 ? '9+' : count;
+                    }
+
+                    // --- C. CHÈN NGAY THÔNG BÁO VÀO DROPDOWN MÀ KHÔNG CẦN F5 ---
+                    let list = document.getElementById('notificationList');
+                    let noMsg = document.getElementById('noNotifMsg');
+                    if (noMsg) noMsg.remove(); // Xóa chữ "Không có thông báo mới"
+
+                    // Tạo HTML giả cho cái thông báo mới vừa nhận
+                    let dateNow = new Date();
+                    let timeString = dateNow.getDate().toString().padStart(2, '0') + '/' +
+                                    (dateNow.getMonth() + 1).toString().padStart(2, '0') + '/' +
+                                    dateNow.getFullYear() + ' ' +
+                                    dateNow.getHours().toString().padStart(2, '0') + ':' +
+                                    dateNow.getMinutes().toString().padStart(2, '0');
+
+                    let newItemHTML = `
+                        <a class="dropdown-item d-flex align-items-center bg-light" href="#">
+                            <div class="mr-3">
+                                <div class="icon-circle bg-success text-white p-2 rounded-circle">
+                                    <i class="fas fa-bell"></i>
+                                </div>
+                            </div>
+                            <div class="ms-2">
+                                <div class="small text-gray-500">Mới nhận (${timeString})</div>
+                                <span class="font-weight-bold text-success">${message}</span>
+                            </div>
+                        </a>
+                    `;
+                    // Nhét nó lên đầu danh sách
+                    list.insertAdjacentHTML('afterbegin', newItemHTML);
+                }
+            });
+
+            // 3. Khởi động máy
+            window.notificationConnection.start().then(function () {
+                console.log("⚡ SignalR: Đã kết nối với Trạm trung chuyển thành công!");
+            }).catch(function (err) {
+                console.error("SignalR Error: " + err.toString());
+            });
+        }
+    </script>
+}

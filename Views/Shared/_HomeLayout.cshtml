@@ -1,0 +1,355 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using PBL3_HealthCare.Models
+@using PBL3_HealthCare.Data
+@using Microsoft.EntityFrameworkCore
+@inject UserManager<ApplicationUser> UserManager
+@inject ApplicationDbContext _context
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewBag.Title - Mediplus</title>
+    <link href="https://fonts.googleapis.com/css?family=Poppins:100,200,300,400,500,600,700,800,900" rel="stylesheet">
+    <link rel="stylesheet" href="~/mediplus-master/css/open-iconic-bootstrap.min.css">
+    <link rel="stylesheet" href="~/mediplus-master/css/animate.css">
+    <link rel="stylesheet" href="~/mediplus-master/css/owl.carousel.min.css">
+    <link rel="stylesheet" href="~/mediplus-master/css/owl.theme.default.min.css">
+    <link rel="stylesheet" href="~/mediplus-master/css/magnific-popup.css">
+    <link rel="stylesheet" href="~/mediplus-master/css/aos.css">
+    <link rel="stylesheet" href="~/mediplus-master/css/ionicons.min.css">
+    <link rel="stylesheet" href="~/mediplus-master/css/flaticon.css">
+    <link rel="stylesheet" href="~/mediplus-master/css/icomoon.css">
+    <link rel="stylesheet" href="~/css/site.css">
+    <link rel="stylesheet" href="~/mediplus-master/css/style.css">
+    @await RenderSectionAsync("Styles", required: false)    @* ← chuyển lên đây *@
+</head>
+<body>
+    <!-- TOP BAR -->
+    <div class="topbar">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md d-flex align-items-center">
+                    <div class="icon mr-2"><span class="icon-phone2"></span></div>
+                    <span class="text">+ 1235 2355 98</span>
+                </div>
+                <div class="col-md d-flex align-items-center">
+                    <div class="icon mr-2"><span class="icon-paper-plane"></span></div>
+                    <span class="text">youremail@email.com</span>
+                </div>
+                <div class="col-md-5 d-flex justify-content-end align-items-center">
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        // 1. LẤY THÔNG TIN USER (Chỉ lấy 1 lần duy nhất)
+                        var user = await UserManager.GetUserAsync(User);
+                        var userId = user?.Id;
+
+                        // 2. LOGIC THÔNG BÁO
+                        var unreadCount = await _context.Notifications.CountAsync(n => n.ReceiverId == userId && !n.IsRead);
+                        var latestNotifications = await _context.Notifications
+                        .Where(n => n.ReceiverId == userId && !n.IsRead)
+                        .OrderByDescending(n => n.CreatedAt)
+                        .Take(5)
+                        .ToListAsync();
+
+                        // 2. LOGIC AVATAR (Có chống kẹt cache)
+                        var avatarUrl = (user != null && !string.IsNullOrEmpty(user.Avatar))
+                        ? "/img/" + user.Avatar + "?v=" + DateTime.Now.Ticks
+                        : "/img/undraw_profile.svg";
+
+                        <div class="dropdown mr-4" style="display:inline-block;">
+                            <a href="#" class="dropdown-toggle d-flex align-items-center" id="patientAlertsDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="color: rgba(255,255,255,0.8); text-decoration: none;">
+                                <span class="icon-bell" style="font-size: 1.2rem; position: relative;">
+                                    @if (unreadCount > 0)
+                                    {
+                                        <span class="badge badge-danger" style="position: absolute; top: -6px; right: -8px; border-radius: 50%; font-size: 0.6rem; padding: 0.2rem 0.35rem; font-family: sans-serif;">
+                                            @(unreadCount > 9 ? "9+" : unreadCount.ToString())
+                                        </span>
+                                    }
+                                </span>
+                            </a>
+                            <div class="dropdown-menu shadow-lg border-0" aria-labelledby="patientAlertsDropdown" style="width: 320px; padding: 0; border-radius: 8px; overflow: hidden; margin-top: 10px; right: 0; left: auto;">
+                                <div class="dropdown-header text-white p-3" style="background: #3d5ee1; font-size: 0.95rem; font-weight: 600;">
+                                    Thông báo của bạn (@unreadCount)
+                                </div>
+                                <div style="max-height: 320px; overflow-y: auto;">
+                                    @if (latestNotifications.Any())
+                                    {
+                                        foreach (var notif in latestNotifications)
+                                        {
+                                            <a class="dropdown-item p-3" href="#" style="white-space: normal; border-bottom: 1px solid #f0f0f0;">
+                                                <div class="small text-muted mb-1" style="font-size: 0.75rem;">
+                                                    <span class="icon-calendar mr-1"></span> @notif.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                                </div>
+                                                <div style="font-size: 0.85rem; color: #333; line-height: 1.4;">@notif.Content</div>
+                                            </a>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <div class="p-4 text-center text-muted" style="font-size: 0.85rem;">Không có thông báo nào mới.</div>
+                                    }
+                                </div>
+                                <a asp-controller="Home" asp-action="AllNotifications" class="dropdown-item text-center p-2" style="font-size: 0.85rem; font-weight: 600; color: #3d5ee1; background: #f8f9fa;">Xem tất cả thông báo</a>
+                            </div>
+                        </div>
+
+                        <a asp-controller="Home" asp-action="Profile" class="mr-3 d-inline-flex align-items-center" style="color: #fff; text-decoration: none; transition: opacity .2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                            <span class="mr-2 d-none d-lg-inline">Xin chào, @(user?.FullName ?? User.Identity.Name)</span>
+                            <img src="@avatarUrl" class="rounded-circle shadow-sm" style="width: 32px; height: 32px; object-fit: cover; border: 1.5px solid rgba(255,255,255,0.6);">
+                        </a>
+
+                        <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index","Home",new{area=""})" method="post" class="d-inline m-0">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn-logout">Đăng xuất</button>
+                        </form>
+
+                        <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.12/signalr.min.js"></script>
+                        <script>
+                            if (typeof window.homeSignalR === 'undefined') {
+                                window.homeSignalR = true; // Cờ đánh dấu để không chạy 2 lần
+                                const currentUserId = '@userId';
+
+                                const connection = new signalR.HubConnectionBuilder()
+                                    .withUrl("/notificationHub")
+                                    .withAutomaticReconnect()
+                                    .build();
+
+                                connection.on("ReceiveNotification", function (targetUserId, message) {
+                                    if (currentUserId === targetUserId) {
+
+                                        // 1. Hiện popup SweetAlert2
+                                        if (typeof Swal !== 'undefined') {
+                                            Swal.fire({
+                                                toast: true, position: 'top-end', icon: 'info',
+                                                title: 'Thông báo mới!', text: message,
+                                                showConfirmButton: false, timer: 5000, timerProgressBar: true
+                                            });
+                                        }
+
+                                        // 2. Tăng số ở cái chuông Theme Home
+                                        let badge = document.getElementById('homeBadge');
+                                        if(badge) {
+                                            badge.style.display = 'inline-block';
+                                            let currentText = badge.innerText.replace('+', '').trim();
+                                            let count = currentText ? parseInt(currentText) : 0;
+                                            badge.innerText = (count + 1) > 9 ? '9+' : (count + 1);
+                                        }
+
+                                        // 3. Nhét thông báo vào list với giao diện của Mediplus
+                                        let list = document.getElementById('homeNotifList');
+                                        let noMsg = document.getElementById('homeNoMsg');
+                                        if (noMsg) noMsg.remove();
+
+                                        let dateNow = new Date();
+                                        let timeStr = dateNow.getDate().toString().padStart(2, '0') + '/' +
+                                                      (dateNow.getMonth() + 1).toString().padStart(2, '0') + ' ' +
+                                                      dateNow.getHours().toString().padStart(2, '0') + ':' +
+                                                      dateNow.getMinutes().toString().padStart(2, '0');
+
+                                        let newItemHTML = `
+                                            <a class="dropdown-item p-3" href="#" style="white-space: normal; border-bottom: 1px solid #f0f0f0; background-color: #f8f9fc;">
+                                                <div class="small mb-1" style="font-size: 0.75rem; color: #3d5ee1;">
+                                                    <span class="icon-calendar mr-1"></span> Vừa xong (${timeStr})
+                                                </div>
+                                                <div style="font-size: 0.85rem; color: #111; font-weight: 500; line-height: 1.4;">${message}</div>
+                                            </a>
+                                        `;
+                                        list.insertAdjacentHTML('afterbegin', newItemHTML);
+                                    }
+                                });
+
+                                connection.start().catch(err => console.error("SignalR Home Error: ", err));
+                            }
+                        </script>
+                    }
+                    else
+                    {
+                        <a href="/Identity/Account/Register" class="mr-3">Đăng ký</a>
+                        <a href="/Identity/Account/Login">Đăng nhập</a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg ftco_navbar ftco-navbar-light site-navbar-target sticky-top" id="ftco-navbar">
+        <div class="container">
+            <a class="navbar-brand" asp-controller="Home" asp-action="Index">SUPERSTAR</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#ftco-nav"
+                    aria-controls="ftco-nav" aria-expanded="false">
+                <span class="oi oi-menu"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="ftco-nav">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item"><a href="#home-section" class="nav-link">Trang chủ</a></li>
+                    <li class="nav-item"><a href="#about-section" class="nav-link">Giới thiệu</a></li>
+                    <li class="nav-item"><a href="#department-section" class="nav-link">Khoa</a></li>
+                    <li class="nav-item"><a href="#doctor-section" class="nav-link">Bác sĩ</a></li>
+                    <li class="nav-item"><a href="#contact-section" class="nav-link">Liên hệ</a></li>
+                    <li class="nav-item cta mr-md-2">
+                        <a asp-controller="Home" asp-action="BookAppointment" class="nav-link">Đặt lịch khám</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    @RenderBody()
+    <!-- ══════════════════════════════════════
+     FOOTER — dùng inline style để tránh bị style.css mediplus override
+        ══════════════════════════════════════ -->
+    <footer class="ftco-footer ftco-section img" style="background-image:url('/img/footer-bg.jpg');">
+        <div class="overlay" style="background:rgba(10,14,30,.88);"></div>
+        <div style="position:relative;z-index:2;" class="container-fluid px-md-5">
+            <div class="row mb-5 pt-5">
+
+                <!-- SuperStar -->
+                <div class="col-md">
+                    <div class="ftco-footer-widget mb-4">
+                        <h2 style="font-size:.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:1.1rem;">SuperStar</h2>
+                        <p style="color:rgba(255,255,255,.6);font-size:.83rem;line-height:1.75;">Phòng khám đa khoa hàng đầu — tận tâm, chuyên nghiệp, hiệu quả.</p>
+                        <div class="d-flex mt-3" style="gap:.4rem;">
+                            <a href="https://www.google.com/search?q=%C4%90%E1%BB%99+mixi&sxsrf=ANbL-n6QUMfmPBGUycro3LiJ-9-_tl7etw%3A1774278685439" style="width:34px;height:34px;background:rgba(255,255,255,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.75);text-decoration:none;transition:background .15s;" onmouseover="this.style.background='#3d5ee1'" onmouseout="this.style.background='rgba(255,255,255,.1)'"><span class="icon-google"></span></a>
+                            <a href="https://www.facebook.com/MixiGaming" style="width:34px;height:34px;background:rgba(255,255,255,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.75);text-decoration:none;" onmouseover="this.style.background='#3d5ee1'" onmouseout="this.style.background='rgba(255,255,255,.1)'"><span class="icon-facebook"></span></a>
+                            <a href="https://www.youtube.com/@@MixiGaming3con" style="width:34px;height:34px;background:rgba(255,255,255,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.75);text-decoration:none;" onmouseover="this.style.background='#3d5ee1'" onmouseout="this.style.background='rgba(255,255,255,.1)'"><span class="icon-youtube"></span></a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chuyên khoa -->
+                <div class="col-md">
+                    <div class="ftco-footer-widget mb-4">
+                        <h2 style="font-size:.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:1.1rem;">Chuyên khoa</h2>
+                        <ul class="list-unstyled" style="margin:0;padding:0;">
+                            <li style="margin-bottom:.45rem;"><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><span style="color:rgba(255,255,255,.65);font-size:.83rem;">Thần kinh</span></li>
+                            <li style="margin-bottom:.45rem;"><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><span style="color:rgba(255,255,255,.65);font-size:.83rem;">Nha khoa</span></li>
+                            <li style="margin-bottom:.45rem;"><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><span style="color:rgba(255,255,255,.65);font-size:.83rem;">Chụp MRI</span></li>
+                            <li style="margin-bottom:.45rem;"><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><span style="color:rgba(255,255,255,.65);font-size:.83rem;">Ngoại khoa</span></li>
+                            <li><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><span style="color:rgba(255,255,255,.65);font-size:.83rem;">Tim mạch</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Liên kết -->
+                <div class="col-md">
+                    <div class="ftco-footer-widget mb-4">
+                        <h2 style="font-size:.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:1.1rem;">Liên kết</h2>
+                        <ul class="list-unstyled" style="margin:0;padding:0;">
+                            <li style="margin-bottom:.45rem;"><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><a href="#home-section" style="color:rgba(255,255,255,.65);font-size:.83rem;text-decoration:none;">Trang chủ</a></li>
+                            <li style="margin-bottom:.45rem;"><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><a href="#about-section" style="color:rgba(255,255,255,.65);font-size:.83rem;text-decoration:none;">Giới thiệu</a></li>
+                            <li style="margin-bottom:.45rem;"><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><a href="#department-section" style="color:rgba(255,255,255,.65);font-size:.83rem;text-decoration:none;">Khoa</a></li>
+                            <li style="margin-bottom:.45rem;"><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><a href="#doctor-section" style="color:rgba(255,255,255,.65);font-size:.83rem;text-decoration:none;">Bác sĩ</a></li>
+                            <li><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><a href="#contact-section" style="color:rgba(255,255,255,.65);font-size:.83rem;text-decoration:none;">Liên hệ</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Dịch vụ -->
+                <div class="col-md">
+                    <div class="ftco-footer-widget mb-4">
+                        <h2 style="font-size:.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:1.1rem;">Dịch vụ</h2>
+                        <ul class="list-unstyled" style="margin:0;padding:0;">
+                            <li style="margin-bottom:.45rem;"><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><span style="color:rgba(255,255,255,.65);font-size:.83rem;">Dịch vụ cấp cứu</span></li>
+                            <li style="margin-bottom:.45rem;"><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><span style="color:rgba(255,255,255,.65);font-size:.83rem;">Bác sĩ chuyên môn cao</span></li>
+                            <li style="margin-bottom:.45rem;"><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><span style="color:rgba(255,255,255,.65);font-size:.83rem;">Khám bệnh ngoại trú</span></li>
+                            <li><span style="color:rgba(255,255,255,.3);" class="icon-long-arrow-right mr-2"></span><span style="color:rgba(255,255,255,.65);font-size:.83rem;">Dịch vụ 24 giờ</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Liên hệ -->
+                <div class="col-md">
+                    <div class="ftco-footer-widget mb-4">
+                        <h2 style="font-size:.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:1.1rem;">Liên hệ</h2>
+                        <ul class="list-unstyled" style="margin:0;padding:0;">
+                            <li style="margin-bottom:.6rem;display:flex;align-items:flex-start;gap:.5rem;">
+                                <span class="icon-map-marker" style="color:rgba(255,255,255,.35);margin-top:.15rem;"></span>
+                                <span style="color:rgba(255,255,255,.65);font-size:.83rem;">120 Yên Lãng, Hà Nội</span>
+                            </li>
+                            <li style="margin-bottom:.6rem;display:flex;align-items:flex-start;gap:.5rem;">
+                                <span class="icon-phone" style="color:rgba(255,255,255,.35);margin-top:.15rem;"></span>
+                                <span style="color:rgba(255,255,255,.65);font-size:.83rem;">+1235 2355 98</span>
+                            </li>
+                            <li style="display:flex;align-items:flex-start;gap:.5rem;">
+                                <span class="icon-envelope" style="color:rgba(255,255,255,.35);margin-top:.15rem;"></span>
+                                <span style="color:rgba(255,255,255,.65);font-size:.83rem;">info@yourdomain.com</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Copyright -->
+            <div class="row pb-4" style="border-top:1px solid rgba(255,255,255,.08);padding-top:1.25rem;">
+                <div class="col-md-12 text-center">
+                    <p style="color:rgba(255,255,255,.35);font-size:.8rem;margin:0;">
+                        Copyright &copy; <script>document.write(new Date().getFullYear());</script> PBL3 Health Care — by 4thangdaucac
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Loader -->
+    <div id="ftco-loader" class="show fullscreen">
+        <svg class="circular" width="48px" height="48px">
+            <circle class="path-bg" cx="24" cy="24" r="22" fill="none" stroke-width="4" stroke="#eeeeee" />
+            <circle class="path" cx="24" cy="24" r="22" fill="none" stroke-width="4" stroke-miterlimit="10" stroke="#3d5ee1" />
+        </svg>
+    </div>
+    <partial name="_Chatbot" />
+    <script src="~/mediplus-master/js/jquery.min.js"></script>
+    <script src="~/mediplus-master/js/jquery-migrate-3.0.1.min.js"></script>
+    <script src="~/mediplus-master/js/popper.min.js"></script>
+    <script src="~/mediplus-master/js/bootstrap.min.js"></script>
+    <script src="~/mediplus-master/js/jquery.easing.1.3.js"></script>
+    <script src="~/mediplus-master/js/jquery.waypoints.min.js"></script>
+    <script src="~/mediplus-master/js/jquery.stellar.min.js"></script>
+    <script src="~/mediplus-master/js/owl.carousel.min.js"></script>
+    <script src="~/mediplus-master/js/jquery.magnific-popup.min.js"></script>
+    <script src="~/mediplus-master/js/aos.js"></script>
+    <script src="~/mediplus-master/js/jquery.animateNumber.min.js"></script>
+    <script src="~/mediplus-master/js/scrollax.min.js"></script>
+    <script src="~/mediplus-master/js/main.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)   @* ← thêm dòng này *@
+
+    @if (TempData["Success"] != null)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end', // Trôi nổi ở góc trên bên phải
+                    icon: 'success',
+                    title: 'Thành công!',
+                    text: '@Html.Raw(TempData["Success"])',
+                    showConfirmButton: false,
+                    timer: 3500, // Tự tắt sau 3.5 giây
+                    timerProgressBar: true
+                });
+            });
+        </script>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: 'Có lỗi xảy ra!',
+                    text: '@Html.Raw(TempData["Error"])',
+                    showConfirmButton: false,
+                    timer: 4000,
+                    timerProgressBar: true
+                });
+            });
+        </script>
+    }
+</body>
+</html>

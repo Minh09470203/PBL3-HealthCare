@@ -1,0 +1,132 @@
+﻿@{
+    ViewData["Title"] = "Tổng Quan Hệ Thống";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml"; 
+}
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white shadow">
+            <div class="card-body">
+                <h5>Tổng Bệnh Nhân</h5>
+                <h2>@ViewBag.TotalPatients</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-success text-white shadow">
+            <div class="card-body">
+                <h5>Tổng Bác Sĩ</h5>
+                <h2>@ViewBag.TotalDoctors</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-warning text-dark shadow">
+            <div class="card-body">
+                <h5>Doanh Thu Tháng Này</h5>
+                <h2>@(ViewBag.MonthlyRevenue != null ? string.Format("{0:N0} VNĐ", ViewBag.MonthlyRevenue) : "0 VNĐ")</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-white font-weight-bold">Biểu Đồ Doanh Thu 6 Tháng Gần Nhất</div>
+            <div class="card-body">
+                <canvas id="revenueChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow">
+            <div class="card-header bg-white font-weight-bold">Tỷ Lệ Khám Theo Khoa</div>
+            <div class="card-body">
+                <canvas id="specialtyChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Gọi API lấy data
+            $.ajax({
+                url: '/Admin/GetChartData',
+                type: 'GET',
+                success: function (res) {
+                    console.log("Dữ liệu từ Server trả về:", res); // Sếp F12 xem dòng này để biết data trông thế nào nhé
+
+                    // 1. LẤY DATA (Chấp cả viết hoa lẫn viết thường)
+                    let barChartList = res.barChartData || res.BarChartData || [];
+                    let pieChartList = res.pieChartData || res.PieChartData || [];
+
+                    // Nếu CÓ tiền nhưng chưa có đủ data vẽ (ví dụ chưa có Khoa nào), bọc giáp trống lỗi
+                    if (barChartList.length === 0) {
+                        barChartList = [{ month: "Tháng này", total: 0 }];
+                    }
+                    if (pieChartList.length === 0) {
+                        pieChartList = [{ specialtyName: "Chưa phân khoa", patientCount: 1 }];
+                    }
+
+                    // 2. VẼ BIỂU ĐỒ CỘT (DOANH THU)
+                    let barLabels = barChartList.map(x => x.month || x.Month || "N/A");
+                    let barData = barChartList.map(x => x.total || x.Total || 0);
+
+                    new Chart(document.getElementById('revenueChart'), {
+                        type: 'bar',
+                        data: {
+                            labels: barLabels,
+                            datasets: [{
+                                label: 'Doanh thu (VNĐ)',
+                                data: barData,
+                                backgroundColor: 'rgba(78, 115, 223, 0.85)', // Màu xanh Primary của sếp
+                                borderColor: 'rgba(78, 115, 223, 1)',
+                                borderWidth: 1,
+                                borderRadius: 5 // Bo góc cột cho hiện đại
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false, // Để biểu đồ tự giãn theo thẻ Card
+                            scales: {
+                                y: { beginAtZero: true }
+                            }
+                        }
+                    });
+
+                    // 3. VẼ BIỂU ĐỒ TRÒN (TỶ LỆ KHOA)
+                    let pieLabels = pieChartList.map(x => x.specialtyName || x.SpecialtyName || "N/A");
+                    let pieData = pieChartList.map(x => x.patientCount || x.PatientCount || 0);
+
+                    new Chart(document.getElementById('specialtyChart'), {
+                        type: 'doughnut', // Biểu đồ bánh donut rỗng ruột cho đẹp
+                        data: {
+                            labels: pieLabels,
+                            datasets: [{
+                                data: pieData,
+                                backgroundColor: ['#4e73df', '#1cc88a', '#f6c23e', '#e74a3b', '#36b9cc'],
+                                hoverBorderColor: "rgba(234, 236, 244, 1)"
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'bottom' } // Đưa chú thích xuống dưới cho gọn
+                            }
+                        }
+                    });
+                },
+                error: function (err) {
+                    console.error("Lỗi API tải biểu đồ:", err);
+                }
+            });
+        });
+    </script>
+}

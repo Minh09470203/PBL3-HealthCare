@@ -1,0 +1,69 @@
+﻿@model PBL3_HealthCare.Models.Schedule
+
+@{
+    ViewData["Title"] = "Xóa Ca làm việc";
+    Layout = "_AdminLayout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/schedules.css" />
+}
+
+<a asp-action="Index" class="btn btn-light btn-sm mb-3" style="border-radius:8px;"><i class="fas fa-arrow-left mr-1"></i>Quay lại danh sách</a>
+
+<div class="delete-card card mb-4">
+    <div class="danger-header">
+        <div class="danger-icon"><i class="fas fa-calendar-minus"></i></div>
+        <h5>Xóa Ca làm việc</h5>
+        <p>Hành động này không thể hoàn tác</p>
+    </div>
+    <div class="delete-body">
+        <div class="schedule-preview">
+            <div class="preview-icon-wrap"><i class="fas fa-clock"></i></div>
+            <div>
+                <div class="preview-name">@(Model?.Doctor?.User?.FullName ?? "—")</div>
+                <div class="preview-meta">
+                    <i class="fas fa-calendar mr-1"></i>@Model?.Date.ToString("dd/MM/yyyy")
+                    &nbsp;·&nbsp;
+                    <i class="fas fa-sun mr-1"></i>@Model?.Shift
+                </div>
+            </div>
+        </div>
+
+        <div class="info-row">
+            <span class="label">Ca làm việc</span>
+            <span class="value">@(Model?.Shift ?? "—")</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Ngày làm</span>
+            <span class="value">@Model?.Date.ToString("dd/MM/yyyy")</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Trạng thái</span>
+            <span class="value">
+                @if (Model?.IsAvailable == true)
+                {
+                    <span class="avail-badge avail-yes"><i class="fas fa-check-circle mr-1"></i>Còn trống</span>
+                }
+                else
+                {
+
+                    <span class="avail-badge avail-no"><i class="fas fa-times-circle mr-1"></i>Đã kín</span>
+                }
+            </span>
+        </div>
+
+        <div class="warning-box">
+            <i class="fas fa-exclamation-triangle mr-2"></i>
+            <strong>Cảnh báo:</strong> Xóa ca làm việc này có thể ảnh hưởng đến các lịch khám đã được đặt trong ca này.
+        </div>
+
+        <form asp-action="Delete">
+            <input type="hidden" asp-for="Id" />
+            <div class="d-flex" style="gap:.75rem">
+                <button type="submit" class="btn btn-confirm-delete"><i class="fas fa-trash mr-1"></i>Xác nhận xóa</button>
+                <a asp-action="Index" class="btn btn-cancel-soft"><i class="fas fa-ban mr-1"></i>Hủy bỏ</a>
+            </div>
+        </form>
+    </div>
+</div>

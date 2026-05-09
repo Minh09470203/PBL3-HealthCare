@@ -1,0 +1,125 @@
+﻿@model PBL3_HealthCare.Models.Doctor
+
+@{
+    ViewData["Title"] = "Chỉnh sửa thông tin Bác sĩ";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/doctors.css" />
+}
+
+<div class="d-flex align-items-center mb-3">
+    <a asp-action="Index" class="btn btn-light btn-sm mr-3" style="border-radius:8px;"><i class="fas fa-arrow-left mr-1"></i>Quay lại</a>
+    <span class="id-badge"><i class="fas fa-fingerprint mr-1"></i>ID: @Model?.Id</span>
+</div>
+
+<div class="form-card edit card mb-4">
+    <div class="card-header">
+        <h5><i class="fas fa-user-edit mr-2"></i>Chỉnh sửa thông tin Bác sĩ</h5>
+        <p>Cập nhật hồ sơ — @Model?.User?.FullName</p>
+    </div>
+    <div class="card-body">
+        <form asp-action="Edit" autocomplete="off" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3" style="border-radius:10px;font-size:.85rem;"></div>
+            <input type="hidden" asp-for="Id" />
+
+            <input type="hidden" name="Image" value="@Model?.Image" />
+
+            <p class="form-section-title yellow"><i class="fas fa-id-card mr-1"></i>Thông tin cơ bản</p>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-floating-custom">
+                        <label><i class="fas fa-user mr-1 text-muted"></i>Tài khoản người dùng</label>
+                        <select asp-for="UserId" class="form-control" asp-items="ViewBag.UserId"></select>
+                        <span asp-validation-for="UserId" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating-custom">
+                        <label><i class="fas fa-stethoscope mr-1 text-muted"></i>Chuyên khoa</label>
+                        <select asp-for="SpecialtyId" class="form-control" asp-items="ViewBag.SpecialtyId"></select>
+                        <span asp-validation-for="SpecialtyId" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating-custom">
+                        <label><i class="fas fa-graduation-cap mr-1 text-muted"></i>Bằng cấp / Học hàm</label>
+                        <div class="input-icon-wrap">
+                            <i class="input-icon fas fa-award"></i>
+                            <input asp-for="Degree" class="form-control" />
+                        </div>
+                        <span asp-validation-for="Degree" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating-custom">
+                        <label><i class="fas fa-money-bill-wave mr-1 text-muted"></i>Giá khám (VNĐ)</label>
+                        <div class="input-icon-wrap">
+                            <i class="input-icon fas fa-tag"></i>
+                            <input asp-for="Price" class="form-control" type="number" />
+                        </div>
+                        <span asp-validation-for="Price" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-12 mt-3">
+                    <div class="custom-control custom-checkbox" style="padding-left: 2rem;">
+                        <input asp-for="IsVideoAvailable" class="custom-control-input" id="IsVideoAvailableEdit" style="cursor:pointer;" />
+                        <label class="custom-control-label font-weight-bold text-primary" for="IsVideoAvailableEdit" style="font-size: 1.05rem; cursor:pointer;">
+                            <i class="fas fa-video mr-1"></i> Hỗ trợ Khám Online (Video Call)
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <p class="form-section-title yellow mt-2"><i class="fas fa-align-left mr-1"></i>Mô tả & Hình ảnh</p>
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="form-floating-custom">
+                        <label>Tiểu sử / Giới thiệu bác sĩ</label>
+                        <textarea asp-for="Bio" class="form-control" rows="5"></textarea>
+                        <span asp-validation-for="Bio" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-floating-custom">
+                        <label><i class="fas fa-image mr-1 text-muted"></i>Đổi ảnh đại diện (Tùy chọn)</label>
+                        <div class="custom-file">
+                            <input type="file" name="AvatarFile" class="custom-file-input" id="customFileEdit" accept="image/*">
+                            <label class="custom-file-label" for="customFileEdit" data-browse="Chọn file">Tải ảnh lên...</label>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 text-center p-2 bg-light" style="border-radius: 8px;">
+                        <span class="d-block small text-muted mb-2">Ảnh hiện tại</span>
+                        @{
+                            var imgUrl = string.IsNullOrEmpty(Model?.Image) ? "/img/undraw_profile.svg" : $"/img/{Model.Image}";
+                        }
+                        <img src="@imgUrl" alt="Ảnh bác sĩ" style="max-width:100px; height:100px; object-fit:cover; border-radius:50%; border:3px solid #ffe566; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
+                    </div>
+                </div>
+            </div>
+
+            <hr style="border-color:#fff8e0;margin:1.5rem 0;">
+            <div class="d-flex" style="gap:.75rem">
+                <button type="submit" class="btn btn-save-yellow"><i class="fas fa-save mr-1"></i>Lưu thay đổi</button>
+                <a asp-action="Index" class="btn btn-cancel-soft"><i class="fas fa-times mr-1"></i>Hủy bỏ</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        // Script hiển thị tên file khi Admin chọn ảnh
+        $(document).ready(function () {
+            $('.custom-file-input').on('change', function () {
+                var fileName = $(this).val().split('\\').pop();
+                $(this).next('.custom-file-label').addClass("selected").html(fileName);
+            });
+        });
+    </script>
+}

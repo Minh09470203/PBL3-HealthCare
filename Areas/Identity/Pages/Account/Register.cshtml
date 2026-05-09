@@ -1,0 +1,110 @@
+﻿@page
+@model RegisterModel
+@{
+    ViewBag.Title = "Đăng ký tài khoản";
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+}
+
+<style>
+    /* Kế thừa CSS nút bấm đã viết ở trang Login */
+    .form-control-pill {
+        border-radius: 50px;
+        padding: 12px 20px;
+        border: 1.5px solid #e2e8f0;
+        font-size: 0.95rem;
+        transition: all 0.3s;
+    }
+
+        .form-control-pill:focus {
+            border-color: #00b5f1;
+            box-shadow: 0 0 0 4px rgba(0, 181, 241, 0.15);
+            outline: none;
+        }
+
+    /* 🔥 NÚT GRADIENT */
+    /* 🔥 NÚT BẤM TINH TẾ (Đã khử mùi AI 100%) */
+    .btn-auth-gradient {
+        border-radius: 50px;
+        padding: 14px 25px;
+        font-weight: 700;
+        font-size: 1rem;
+        border: none;
+        color: white;
+        /* Chuyển sang Gradient cực nhẹ (từ Xanh Cyan sang Xanh Cyan sáng hơn 1 tí tẹo) */
+        background: linear-gradient(to right, #00b5f1, #1ec8fe);
+        /* Giảm bóng đổ: Bớt độ rực, thu gọn lại cho chuyên nghiệp */
+        box-shadow: 0 4px 10px rgba(0, 181, 241, 0.15);
+        transition: all 0.3s ease;
+    }
+
+        .btn-auth-gradient:hover {
+            /* Khi trỏ chuột vào thì tối đi một xíu để có cảm giác bấm */
+            background: linear-gradient(to right, #00a2db, #00b5f1);
+            transform: translateY(-1px); /* Chỉ nhích nhẹ 1px thay vì 2px */
+            box-shadow: 0 6px 14px rgba(0, 181, 241, 0.2);
+            color: white;
+        }
+</style>
+
+<div class="mb-4 text-center text-lg-start">
+    <h2 style="font-weight: 800; color: #1a202c; letter-spacing: -1px;">TẠO TÀI KHOẢN</h2>
+    <p class="text-muted">Đăng ký để trải nghiệm dịch vụ y tế hàng đầu</p>
+</div>
+
+<form method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3 small"></div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <input asp-for="Input.FullName" class="form-control form-control-pill" placeholder="Họ và tên" />
+            <span asp-validation-for="Input.FullName" class="text-danger small px-3"></span>
+        </div>
+        <div class="col-md-6 mb-3">
+            <input asp-for="Input.Email" class="form-control form-control-pill" placeholder="Email của bạn" />
+            <span asp-validation-for="Input.Email" class="text-danger small px-3"></span>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <input asp-for="Input.Password" type="password" class="form-control form-control-pill" placeholder="Mật khẩu" />
+            <span asp-validation-for="Input.Password" class="text-danger small px-3"></span>
+        </div>
+        <div class="col-md-6 mb-3">
+            <input asp-for="Input.ConfirmPassword" type="password" class="form-control form-control-pill" placeholder="Xác nhận mật khẩu" />
+            <span asp-validation-for="Input.ConfirmPassword" class="text-danger small px-3"></span>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <input asp-for="Input.Address" class="form-control form-control-pill" placeholder="Địa chỉ hiện tại của bạn" />
+        <span asp-validation-for="Input.Address" class="text-danger small px-3"></span>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-6">
+            <select asp-for="Input.Gender" class="form-select form-control-pill" style="height: 50px;">
+                <option value="">Giới tính</option>
+                <option>Nam</option>
+                <option>Nữ</option>
+                <option>Khác</option>
+            </select>
+            <span asp-validation-for="Input.Gender" class="text-danger small px-3"></span>
+        </div>
+        <div class="col-6">
+            <input asp-for="Input.DateOfBirth" type="date" class="form-control form-control-pill" style="height: 50px;" />
+            <span asp-validation-for="Input.DateOfBirth" class="text-danger small px-3"></span>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-auth-gradient w-100">ĐĂNG KÝ NGAY</button>
+
+    <div class="text-center text-lg-start mt-4 pt-2 border-top" style="border-color: #f0f2f5 !important;">
+        <span class="text-muted small">Đã có tài khoản? </span>
+        <a asp-page="./Login" class="text-decoration-none fw-bold small" style="color: #f58220;">Đăng nhập</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

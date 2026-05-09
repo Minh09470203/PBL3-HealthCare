@@ -1,0 +1,39 @@
+﻿@model IEnumerable<PBL3_HealthCare.Models.Doctor>
+
+@{
+    ViewData["Title"] = "Danh sách bác sĩ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Tất cả đội ngũ bác sĩ</h2>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="row">
+            @foreach (var item in Model)
+            {
+                <div class="col-md-4 mb-4 ftco-animate">
+                    <div class="card shadow-sm text-center h-100 staff">
+                        <div class="img-wrap d-flex align-items-stretch" style="height: 300px;">
+                            <div class="img align-self-stretch w-100" style="background-image: url(/images/doctors/@(item.Image ?? "default.jpg")); background-size: cover; background-position: center;"></div>
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title mt-3">@(item.User?.FullName ?? "Bác sĩ")</h5>
+                            <p class="text-primary mb-3">@(item.Specialty?.Name ?? "Chuyên khoa")</p>
+                            <div class="mt-auto">
+                                <a asp-controller="Doctors" asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-primary btn-sm">Xem chi tiết & Đặt lịch</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <p class="lead text-muted">Không tìm thấy bác sĩ nào trong danh sách.</p>
+        </div>
+    }
+</div>

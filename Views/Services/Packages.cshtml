@@ -1,0 +1,164 @@
+﻿@model IEnumerable<PBL3_HealthCare.Models.HealthPackage>
+@{
+    ViewData["Title"] = "Danh sách Gói Khám Sức Khỏe";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        /* CSS MỚI: BỌC THÉP TỪNG PHẦN, CHỐNG MÉO CHỐNG VỠ 100% */
+        .pkg-list-card {
+            background: #ffffff;
+            border: 1px solid #00b5f1;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+            transition: all 0.3s ease;
+            /* Bố cục ngang chuẩn */
+            display: flex;
+            align-items: center;
+            gap: 25px; /* Khoảng cách cố định giữa Hình - Chữ - Nút */
+        }
+
+            .pkg-list-card:hover {
+                box-shadow: 0 8px 25px rgba(0, 181, 241, 0.15);
+                transform: translateY(-3px);
+            }
+
+        /* 1. KHU VỰC ẢNH CHỐNG BÓP MÉO */
+        .pkg-img-left {
+            width: 80px;
+            height: 80px;
+            min-width: 80px; /* Ép cứng không cho thằng nào bóp nhỏ */
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #e0f6ff;
+            background-color: #f4f9fd;
+            padding: 5px;
+        }
+
+        /* 2. KHU VỰC CHỮ RỘNG RÃI */
+        .pkg-info-center {
+            flex: 1; /* Chiếm toàn bộ khoảng trống ở giữa */
+            text-align: left;
+        }
+
+        .pkg-name {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #2b3452;
+            margin-bottom: 8px;
+        }
+
+        .pkg-desc-text {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .pkg-price-text {
+            color: #f58220;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        /* 3. KHU VỰC NÚT BẤM CỐ ĐỊNH */
+        .pkg-action-right {
+            min-width: 170px; /* Ép cứng chiều rộng khu vực nút */
+            text-align: right;
+        }
+
+        .btn-book-cyan {
+            background-color: #00cbff;
+            color: #ffffff !important;
+            border-radius: 50px;
+            font-weight: 600;
+            padding: 10px 25px;
+            border: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 203, 255, 0.3);
+            text-decoration: none;
+            display: inline-block;
+            width: 100%;
+            text-align: center;
+        }
+
+            .btn-book-cyan:hover {
+                background-color: #00b5f1;
+                transform: scale(1.05);
+            }
+
+        /* Chỉnh lại layout khi coi trên Điện thoại */
+        @@media (max-width: 768px) {
+            .pkg-list-card {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+
+            .pkg-info-center, .pkg-action-right {
+                text-align: center;
+                min-width: auto;
+                width: 100%;
+            }
+        }
+    </style>
+}
+
+<section class="packages-page">
+    <div class="container" style="padding-top: 40px; padding-bottom: 40px;">
+
+        <div class="packages-header text-center mb-5">
+            <p class="eyebrow text-primary font-weight-bold" style="text-transform: uppercase; font-size: 14px; letter-spacing: 2px;">Dịch vụ y tế</p>
+            <h2 style="font-weight: 800; color: #1a202c;">Các Gói Khám Sức Khỏe</h2>
+            <p class="text-muted">Lựa chọn gói khám phù hợp để bảo vệ sức khỏe cho bạn và gia đình.</p>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="empty-pkg text-center py-5">
+                <div class="empty-icon" style="font-size: 50px; color: #ccc;"><i class="fas fa-box-open"></i></div>
+                <h4 class="mt-3">Hiện tại phòng khám đang cập nhật các gói khám mới.</h4>
+                <p>Vui lòng quay lại sau nhé!</p>
+            </div>
+        }
+        else
+        {
+            <div class="row justify-content-center">
+                <div class="col-lg-9">
+
+                    @foreach (var item in Model)
+                    {
+                        <div class="pkg-list-card">
+
+                            <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "https://cdn-icons-png.flaticon.com/512/2865/2865768.png" : item.ImageUrl)"
+                                 class="pkg-img-left" alt="@item.Name" />
+
+                            <div class="pkg-info-center">
+                                <div class="pkg-name">@item.Name</div>
+                                <div class="pkg-desc-text"><i class="fas fa-check-circle mr-1" style="color: #00cbff;"></i> @item.Description</div>
+                                <div class="pkg-price-text">Giá: @item.Price.ToString("N0") VNĐ</div>
+                            </div>
+
+                            <div class="pkg-action-right">
+                                <a asp-controller="Services" asp-action="BookPackage"
+                                   asp-route-id="@item.Id"
+                                   class="btn-book-cyan">
+                                    Đặt khám ngay
+                                </a>
+                            </div>
+
+                        </div>
+                    }
+
+                </div>
+            </div>
+        }
+
+    </div>
+</section>

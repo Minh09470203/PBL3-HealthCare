@@ -1,0 +1,80 @@
+﻿@model PBL3_HealthCare.Models.Medicine
+
+@{
+    ViewData["Title"] = "Nhập thuốc mới";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/medicines.css" />
+}
+
+<a asp-action="Index" class="btn btn-light btn-sm mb-3" style="border-radius:8px;"><i class="fas fa-arrow-left mr-1"></i>Quay lại kho</a>
+
+<div class="form-card create card mb-4" style="max-width:720px;">
+    <div class="card-header">
+        <h5><i class="fas fa-pills mr-2"></i>Nhập thuốc mới vào kho</h5>
+        <p>Điền thông tin đầy đủ để cập nhật kho dược phẩm</p>
+    </div>
+    <div class="card-body">
+        <form asp-action="Create" autocomplete="off">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3" style="border-radius:10px;font-size:.85rem;"></div>
+
+            <p class="form-section-title purple"><i class="fas fa-capsules mr-1"></i>Thông tin thuốc</p>
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="form-floating-custom">
+                        <label>Tên thuốc</label>
+                        <div class="input-icon-wrap">
+                            <i class="input-icon fas fa-capsules"></i>
+                            <input asp-for="Name" class="form-control" placeholder="Nhập tên thuốc..." />
+                        </div>
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-floating-custom">
+                        <label>Đơn vị tính</label>
+                        <div class="input-icon-wrap">
+                            <i class="input-icon fas fa-tag"></i>
+                            <input asp-for="Unit" class="form-control" placeholder="Viên, Vỉ, Chai..." />
+                        </div>
+                        <span asp-validation-for="Unit" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating-custom">
+                        <label>Số lượng tồn kho</label>
+                        <div class="input-icon-wrap">
+                            <i class="input-icon fas fa-cubes"></i>
+                            <input asp-for="StockQuantity" class="form-control" type="number" min="0" placeholder="0" />
+                        </div>
+                        <span asp-validation-for="StockQuantity" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating-custom">
+                        <label>Đơn giá (VNĐ)</label>
+                        <div class="input-icon-wrap">
+                            <i class="input-icon fas fa-money-bill"></i>
+                            <input asp-for="Price" class="form-control" type="number" min="0" placeholder="0" />
+                        </div>
+                        <span asp-validation-for="Price" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <hr style="border-color:#ede8ff;margin:1.5rem 0;">
+            <div class="d-flex" style="gap:.75rem">
+                <button type="submit" class="btn btn-save-purple"><i class="fas fa-plus mr-1"></i>Thêm vào kho</button>
+                <a asp-action="Index" class="btn btn-cancel-soft"><i class="fas fa-times mr-1"></i>Hủy bỏ</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

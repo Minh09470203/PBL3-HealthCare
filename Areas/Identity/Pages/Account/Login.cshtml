@@ -1,0 +1,128 @@
+﻿@page
+@model LoginModel
+@{
+    ViewBag.Title = "Đăng nhập";
+    // Trỏ về Layout cũ có clip-path vát chéo nhé sếp
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+}
+
+<style>
+    /* CSS NÂNG CẤP BỘ NÚT BẤM CỰC XỊN */
+
+    /* Input bo tròn dạng viên thuốc (Pill-shape) */
+    .form-control-pill {
+        border-radius: 50px;
+        padding: 14px 25px;
+        border: 1.5px solid #e2e8f0;
+        font-size: 0.95rem;
+        transition: all 0.3s;
+    }
+
+        .form-control-pill:focus {
+            border-color: #00b5f1;
+            box-shadow: 0 0 0 4px rgba(0, 181, 241, 0.15);
+            outline: none;
+        }
+
+    .btn-auth-gradient {
+        border-radius: 50px;
+        padding: 14px 25px;
+        font-weight: 700;
+        font-size: 1rem;
+        border: none;
+        color: white;
+        /* Chuyển sang Gradient cực nhẹ (từ Xanh Cyan sang Xanh Cyan sáng hơn 1 tí tẹo) */
+        background: linear-gradient(to right, #00b5f1, #1ec8fe);
+        /* Giảm bóng đổ: Bớt độ rực, thu gọn lại cho chuyên nghiệp */
+        box-shadow: 0 4px 10px rgba(0, 181, 241, 0.15);
+        transition: all 0.3s ease;
+    }
+
+    .btn-auth-gradient:hover {
+        /* Khi trỏ chuột vào thì tối đi một xíu để có cảm giác bấm */
+        background: linear-gradient(to right, #00a2db, #00b5f1);
+        transform: translateY(-1px); /* Chỉ nhích nhẹ 1px thay vì 2px */
+        box-shadow: 0 6px 14px rgba(0, 181, 241, 0.2);
+        color: white;
+    }
+
+    /* 🔥 NÚT GOOGLE CHUẨN ĐÉT GOOGLE (NỀN TRẮNG, VIỀN XÁM, LOGO 'G') */
+    .btn-google-brand {
+        background-color: #ffffff;
+        color: #4a5568;
+        border: 1px solid #dadce0;
+        border-radius: 8px; /* Giữ bo góc vuông nhẹ cho Google */
+        padding: 10px 18px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+    }
+
+        .btn-google-brand:hover {
+            background-color: #f8f9fa;
+            border-color: #d2d6dc;
+            text-decoration: none;
+            color: #2d3748;
+        }
+</style>
+
+<div class="mb-4 text-center text-lg-start">
+    <h2 style="font-weight: 800; color: #1a202c; letter-spacing: -1px;">ĐĂNG NHẬP</h2>
+    <p class="text-muted">SuperStar Medical Center</p>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success fw-bold" style="border-radius: 12px; font-size: 0.9rem;">
+        <i class="fas fa-check-circle mr-2"></i> @TempData["SuccessMessage"]
+    </div>
+}
+
+<form method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger fw-bold mb-3 text-center" style="font-size: 0.9rem;" role="alert"></div>
+
+    <div class="mb-4">
+        <input asp-for="Input.Email" class="form-control form-control-pill" placeholder="Email hoặc Số điện thoại" />
+        <span asp-validation-for="Input.Email" class="text-danger small ms-3 mt-1 d-block"></span>
+    </div>
+
+    <div class="mb-4">
+        <input asp-for="Input.Password" type="password" class="form-control form-control-pill" placeholder="Nhập mật khẩu" />
+        <span asp-validation-for="Input.Password" class="text-danger small ms-3 mt-1 d-block"></span>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4 px-2">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="rememberMe" asp-for="Input.RememberMe">
+            <label class="form-check-label text-muted small" for="rememberMe">Ghi nhớ</label>
+        </div>
+        <a asp-area="Identity" asp-page="/Account/ForgotPassword" class="small text-decoration-none" style="color: #00b5f1; font-weight: 600;">Quên mật khẩu?</a>
+    </div>
+
+    <button type="submit" class="btn btn-auth-gradient w-100 mb-4">TIẾP TỤC</button>
+</form>
+
+<div class="d-flex align-items-center mb-4">
+    <hr class="flex-grow-1" style="border-color: #e2e8f0;">
+    <span class="mx-3 text-muted small fw-bold" style="letter-spacing: 1px;">HOẶC ĐĂNG NHẬP BẰNG</span>
+    <hr class="flex-grow-1" style="border-color: #e2e8f0;">
+</div>
+
+<form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+    <button type="submit" class="btn-google-red w-100 mb-2" name="provider" value="Google">
+        <i class="fab fa-google"></i> Đăng nhập với Google
+    </button>
+</form>
+
+<div class="text-center text-lg-start mt-4 pt-2 border-top" style="border-color: #f0f2f5 !important;">
+    <span class="text-muted small">Chưa có tài khoản? </span>
+    <a asp-page="./Register" class="text-decoration-none fw-bold small" style="color: #f58220;">Đăng ký ngay</a>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

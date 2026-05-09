@@ -1,0 +1,106 @@
+﻿@model PBL3_HealthCare.Models.MedicalRecord
+@{
+    ViewData["Title"] = "Chi Tiết Bệnh Án";
+    Layout = "~/Views/Shared/_PatientLayout.cshtml";
+}
+
+<div class="container-fluid mt-4">
+    <div class="card shadow-lg border-0 rounded-lg mb-4">
+        <div class="card-header bg-info text-white text-center py-3">
+            <h4 class="mb-0"><i class="fas fa-file-medical-alt mr-2"></i>HỒ SƠ BỆNH ÁN CHI TIẾT</h4>
+        </div>
+        <div class="card-body p-5">
+            <div class="row mb-4">
+                <div class="col-sm-6">
+                    <h6 class="text-muted">Bác sĩ phụ trách</h6>
+                    <h5 class="font-weight-bold text-dark">BS. @(Model.Doctor?.User?.FullName ?? "N/A")</h5>
+                </div>
+                <div class="col-sm-6 text-md-right">
+                    <h6 class="text-muted">Ngày khám</h6>
+                    <h5 class="font-weight-bold text-dark">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</h5>
+                </div>
+            </div>
+            <hr />
+
+            <div class="mb-4 mt-4">
+                <h5 class="text-primary border-bottom pb-2"><i class="fas fa-search mr-2"></i>Chẩn Đoán Của Bác Sĩ</h5>
+                <p class="fs-5 mt-3 text-dark font-weight-bold text-danger">@Model.Diagnosis</p>
+            </div>
+
+            <div class="mb-4">
+                <h5 class="text-success border-bottom pb-2"><i class="fas fa-heartbeat mr-2"></i>Hướng Điều Trị & Lời Dặn</h5>
+                <div class="bg-light p-3 rounded text-dark">
+                    @(string.IsNullOrEmpty(Model.Treatment) ? "Không có lời dặn thêm." : Model.Treatment)
+                </div>
+            </div>
+
+            @* BẢNG THÔNG BÁO TÁI KHÁM (Có nút Đặt lịch ngay) *@
+            @if (Model.ReExaminationDate.HasValue && Model.ReExaminationDate.Value.Date >= DateTime.Today)
+            {
+                <div class="card shadow-sm mt-4 mb-4" style="border-left: 5px solid #36b9cc; border-radius: 12px; background-color: #f8f9fc;">
+                    <div class="card-body d-flex flex-column flex-md-row align-items-center justify-content-between p-4">
+                        <div class="mb-3 mb-md-0">
+                            <h6 class="font-weight-bold text-info mb-1" style="font-size: 1.1rem;">
+                                <i class="fas fa-calendar-check mr-2"></i>Lịch hẹn tái khám
+                            </h6>
+                            <p class="mb-0 text-muted">
+                                Bác sĩ chỉ định bạn nên tái khám vào ngày
+                                <strong class="text-danger" style="font-size: 1.1rem;">@Model.ReExaminationDate.Value.ToString("dd/MM/yyyy")</strong>
+                                để kiểm tra lại tình trạng sức khỏe.
+                            </p>
+                        </div>
+
+                        <a asp-controller="Home" asp-action="DoctorInfo"
+                           asp-route-id="@(Model.Appointment?.DoctorId ?? Model.Doctor?.Id)"
+                           asp-route-date="@Model.ReExaminationDate.Value.ToString("yyyy-MM-dd")"
+                           class="btn btn-info shadow-sm rounded-pill px-4 py-2 font-weight-bold" style="white-space: nowrap;">
+                            <i class="fas fa-calendar-plus mr-1"></i> Đặt lịch ngay
+                        </a>
+                    </div>
+                </div>
+            }
+
+            @if (Model.Prescriptions != null && Model.Prescriptions.Any())
+            {
+                var prescription = Model.Prescriptions.FirstOrDefault();
+                <div class="mt-5">
+                    <h5 class="text-info border-bottom pb-2"><i class="fas fa-pills mr-2"></i>Đơn Thuốc Được Kê</h5>
+                    @if (prescription.Details != null && prescription.Details.Any())
+                    {
+                        <div class="table-responsive mt-3">
+                            <table class="table table-sm table-bordered">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>Tên thuốc</th>
+                                        <th class="text-center">Số lượng</th>
+                                        <th>Liều dùng/Cách dùng</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var detail in prescription.Details)
+                                    {
+                                        <tr>
+                                            <td class="font-weight-bold text-primary">@detail.Medicine?.Name</td>
+                                            <td class="text-center">@detail.Quantity</td>
+                                            <td>@detail.Instruction</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted mt-2">Đơn thuốc chưa có chi tiết các loại thuốc.</p>
+                    }
+                </div>
+            }
+
+            <div class="text-center mt-5">
+                <a asp-action="MyMedicalRecords" class="btn btn-outline-secondary px-5 rounded-pill shadow-sm">
+                    <i class="fas fa-arrow-left mr-2"></i> Quay Về Danh Sách
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

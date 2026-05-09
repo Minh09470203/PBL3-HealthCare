@@ -1,0 +1,116 @@
+﻿@model PBL3_HealthCare.Models.Doctor
+
+@{
+    ViewData["Title"] = "Thêm Bác sĩ mới";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/doctors.css" />
+}
+
+<a asp-action="Index" class="btn btn-light btn-sm mb-3" style="border-radius:8px;">
+    <i class="fas fa-arrow-left mr-1"></i>Quay lại
+</a>
+
+<div class="form-card create card mb-4">
+    <div class="card-header">
+        <h5><i class="fas fa-user-md mr-2"></i>Thêm Bác sĩ mới vào hệ thống</h5>
+        <p>Điền đầy đủ thông tin để tạo hồ sơ bác sĩ</p>
+    </div>
+    <div class="card-body">
+        <form asp-action="Create" autocomplete="off" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3" style="border-radius:10px;font-size:.85rem;"></div>
+
+            <p class="form-section-title blue"><i class="fas fa-id-card mr-1"></i>Thông tin cơ bản</p>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-floating-custom">
+                        <label><i class="fas fa-user mr-1 text-muted"></i>Tài khoản người dùng</label>
+                        <select asp-for="UserId" class="form-control" asp-items="ViewBag.UserId">
+                            <option value="">-- Chọn tài khoản --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating-custom">
+                        <label><i class="fas fa-stethoscope mr-1 text-muted"></i>Chuyên khoa</label>
+                        <select asp-for="SpecialtyId" class="form-control" asp-items="ViewBag.SpecialtyId">
+                            <option value="">-- Chọn chuyên khoa --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating-custom">
+                        <label><i class="fas fa-graduation-cap mr-1 text-muted"></i>Bằng cấp / Học hàm</label>
+                        <div class="input-icon-wrap">
+                            <i class="input-icon fas fa-award"></i>
+                            <input asp-for="Degree" class="form-control" placeholder="VD: Tiến sĩ, Thạc sĩ Y khoa..." />
+                        </div>
+                        <span asp-validation-for="Degree" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating-custom">
+                        <label><i class="fas fa-money-bill-wave mr-1 text-muted"></i>Giá khám (VNĐ)</label>
+                        <div class="input-icon-wrap">
+                            <i class="input-icon fas fa-tag"></i>
+                            <input asp-for="Price" class="form-control" type="number" placeholder="0" />
+                        </div>
+                        <span asp-validation-for="Price" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-12 mt-3">
+                    <div class="custom-control custom-checkbox" style="padding-left: 2rem;">
+                        <input asp-for="IsVideoAvailable" class="custom-control-input" id="IsVideoAvailableCreate" style="cursor:pointer;" />
+                        <label class="custom-control-label font-weight-bold text-primary" for="IsVideoAvailableCreate" style="font-size: 1.05rem; cursor:pointer;">
+                            <i class="fas fa-video mr-1"></i> Cho phép Bác sĩ này nhận Khám trực tuyến (Video Call)
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <p class="form-section-title blue mt-2"><i class="fas fa-align-left mr-1"></i>Mô tả & Hình ảnh</p>
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="form-floating-custom">
+                        <label>Tiểu sử / Giới thiệu bác sĩ</label>
+                        <textarea asp-for="Bio" class="form-control" rows="4" placeholder="Nhập mô tả ngắn về bác sĩ..."></textarea>
+                        <span asp-validation-for="Bio" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-floating-custom">
+                        <label><i class="fas fa-image mr-1 text-muted"></i>Tải ảnh đại diện lên</label>
+                        <div class="custom-file mt-2">
+                            <input type="file" name="AvatarFile" class="custom-file-input" id="customFileCreate" accept="image/*" required>
+                            <label class="custom-file-label" for="customFileCreate" data-browse="Chọn file">Chọn ảnh từ máy tính...</label>
+                        </div>
+                        <small class="text-muted mt-2 d-block">Định dạng hỗ trợ: JPG, PNG, JPEG.</small>
+                    </div>
+                </div>
+            </div>
+
+            <hr style="border-color:#e8edff;margin:1.5rem 0;">
+            <div class="d-flex" style="gap:.75rem">
+                <button type="submit" class="btn btn-save-blue"><i class="fas fa-check mr-1"></i>Lưu thông tin</button>
+                <a asp-action="Index" class="btn btn-cancel-soft"><i class="fas fa-times mr-1"></i>Hủy bỏ</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        // Script hiển thị tên file khi Admin chọn ảnh
+        $(document).ready(function () {
+            $('.custom-file-input').on('change', function () {
+                var fileName = $(this).val().split('\\').pop();
+                $(this).next('.custom-file-label').addClass("selected").html(fileName);
+            });
+        });
+    </script>
+}

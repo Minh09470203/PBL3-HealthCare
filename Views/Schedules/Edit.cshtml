@@ -1,0 +1,190 @@
+﻿@model PBL3_HealthCare.Models.Schedule
+
+@{
+    ViewData["Title"] = "Chỉnh sửa Ca làm việc";
+    Layout = "_AdminLayout";
+}
+
+<style>
+    /* CSS đồng bộ tông màu Vàng cho trang Edit */
+    .id-badge {
+        background: #fff8e0;
+        color: #b8860b;
+        padding: .4rem .8rem;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: .85rem;
+        border: 1px solid #ffeeba;
+    }
+
+    .form-card.edit {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 24px rgba(184, 134, 11, .08);
+        overflow: hidden;
+        margin: 0 auto;
+    }
+
+    .form-card .card-header {
+        background: #fffdf5;
+        border-bottom: 1px solid #fff8e0;
+        padding: 1.25rem 1.5rem;
+    }
+
+        .form-card .card-header h5 {
+            color: #b8860b;
+            font-weight: 700;
+            margin: 0;
+        }
+
+    .form-section-title.yellow {
+        color: #d4a017;
+        font-size: .8rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 800;
+        margin-bottom: 1.25rem;
+        display: block;
+    }
+
+    .form-floating-custom label {
+        display: block;
+        font-size: .85rem;
+        font-weight: 700;
+        color: #5a5c69;
+        margin-bottom: .4rem;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #d4a017;
+    }
+
+    .form-control {
+        border-radius: 10px;
+        border: 1.5px solid #e3e6f0;
+        padding: .6rem .75rem .6rem 2.5rem;
+        font-size: .9rem;
+    }
+
+        .form-control:focus {
+            border-color: #d4a017;
+            box-shadow: 0 0 0 0.2rem rgba(212, 160, 23, 0.1);
+        }
+
+    .availability-toggle {
+        background: #fffdf5;
+        padding: 1rem;
+        border-radius: 12px;
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        border: 1px dashed #ffeeba;
+    }
+
+    .btn-save-yellow {
+        background: linear-gradient(135deg,#d4a017,#b8860b);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: .6rem 1.5rem;
+        font-weight: 600;
+        transition: all .2s;
+    }
+
+        .btn-save-yellow:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(184,134,11,.3);
+            color: white;
+        }
+
+    .btn-cancel-soft {
+        background: #f8f9fc;
+        color: #858796;
+        border-radius: 10px;
+        padding: .6rem 1.5rem;
+        font-weight: 600;
+        border: 1px solid #e3e6f0;
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="d-flex align-items-center mb-3">
+        <a asp-action="Index" class="btn btn-light btn-sm mr-3" style="border-radius:8px;">
+            <i class="fas fa-arrow-left mr-1"></i>Quay lại
+        </a>
+        <span class="id-badge"><i class="fas fa-fingerprint mr-1"></i>Mã ca trực: #@Model?.Id</span>
+    </div>
+
+    <div class="form-card edit card mb-4" style="max-width:680px;">
+        <div class="card-header">
+            <h5><i class="fas fa-edit mr-2"></i>Chỉnh sửa Ca làm việc</h5>
+            <p>Thay đổi thời gian hoặc bác sĩ phụ trách ca trực này</p>
+        </div>
+        <div class="card-body" style="padding: 1.5rem 2rem;">
+            <form asp-action="Edit" autocomplete="off">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3" style="font-size:.85rem;"></div>
+                <input type="hidden" asp-for="Id" />
+
+                <span class="form-section-title yellow"><i class="fas fa-info-circle mr-1"></i>Chi tiết thay đổi</span>
+
+                <div class="form-floating-custom">
+                    <label>Bác sĩ phụ trách</label>
+                    <select asp-for="DoctorId" class="form-control" asp-items="ViewBag.DoctorId" style="padding-left:1rem;"></select>
+                    <span asp-validation-for="DoctorId" class="text-danger small"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-floating-custom">
+                            <label>Ngày làm việc</label>
+                            <div class="input-icon-wrap" style="position:relative;">
+                                <i class="input-icon fas fa-calendar-check"></i>
+                                <input asp-for="Date" class="form-control" type="date" />
+                            </div>
+                            <span asp-validation-for="Date" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating-custom">
+                            <label>Ca làm việc</label>
+                            <div class="input-icon-wrap" style="position:relative;">
+                                <i class="input-icon fas fa-clock"></i>
+                                <input asp-for="Shift" class="form-control" placeholder="VD: Sáng, Chiều..." />
+                            </div>
+                            <span asp-validation-for="Shift" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="availability-toggle mb-4">
+                    <div style="padding-top: 2px;">
+                        <input class="form-check-input" type="checkbox" asp-for="IsAvailable" style="width: 18px; height: 18px; cursor:pointer;" />
+                    </div>
+                    <div>
+                        <label asp-for="IsAvailable" style="font-size:.9rem;font-weight:700;color:#2d3748;cursor:pointer;margin:0;">Còn chỗ nhận lịch</label>
+                        <div style="font-size:.78rem;color:#858796;">Bỏ tích nếu ca trực này đã đủ số lượng bệnh nhân đặt</div>
+                    </div>
+                </div>
+
+                <hr style="border-color:#fff8e0; margin: 1.5rem 0;">
+
+                <div class="d-flex align-items-center" style="gap:.75rem">
+                    <button type="submit" class="btn btn-save-yellow">
+                        <i class="fas fa-save mr-1"></i>Cập nhật ngay
+                    </button>
+                    <a asp-action="Index" class="btn btn-cancel-soft">Hủy bỏ</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,0 +1,224 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>@ViewData["Title"] - Hệ thống Y tế</title>
+    @using Microsoft.AspNetCore.Identity
+    @using PBL3_HealthCare.Models
+    @inject SignInManager<ApplicationUser> SignInManager
+    @inject UserManager<ApplicationUser> UserManager
+    <link href="~/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,i,300,i,400,i,600,i,700,i,800,i,900,i" rel="stylesheet">
+
+    <link href="~/css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="~/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" asp-controller="Admin" asp-action="Index">
+                <div class="sidebar-brand-icon rotate-n-15">
+                    <i class="fas fa-hospital"></i>
+                </div>
+                <div class="sidebar-brand-text mx-3">HealthCare Admin</div>
+            </a>
+
+            <hr class="sidebar-divider my-0">
+
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="Admin" asp-action="Index">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>Tổng quan</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Nghiệp vụ</div>
+
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="Appointments" asp-action="Index">
+                    <i class="fas fa-fw fa-calendar-check"></i>
+                    <span>Quản lý Lịch khám</span>
+                </a>
+            </li>
+
+            <li class="nav-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Schedules" ? "active" : "")">
+                <a class="nav-link" asp-controller="Schedules" asp-action="Index">
+                    <i class="fas fa-fw fa-clock"></i>
+                    <span>Quản lý Ca làm việc</span>
+                </a>
+            </li>
+
+            <li class="nav-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "PendingPackages" ? "active" : "")">
+                <a class="nav-link" asp-controller="Admin" asp-action="PendingPackages">
+                    <i class="fas fa-fw fa-clipboard-list"></i>
+                    <span>Duyệt Gói Khám</span>
+                    </a>
+            </li>
+
+            <li class="nav-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "PendingVaccinations" ? "active" : "")">
+                <a class="nav-link" asp-controller="Admin" asp-action="PendingVaccinations">
+                    <i class="fas fa-fw fa-syringe"></i>
+                    <span>Duyệt Tiêm Chủng</span>
+                </a>
+            </li>
+
+            <li class="nav-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "PendingHomeCare" ? "active" : "")">
+                <a class="nav-link" asp-controller="Admin" asp-action="PendingHomeCare">
+                    <i class="fas fa-fw fa-house-user"></i>
+                    <span>Duyệt Y Tế Tại Nhà</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="Invoices" asp-action="Index">
+                    <i class="fas fa-fw fa-file-invoice-dollar"></i>
+                    <span>Quản lý Hóa Đơn</span>
+                </a>
+            </li>
+
+            @if (User.IsInRole("Admin"))
+            {
+                <hr class="sidebar-divider">
+                <div class="sidebar-heading">Quản trị hệ thống</div>
+
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Doctors" asp-action="Index">
+                        <i class="fas fa-fw fa-user-md"></i>
+                        <span>Quản lý Bác sĩ</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Specialties" asp-action="Index">
+                        <i class="fas fa-fw fa-stethoscope"></i>
+                        <span>Quản lý Chuyên khoa</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Medicines" asp-action="Index">
+                        <i class="fas fa-fw fa-pills"></i>
+                        <span>Kho Thuốc</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Patients" asp-action="Index">
+                        <i class="fas fa-fw fa-user-injured"></i>
+                        <span>Quản lý Bệnh nhân</span>
+                    </a>
+                </li>
+            }
+
+            <hr class="sidebar-divider d-none d-md-block">
+            <div class="text-center d-none d-md-inline">
+                <button class="rounded-circle border-0" id="sidebarToggle"></button>
+            </div>
+        </ul>
+
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars"></i>
+                    </button>
+                    <ul class="navbar-nav ml-auto">
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            var user = await UserManager.GetUserAsync(User);
+                            <li class="nav-item dropdown no-arrow">
+                                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                                   data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <span class="mr-2 d-none d-lg-inline text-gray-600 small">
+                                        @(user?.FullName ?? User.Identity.Name)
+                                    </span>
+
+                                    @{
+                                        // Kiểm tra xem user có ảnh trong DB không
+                                        var avatarUrl = !string.IsNullOrEmpty(user?.Avatar)
+                                        ? $"/img/admins/{user.Avatar}"
+                                        : "/img/admins/default-admin.jpg"; // Ảnh mặc định nếu chưa đổi
+                                    }
+
+                                    <img class="img-profile rounded-circle" src="@avatarUrl" style="object-fit: cover;">
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
+                                     aria-labelledby="userDropdown">
+
+                                    <a class="dropdown-item" asp-controller="Admin" asp-action="Profile">
+                                        <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
+                                        Hồ sơ cá nhân
+                                    </a>
+
+                                    <div class="dropdown-divider"></div>
+
+                                    <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                                        <button type="submit" class="dropdown-item border-0 bg-transparent w-100 text-left">
+                                            <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                                            Đăng xuất
+                                        </button>
+                                    </form>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+
+                <div class="container-fluid">
+                    @RenderBody()
+                </div>
+            </div>
+
+            <footer class="sticky-footer bg-white">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>Copyright &copy; PBL3 HealthCare 2024</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    <script src="~/vendor/jquery/jquery.min.js"></script>
+    <script src="~/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="~/js/sb-admin-2.min.js"></script>
+
+    <script src="~/vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="~/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function () {
+            // Sử dụng HttpUtility để tránh lỗi parse kí tự lạ nếu có
+            var successMsg = '@(TempData["Success"])';
+            var errorMsg = '@(TempData["Error"])';
+
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+
+            if (successMsg) {
+                Toast.fire({ icon: 'success', title: successMsg });
+            }
+            if (errorMsg) {
+                Toast.fire({ icon: 'error', title: errorMsg });
+            }
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,53 @@
+﻿@model PBL3_HealthCare.Models.Medicine
+
+@{
+    ViewData["Title"] = "Chi tiết Thuốc";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/medicines.css" />
+}
+
+<a asp-action="Index" class="btn btn-light btn-sm mb-3" style="border-radius:8px;"><i class="fas fa-arrow-left mr-1"></i>Quay lại kho thuốc</a>
+
+<div class="detail-card card mb-4">
+    <div class="detail-header">
+        <div class="med-icon"><i class="fas fa-pills"></i></div>
+        <h5>@Model?.Name</h5>
+        <p>Kho dược phẩm · #@Model?.Id</p>
+    </div>
+    <div class="detail-body">
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label"><i class="fas fa-tag mr-1"></i>Đơn vị tính</div>
+                <div class="info-value">@(Model?.Unit ?? "—")</div>
+            </div>
+            <div class="info-item teal">
+                <div class="info-label"><i class="fas fa-cubes mr-1"></i>Số lượng tồn</div>
+                <div class="info-value" style="@(Model?.StockQuantity < 10 ? "color:#e74a3b;" : "")">
+                    @Model?.StockQuantity <small style="font-size:.75rem;font-weight:400;color:#9fa5b5;">@Model?.Unit</small>
+                </div>
+            </div>
+            <div class="info-item green" style="grid-column:1/-1;">
+                <div class="info-label"><i class="fas fa-money-bill-wave mr-1"></i>Đơn giá</div>
+                <div class="info-value" style="color:#1cc88a;font-size:1.1rem;">
+                    @string.Format("{0:N0}", Model?.Price) <small style="font-size:.75rem;font-weight:400;color:#9fa5b5;">VNĐ / @Model?.Unit</small>
+                </div>
+            </div>
+        </div>
+
+        @if (Model?.StockQuantity < 10)
+        {
+            <div class="low-stock-warn">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                <strong>Cảnh báo tồn kho thấp!</strong> Số lượng còn lại dưới mức tối thiểu. Cần nhập thêm sớm.
+            </div>
+        }
+    </div>
+    <div class="action-bar">
+        <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-edit-action"><i class="fas fa-edit mr-1"></i>Cập nhật</a>
+        <a asp-action="Delete" asp-route-id="@Model?.Id" class="btn btn-delete-action"><i class="fas fa-trash mr-1"></i>Xóa</a>
+        <a asp-action="Index" class="btn btn-back-action ml-auto"><i class="fas fa-list mr-1"></i>Danh sách</a>
+    </div>
+</div>

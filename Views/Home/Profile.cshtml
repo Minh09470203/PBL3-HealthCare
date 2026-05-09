@@ -1,0 +1,141 @@
+﻿@model PBL3_HealthCare.Models.ApplicationUser
+
+@{
+    ViewData["Title"] = "Hồ sơ cá nhân";
+    Layout = "~/Views/Shared/_PatientLayout.cshtml";
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800"><i class="fas fa-user-edit text-primary mr-2"></i>Hồ sơ cá nhân</h1>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+        <i class="fas fa-check-circle mr-1"></i> @TempData["Success"]
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+}
+
+<form asp-action="Profile" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+
+    <div class="row">
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Ảnh đại diện</h6>
+                </div>
+                <div class="card-body text-center">
+
+                    @{
+                        var avatarUrl = string.IsNullOrEmpty(Model.Avatar) ? "/img/undraw_profile.svg" : "/img/" + Model.Avatar;
+                    }
+                    <img class="img-profile rounded-circle mb-3 shadow-sm" src="@avatarUrl" style="width: 150px; height: 150px; object-fit: cover; border: 4px solid #eaecf4;">
+
+                    <h5 class="font-weight-bold text-dark">@(Model.FullName ?? "Người dùng mới")</h5>
+                    <p class="text-muted mb-3">Bệnh nhân thành viên</p>
+
+                    <div class="custom-file text-left mb-4">
+                        <input type="file" name="AvatarFile" class="custom-file-input" id="customFile" accept="image/*">
+                        <label class="custom-file-label text-truncate" for="customFile" data-browse="Chọn ảnh">Tải ảnh mới lên...</label>
+                    </div>
+
+                    <div class="border-top pt-3 mt-2">
+                        <a asp-controller="Home" asp-action="ChangePassword" class="btn btn-sm btn-outline-secondary shadow-sm w-100">
+                            <i class="fas fa-key fa-sm mr-1"></i> Đổi mật khẩu
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Chi tiết tài khoản</h6>
+                </div>
+                <div class="card-body">
+
+                    <div class="form-row">
+                        <div class="form-group col-md-6 mb-3">
+                            <label class="small font-weight-bold text-dark">Họ và tên <span class="text-danger">*</span></label>
+                            <input type="text" name="FullName" class="form-control" value="@Model.FullName" placeholder="Ví dụ: Nguyễn Văn A" required>
+                        </div>
+                        <div class="form-group col-md-6 mb-3">
+                            <label class="small font-weight-bold text-dark">Tài khoản (Email) <span class="text-danger">*</span></label>
+                            <input type="email" name="Email" class="form-control" value="@Model.Email" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-6 mb-3">
+                            <label class="small font-weight-bold text-dark">Ngày sinh</label>
+                            <input type="date" name="DOB" class="form-control" value="@(Model.DateOfBirth?.ToString("yyyy-MM-dd"))">
+                        </div>
+                        <div class="form-group col-md-6 mb-3">
+                            <label class="small font-weight-bold text-dark">Giới tính</label>
+                            <select name="Gender" class="form-control">
+                                <option value="">-- Chọn giới tính --</option>
+                                @if (Model.Gender == "Nam")
+                                {
+                                    <option value="Nam" selected>Nam</option>
+                                }
+                                else
+                                {
+                                    <option value="Nam">Nam</option>
+                                }
+                                @if (Model.Gender == "Nữ")
+                                {
+                                    <option value="Nữ" selected>Nữ</option>
+                                }
+                                else
+                                {
+                                    <option value="Nữ">Nữ</option>
+                                }
+                                @if (Model.Gender == "Khác")
+                                {
+                                    <option value="Khác" selected>Khác</option>
+                                }
+                                else
+                                {
+                                    <option value="Khác">Khác</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-6 mb-4">
+                            <label class="small font-weight-bold text-dark">Số điện thoại</label>
+                            <input type="tel" name="PhoneNumber" class="form-control" value="@Model.PhoneNumber" placeholder="Nhập số điện thoại của bạn">
+                        </div>
+                        <div class="form-group col-md-6 mb-4">
+                            <label class="small font-weight-bold text-dark">Địa chỉ liên hệ</label>
+                            <input type="text" name="Address" class="form-control" value="@Model.Address" placeholder="Số nhà, đường, phường/xã...">
+                        </div>
+                    </div>
+
+                    <hr class="mt-2 mb-4">
+                    <button type="submit" class="btn btn-primary px-4 shadow-sm">
+                        <i class="fas fa-save mr-1"></i> Cập nhật hồ sơ
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        // Script nhỏ để hiển thị tên file khi người dùng chọn ảnh (Đặc sản của Bootstrap 4)
+        $(document).ready(function () {
+            $('.custom-file-input').on('change', function () {
+                var fileName = $(this).val().split('\\').pop();
+                $(this).next('.custom-file-label').addClass("selected").html(fileName);
+            });
+        });
+    </script>
+}

@@ -1,0 +1,149 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using PBL3_HealthCare.Models
+@model PBL3_HealthCare.Models.Appointment
+
+@{
+    ViewData["Title"] = "Chỉnh sửa Lịch khám";
+    if (User.IsInRole("Admin"))
+    {
+        Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    }
+    else if (User.IsInRole("Doctor"))
+    {
+        Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    }
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/appointments.css" />
+}
+
+<div class="d-flex align-items-center mb-3">
+    <a asp-action="Index" class="btn btn-light btn-sm mr-3" style="border-radius:8px;"><i class="fas fa-arrow-left mr-1"></i>Quay lại</a>
+    @* Sửa hiển thị: Lấy FullName của Patient từ Model *@
+    <span class="appt-id-badge"><i class="fas fa-user-check mr-1"></i>Lịch khám của: @(Model.Patient?.FullName ?? "Bệnh nhân")</span>
+</div>
+
+<div class="form-card edit card mb-4">
+    <div class="card-header">
+        <h5><i class="fas fa-calendar-edit mr-2"></i>Chỉnh sửa Lịch khám</h5>
+        <p>Cập nhật thông tin chi tiết cuộc hẹn #@Model.Id</p>
+    </div>
+    <div class="card-body">
+        <form asp-action="Edit" autocomplete="off">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3" style="border-radius:10px;font-size:.85rem;"></div>
+
+            @* Dữ liệu ẩn quan trọng *@
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="PatientId" /> @* Khóa bệnh nhân, không cho đổi lung tung *@
+
+            <p class="form-section-title yellow"><i class="fas fa-users mr-1"></i>Thông tin liên quan</p>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-floating-custom">
+                        <label>Bệnh nhân</label>
+                        @* Hiển thị Tên thay vì Dropdown để tránh nhầm lẫn *@
+                        <input type="text" class="form-control" value="@(Model.Patient?.FullName ?? "N/A")" readonly style="background-color: #f8f9fc; cursor: not-allowed;" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating-custom">
+                        <label>Bác sĩ phụ trách</label>
+                        @if (User.IsInRole("Doctor"))
+                        {
+                            <input type="text" class="form-control"
+                                   value="@(Model.Doctor?.User?.FullName ?? "Bác sĩ")"
+                                   readonly style="background-color: #f8f9fc; cursor: not-allowed;" />
+
+                            <input type="hidden" asp-for="DoctorId" />
+                        }
+                        else
+                        {
+                            <select asp-for="DoctorId" class="form-control" asp-items="ViewBag.DoctorId"></select>
+                            <span asp-validation-for="DoctorId" class="text-danger"></span>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <p class="form-section-title yellow"><i class="fas fa-clock mr-1"></i>Thời gian & Trạng thái</p>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-floating-custom">
+                        <label>Ngày khám</label>
+                        <div class="input-icon-wrap">
+                            <i class="input-icon fas fa-calendar"></i>
+                            <input asp-for="Date" class="form-control" type="date" />
+                        </div>
+                        <span asp-validation-for="Date" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-floating-custom">
+                        <label>Khung giờ</label>
+                        <div class="input-icon-wrap">
+                            <i class="input-icon fas fa-hourglass-half"></i>
+                            <input asp-for="TimeSlot" class="form-control" type="time" />
+                        </div>
+                        <span asp-validation-for="TimeSlot" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-floating-custom">
+                        <label>Trạng thái</label>
+                        <select asp-for="Status" class="form-control">
+                            <option value="Pending">
+                                <i class="fas fa-hourglass-half text-warning mr-1"></i> Chờ duyệt
+                            </option>
+                            <option value="Confirmed">
+                                <i class="fas fa-check-circle text-success mr-1"></i> Đã xác nhận
+                            </option>
+                            <option value="Cancelled">
+                                <i class="fas fa-times-circle text-danger mr-1"></i> Đã hủy
+                            </option>
+                        </select>
+
+                        <span asp-validation-for="Status" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <p class="form-section-title yellow"><i class="fas fa-notes-medical mr-1"></i>Thông tin y tế</p>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-floating-custom">
+                        <label>Lý do khám (Bệnh nhân khai)</label>
+                        <div class="input-icon-wrap">
+                            <i class="input-icon fas fa-question-circle"></i>
+                            <input asp-for="Reason" class="form-control" placeholder="Lý do..." />
+                        </div>
+                        <span asp-validation-for="Reason" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-floating-custom">
+                        <label>Ngày tạo</label>
+                        <div class="input-icon-wrap">
+                            <i class="input-icon fas fa-calendar-plus"></i>
+                            @* Khóa trường này để giữ tính nguyên bản của record *@
+                            <input asp-for="CreatedAt" class="form-control text-muted" type="datetime-local" readonly style="background-color: #f8f9fc;" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr style="border-color:#fff8e0;margin:1.5rem 0;">
+            <div class="d-flex" style="gap:.75rem">
+                <button type="submit" class="btn btn-save-yellow"><i class="fas fa-save mr-1"></i>Lưu thay đổi</button>
+                <a asp-action="Index" class="btn btn-cancel-soft"><i class="fas fa-times mr-1"></i>Hủy bỏ</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,0 +1,155 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using PBL3_HealthCare.Models
+@inject UserManager<ApplicationUser> UserManager
+
+@model PBL3_HealthCare.Models.Appointment
+@{
+    ViewData["Title"] = "Xác nhận đặt lịch khám";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var fullName = UserManager.GetUserAsync(User).Result?.FullName ?? "";
+    var email = UserManager.GetUserAsync(User).Result?.Email ?? "";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/home/booking.css" />
+}
+
+<section class="booking-page">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-7 col-lg-6">
+
+                <div class="booking-card">
+
+                    @* Header *@
+                    <div class="booking-header">
+                        <h4><i class="icon-calendar mr-2"></i>Xác nhận đặt lịch khám</h4>
+                        <p>Kiểm tra thông tin và hoàn tất đặt lịch</p>
+                    </div>
+
+                    <div class="booking-body">
+
+                        @* Appointment summary *@
+                        <div class="appt-summary">
+                            <div class="summary-label">Thông tin lịch hẹn</div>
+
+                            <div class="appt-row">
+                                <div class="appt-icon"><i class="fas fa-user-md"></i></div>
+                                <span class="appt-key">Bác sĩ</span>
+                                <span class="appt-val">@ViewBag.DoctorName</span>
+                            </div>
+                            <div class="appt-row">
+                                <div class="appt-icon"><i class="fas fa-calendar-alt"></i></div>
+                                <span class="appt-key">Ngày khám</span>
+                                <span class="appt-val">@ViewBag.DisplayDate</span>
+                            </div>
+                            <div class="appt-row">
+                                <div class="appt-icon"><i class="fas fa-clock"></i></div>
+                                <span class="appt-key">Khung giờ</span>
+                                <span class="appt-val">
+                                    <span class="timeslot-badge">@Model.TimeSlot.ToString(@"hh\:mm")</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        @* Form *@
+                        <form asp-controller="Home" asp-action="BookAppointment" method="post">
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden" asp-for="DoctorId" />
+                            <input type="hidden" asp-for="Date" />
+                            <input type="hidden" name="TimeSlot" value="@Model.TimeSlot.ToString(@"hh\:mm")" />
+
+                            @if (ViewBag.IsVideoCall == true)
+                            {
+                                <div class="alert alert-info mt-3" style="border-radius: 8px; border-left: 5px solid #0d6efd; background-color: #f0f7ff;">
+                                    <h6 class="mb-1" style="color: #0d6efd; font-weight: bold;">
+                                        <i class="fas fa-video mr-2"></i> Bạn đang đặt lịch Khám Online
+                                    </h6>
+                                    <p class="mb-0" style="font-size: 0.85rem; color: #495057;">
+                                        Sau khi đặt lịch, bạn sẽ nhận được một đường link truy cập vào phòng khám ảo qua Email và tại màn hình Lịch sử khám.
+                                    </p>
+                                </div>
+
+                                <input type="hidden" name="IsVideoCall" value="true" />
+                            }
+
+                            <p class="form-section-title">Hồ sơ bệnh nhân</p>
+
+                            @if (!ViewData.ModelState.IsValid)
+                            {
+                                <div class="alert-danger">
+                                    <div asp-validation-summary="All" class="mb-0"></div>
+                                </div>
+                            }
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-floating-custom">
+                                        <label>Họ và tên</label>
+                                        <input type="text" class="form-control readonly-field"
+                                               value="@fullName" readonly />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating-custom">
+                                        <label>Email</label>
+                                        <input type="text" class="form-control readonly-field"
+                                               value="@email" readonly />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-floating-custom" style="margin-bottom: 1.25rem;">
+                                <label>
+                                    Lý do khám
+                                    <span style="color:#c92a2a;">*</span>
+                                </label>
+                                <textarea asp-for="Reason" class="form-control" rows="2" required
+                                          placeholder="Ví dụ: Khám tổng quát, Đau dạ dày, Tái khám..."></textarea>
+                                <div class="form-hint">Nhập lý do ngắn gọn để phòng khám nắm thông tin cơ bản.</div>
+                            </div>
+
+                            <div class="form-floating-custom">
+                                <label>
+                                    Triệu chứng 
+                                </label>
+                                <textarea asp-for="Symptoms" class="form-control" rows="3"
+                                          placeholder="Ví dụ: Đau đầu kéo dài 3 ngày, sốt cao 39 độ, buồn nôn..."></textarea>
+                                <div class="form-hint">Mô tả rõ triệu chứng giúp bác sĩ chẩn đoán sơ bộ tốt hơn. Nếu không có, bạn có thể để trống.</div>
+                            </div>
+
+                            <div style="margin-top:1.5rem;">
+                                <button type="submit" class="btn-submit">
+                                    Hoàn tất đặt lịch
+                                </button>
+                                <p class="submit-note">
+                                    <i class="fas fa-check-circle"></i>Đặt lịch hoàn toàn miễn phí
+                                </p>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Lắng nghe sự kiện khi form được submit
+            $('form').on('submit', function () {
+                var $btn = $(this).find('button[type="submit"]');
+
+                // Vô hiệu hóa nút bấm
+                $btn.prop('disabled', true);
+
+                // Đổi chữ thành Đang xử lý để người dùng biết
+                $btn.html('<i class="fas fa-spinner fa-spin mr-2"></i> Đang xử lý...');
+            });
+        });
+    </script>
+}

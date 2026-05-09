@@ -1,0 +1,147 @@
+﻿@model PBL3_HealthCare.ViewModels.CreatePrescriptionVM
+@{
+    ViewData["Title"] = "Kê Đơn Thuốc";
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" style="border-radius: 12px; border: none; box-shadow: 0 4px 15px rgba(28,200,138,.15);">
+            <i class="fas fa-check-circle mr-2"></i> <strong>Thành công!</strong> @TempData["Success"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert" style="border-radius: 12px; border: none; box-shadow: 0 4px 15px rgba(231,74,59,.15);">
+            <i class="fas fa-exclamation-triangle mr-2"></i> <strong>Lỗi!</strong> @TempData["Error"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+}
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white py-3">
+        <h5 class="m-0 font-weight-bold"><i class="fas fa-pills mr-2"></i>Kê Đơn Thuốc Mới</h5>
+    </div>
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <form asp-action="Create" method="post" id="prescriptionForm">
+            <input type="hidden" asp-for="MedicalRecordId" />
+            <div class="form-group mb-4">
+                <label class="font-weight-bold text-dark">Lời dặn của bác sĩ:</label>
+                <textarea asp-for="DoctorNote" class="form-control" rows="3" placeholder="Nhập lời dặn dò bệnh nhân (kiêng cữ, nghỉ ngơi...)..."></textarea>
+            </div>
+            <hr />
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="text-success font-weight-bold mb-0">Danh Sách Thuốc Kê Đơn</h5>
+                <button type="button" class="btn btn-sm btn-success shadow-sm"
+                        id="btnAddMedicine">
+                    <i class="fas fa-plus"></i> Thêm Thuốc
+                </button>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="medicineTable">
+                    <thead class="bg-light text-center">
+                        <tr>
+                            <th>Tên Thuốc</th>
+                            <th width="120px">Số Lượng</th>
+                            <th>Cách Dùng</th>
+                            <th width="60px">Xóa</th>
+                        </tr>
+                    </thead>
+                    <tbody id="medicineList">
+                        <tr>
+                            <td>
+                                <select name="Details[0].MedicineId" class="form-control medicine-select"
+                                        asp-items="ViewBag.Medicines" required>
+                                    <option value="">-- Chọn thuốc --</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="number" name="Details[0].Quantity" class="form-control text-center" min="1" value="1" required />
+                            </td>
+                            <td>
+                                <input type="text" name="Details[0].Instruction" class="form-control"
+                                       placeholder="VD: Sáng 1 viên, tối 1 viên sau ăn..." required />
+                            </td>
+                            <td class="text-center align-middle">
+                                <button type="button" class="btn btn-danger btn-sm btn-remove" title="Xóa thuốc này">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="text-end mt-4 border-top pt-3">
+                <a asp-controller="Appointments" asp-action="Index" class="btn btn-secondary btn-lg me-2">Hủy Bỏ</a>
+                <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-save mr2"></i>Lưu & Xuất Hóa Đơn</button>
+            </div>
+        </form>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Biến đếm index để BE map được vào List. Bắt đầu từ 1 vì dòng đầu là 0 rồi
+            let medicineIndex = 1;
+
+            // Lấy toàn bộ thẻ <option> của cái select box đầu tiên để nhân bản
+            let selectOptionsHtml = $("#medicineList tr:first .medicine-select").html();
+
+            // SỰ KIỆN: Bấm nút "Thêm Thuốc"
+            $("#btnAddMedicine").click(function () {
+                // Tạo ra HTML của 1 dòng mới. Chú ý name="Details[${medicineIndex}]"
+                let newRow = `
+                    <tr>
+                        <td>
+                            <select name="Details[${medicineIndex}].MedicineId" class="form-control medicine-select" required>
+                                ${selectOptionsHtml}
+                            </select>
+                        </td>
+                        <td>
+                            <input type="number" name="Details[${medicineIndex}].Quantity" class="form-control text-center" min="1" value="1" required />
+                        </td>
+                        <td>
+                            <input type="text" name="Details[${medicineIndex}].Instruction" class="form-control" placeholder="VD: Sáng 1 viên, tối 1 viên sau ăn..." required />
+                        </td>
+                        <td class="text-center align-middle">
+                            <button type="button" class="btn btn-danger btn-sm btn-remove" title="Xóa thuốc này">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+
+                // Nhét dòng mới vào cuối bảng
+                $("#medicineList").append(newRow);
+                medicineIndex++; // Tăng index lên cho lần bấm tiếp theo
+            });
+
+            // SỰ KIỆN: Bấm nút thùng rác "Xóa"
+            $(document).on('click', '.btn-remove', function () {
+                // Kiểm tra: Nếu chỉ còn đúng 1 dòng thì không cho xóa
+                if ($("#medicineList tr").length > 1) {
+                    $(this).closest('tr').remove();
+                    // ASP.NET Core Model Binding rất thông minh, index bị nhảy cóc (VD: 0, 2, 3) nó vẫn nhận đúng!
+                } else {
+                    // Cảnh báo nếu xóa hết
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Oops...',
+                            text: 'Phải kê ít nhất 1 loại thuốc trong đơn!'
+                        });
+                    } else {
+                        alert('Phải kê ít nhất 1 loại thuốc trong đơn!');
+                    }
+                }
+            });
+        });
+    </script>
+}

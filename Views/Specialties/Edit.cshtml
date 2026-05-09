@@ -1,0 +1,219 @@
+﻿@model PBL3_HealthCare.Models.Specialty
+
+@{
+    ViewData["Title"] = "Chỉnh sửa Chuyên khoa";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/specialties.css" />
+    <style>
+        .upload-zone {
+            border: 2px dashed #ced4da;
+            border-radius: 4px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            background: #f8f9fa;
+            transition: border-color .15s, background .15s;
+            position: relative;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .upload-zone:hover {
+                border-color: #e67700;
+                background: #fff9f0;
+            }
+
+            .upload-zone.has-image {
+                padding: 0;
+                border-style: solid;
+                border-color: #ced4da;
+                overflow: hidden;
+            }
+
+            .upload-zone input[type="file"] {
+                position: absolute;
+                inset: 0;
+                opacity: 0;
+                cursor: pointer;
+                width: 100%;
+                height: 100%;
+                z-index: 2;
+            }
+
+        .upload-placeholder i {
+            font-size: 1.75rem;
+            color: #ced4da;
+            display: block;
+            margin-bottom: .4rem;
+        }
+
+        .upload-placeholder span {
+            font-size: .8rem;
+            color: #868e96;
+            display: block;
+        }
+
+        .upload-placeholder small {
+            font-size: .73rem;
+            color: #adb5bd;
+        }
+
+        .preview-img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .change-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            background: rgba(0,0,0,.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: .82rem;
+            font-weight: 600;
+        }
+
+        .upload-zone.has-image:hover .change-overlay {
+            display: flex;
+        }
+
+        .current-image-note {
+            font-size: .77rem;
+            color: #868e96;
+            margin-top: .35rem;
+        }
+    </style>
+}
+
+<div class="d-flex align-items-center mb-3">
+    <a asp-action="Index" class="btn btn-light btn-sm mr-3" style="border-radius:4px;"><i class="fas fa-arrow-left mr-1"></i>Quay lại</a>
+    <span class="id-badge"><i class="fas fa-fingerprint mr-1"></i>ID: @Model?.Id</span>
+</div>
+
+<div class="form-card edit card mb-4" style="max-width:720px;">
+    <div class="card-header">
+        <h5><i class="fas fa-edit mr-2"></i>Chỉnh sửa Chuyên khoa</h5>
+        <p>Cập nhật thông tin — @Model?.Name</p>
+    </div>
+    <div class="card-body">
+        <form asp-action="Edit" autocomplete="off" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3" style="border-radius:4px;font-size:.85rem;"></div>
+            <input type="hidden" asp-for="Id" />
+            @* Giữ lại ảnh cũ nếu không chọn ảnh mới *@
+            <input type="hidden" asp-for="Image" />
+
+            <p class="form-section-title"><i class="fas fa-info-circle mr-1"></i>Thông tin chuyên khoa</p>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-floating-custom">
+                        <label>Tên chuyên khoa</label>
+                        <div class="input-icon-wrap">
+                            <i class="input-icon fas fa-stethoscope"></i>
+                            <input asp-for="Name" class="form-control" />
+                        </div>
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating-custom">
+                        <label>Mô tả chuyên khoa</label>
+                        <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-floating-custom">
+                        <label>Hình ảnh đại diện</label>
+                        <div class="upload-zone @(!string.IsNullOrEmpty(Model?.Image) ? "has-image" : "")" id="uploadZone">
+                            <input type="file" name="SpecialtyImage" id="fileInput" accept="image/*" />
+                            <div class="upload-placeholder" id="uploadPlaceholder" style="@(!string.IsNullOrEmpty(Model?.Image) ? "display:none;" : "")">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Nhấn để chọn ảnh mới</span>
+                                <small>PNG, JPG, WEBP · Tối đa 2MB</small>
+                            </div>
+                            @if (!string.IsNullOrEmpty(Model?.Image))
+                            {
+                                <img class="preview-img" id="previewImg"
+                                     src="~/img/specialties/@Model.Image.Replace("specialties/", "")"
+                                     alt="@Model.Name" />
+                            }
+                            else
+                            {
+                                <img class="preview-img" id="previewImg" src="" alt="" style="display:none;" />
+                            }
+                            <div class="change-overlay"><i class="fas fa-camera mr-1"></i>Đổi ảnh</div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model?.Image))
+                        {
+                            <p class="current-image-note"><i class="fas fa-info-circle mr-1"></i>Không chọn ảnh mới sẽ giữ nguyên ảnh hiện tại</p>
+                        }
+                        <span asp-validation-for="Image" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <hr style="border-color:#e9ecef;margin:1.5rem 0;">
+            <div class="d-flex" style="gap:.6rem">
+                <button type="submit" class="btn btn-save-yellow"><i class="fas fa-save mr-1"></i>Lưu thay đổi</button>
+                <a asp-action="Index" class="btn btn-cancel-soft"><i class="fas fa-times mr-1"></i>Hủy bỏ</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        const fileInput         = document.getElementById('fileInput');
+        const uploadZone        = document.getElementById('uploadZone');
+        const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+        const previewImg        = document.getElementById('previewImg');
+
+        fileInput.addEventListener('change', handleFile);
+
+        function handleFile() {
+            const file = fileInput.files[0];
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) {
+                alert('Ảnh quá lớn. Vui lòng chọn ảnh nhỏ hơn 2MB.');
+                fileInput.value = '';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                previewImg.src = e.target.result;
+                previewImg.style.display = 'block';
+                uploadPlaceholder.style.display = 'none';
+                uploadZone.classList.add('has-image');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        uploadZone.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            this.style.borderColor = '#e67700';
+        });
+        uploadZone.addEventListener('dragleave', function () {
+            this.style.borderColor = '';
+        });
+        uploadZone.addEventListener('drop', function (e) {
+            e.preventDefault();
+            this.style.borderColor = '';
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                handleFile();
+            }
+        });
+    </script>
+}

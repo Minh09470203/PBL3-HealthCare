@@ -1,0 +1,179 @@
+﻿@model IEnumerable<PBL3_HealthCare.Models.ApplicationUser>
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<PBL3_HealthCare.Models.ApplicationUser> UserManager
+
+@{
+    ViewData["Title"] = "Quản lý Bệnh nhân";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+            .page-header h4 {
+                font-weight: 700;
+                color: #2d3748;
+                margin: 0;
+            }
+
+        .data-card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(78, 115, 223, 0.08);
+            overflow: hidden;
+        }
+
+        table.dataTable thead th {
+            background: #f8f9fc;
+            color: #5a5c69;
+            font-size: .8rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            border-bottom: 2px solid #eaecf4 !important;
+            padding: 1rem !important;
+        }
+
+        table.dataTable tbody td {
+            padding: 1rem !important;
+            vertical-align: middle;
+            font-size: .9rem;
+            border-bottom: 1px solid #f0f2fa !important;
+        }
+
+        .avatar-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+
+        .btn-action {
+            border-radius: 8px;
+            padding: 0.4rem 0.6rem;
+            font-size: .85rem;
+            border: none;
+            margin-right: 4px;
+            transition: 0.2s;
+        }
+
+            .btn-action:hover {
+                transform: translateY(-2px);
+            }
+    </style>
+}
+
+<div class="page-header">
+    <div>
+        <h4><i class="fas fa-users mr-2 text-primary"></i>Danh sách Bệnh nhân</h4>
+        <p class="text-muted mt-1 mb-0" style="font-size: 0.85rem;">Quản lý tài khoản và hồ sơ của bệnh nhân trên hệ thống.</p>
+    </div>
+</div>
+
+<div class="data-card card mb-4">
+    <div class="card-body p-0">
+        <div class="p-3">
+            <table class="table table-hover w-100" id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Bệnh nhân</th>
+                        <th>Liên hệ</th>
+                        <th>Giới tính / NS</th>
+                        <th>Ngày tham gia</th>
+                        <th>Trạng thái</th>
+                        <th class="text-center" style="width: 180px;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        var isLocked = await UserManager.IsLockedOutAsync(item);
+                        // Lấy chữ cái đầu của tên làm Avatar
+                        var initial = string.IsNullOrEmpty(item.FullName) ? "U" : item.FullName.Substring(0, 1).ToUpper();
+                        // Random màu nền cho avatar
+                        var colors = new[] { "#4e73df", "#1cc88a", "#36b9cc", "#f6c23e", "#e74a3b" };
+                        var bgColor = colors[Math.Abs(item.Id.GetHashCode() % colors.Length)];
+
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    @if (!string.IsNullOrEmpty(item.Avatar))
+                                    {
+                                        <img src="/img/@item.Avatar" class="shadow-sm mr-3" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" alt="Avatar">
+                                    }
+                                    else
+                                    {
+                                        <div class="avatar-circle shadow-sm mr-3" style="background-color: @bgColor">@initial</div>
+                                    }
+
+                                    <div>
+                                        <h6 class="mb-0 font-weight-bold text-dark">@item.FullName</h6>
+                                        <small class="text-muted">ID: @item.Id.Substring(0, 8)...</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div><i class="fas fa-phone-alt text-success mr-1" style="font-size:10px;"></i> @(item.PhoneNumber ?? "---")</div>
+                                <div class="text-muted" style="font-size:0.8rem;"><i class="fas fa-envelope text-primary mr-1" style="font-size:10px;"></i> @item.Email</div>
+                            </td>
+                            <td>
+                                <div>@(item.Gender ?? "---")</div>
+                                <div class="text-muted" style="font-size:0.8rem;">@(item.DateOfBirth?.ToString("dd/MM/yyyy") ?? "---")</div>
+                            </td>
+                            <td>@item.CreatedAt.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                @if (isLocked)
+                                {
+                                    <span class="badge badge-danger px-3 py-2 rounded-pill"><i class="fas fa-lock mr-1"></i> Đã khóa</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-success px-3 py-2 rounded-pill"><i class="fas fa-check-circle mr-1"></i> Hoạt động</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center">
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-action" title="Hồ sơ 360"><i class="fas fa-id-card"></i></a>
+
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-primary btn-action text-white" title="Sửa thông tin">
+                                        <i class="fas fa-user-edit"></i>
+                                    </a>
+
+                                    <form asp-action="ToggleLock" asp-route-id="@item.Id" method="post" class="m-0 p-0" onsubmit="return confirm('Bạn có chắc chắn muốn thay đổi trạng thái khóa của người này?');">
+                                        <button type="submit" class="btn @(isLocked ? "btn-success" : "btn-warning") btn-action text-white" title="@(isLocked ? "Mở khóa" : "Khóa tài khoản")">
+                                            <i class="fas @(isLocked ? "fa-unlock" : "fa-lock")"></i>
+                                        </button>
+                                    </form>
+
+                                    <form asp-action="ResetPassword" asp-route-id="@item.Id" method="post" class="m-0 p-0" onsubmit="return confirm('Mật khẩu sẽ bị reset về mặc định (HealthCare@123). Tiếp tục?');">
+                                        <button type="submit" class="btn btn-danger btn-action" title="Reset Mật khẩu"><i class="fas fa-key"></i></button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#dataTable').DataTable({
+                "language": { "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Vietnamese.json" },
+                "order": [[ 3, "desc" ]] // Sắp xếp theo ngày tham gia mới nhất
+            });
+        });
+    </script>
+}
