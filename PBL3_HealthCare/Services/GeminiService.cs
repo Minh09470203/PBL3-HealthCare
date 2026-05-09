@@ -82,7 +82,7 @@ namespace PBL3_HealthCare.Services
                 try
                 {
                     if (string.IsNullOrWhiteSpace(key)) continue;
-                    var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={key.Trim()}";
+                    var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={key.Trim()}";
                     using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
 
                     var httpResponse = await _httpClient.PostAsync(url, content, cts.Token);
