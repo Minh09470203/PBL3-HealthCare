@@ -77,34 +77,30 @@ namespace PBL3_HealthCare.Services
             var requestBody = new { system_instruction = new { parts = new[] { new { text = finalSystemPrompt } } }, contents = contents };
             var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
 
+            // ✅ TẠO GIỎ ĐỰNG LỖI Ở ĐÂY
+            var errorLogs = new List<string>();
+
             foreach (var key in _apiKeys)
             {
                 try
                 {
                     if (string.IsNullOrWhiteSpace(key)) continue;
+
                     var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={key.Trim()}";
                     using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
 
                     var httpResponse = await _httpClient.PostAsync(url, content, cts.Token);
-                    var responseJson = await httpResponse.Content.ReadAsStringAsync();
 
-                    if (httpResponse.StatusCode == System.Net.HttpStatusCode.TooManyRequests || (int)httpResponse.StatusCode >= 500)
-                    {
-                        // Bắn log ra màn hình Console của Render để sếp xem ngầm
-                        var errBody = await httpResponse.Content.ReadAsStringAsync();
-                        Console.WriteLine($"⚠️ BỎ QUA KEY [{key[..8]}...] DO LỖI {httpResponse.StatusCode}: {errBody}");
-
-                        // BẮT BUỘC PHẢI DÙNG CONTINUE ĐỂ NHẢY SANG KEY TIẾP THEO!
-                        continue;
-                    }
-
+                    // ✅ GỘP CHUNG TẤT CẢ CÁC MÃ LỖI VÀO 1 CỤM ĐỂ XỬ LÝ (Thay vì dùng lệnh return cắt ngang)
                     if (!httpResponse.IsSuccessStatusCode)
                     {
-                        // Đọc thẳng câu chửi gốc của Google trả về
-                        var errorDetail = await httpResponse.Content.ReadAsStringAsync();
-                        return $"⚠️ LỖI THẬT TỪ GOOGLE ({httpResponse.StatusCode}): {errorDetail}";
+                        var errBody = await httpResponse.Content.ReadAsStringAsync();
+                        string safeKey = key.Length >= 8 ? key[..8] : key; // Đề phòng Key quá ngắn gây lỗi Index
+                        errorLogs.Add($"⚠️ [{httpResponse.StatusCode}] Key: {safeKey}... | {errBody}");
+                        continue; // BẮT BUỘC DÙNG CONTINUE ĐỂ NHẢY SANG KEY TIẾP THEO
                     }
 
+                    var responseJson = await httpResponse.Content.ReadAsStringAsync();
                     using var doc = JsonDocument.Parse(responseJson);
                     var text = doc.RootElement.GetProperty("candidates")[0].GetProperty("content").GetProperty("parts")[0].GetProperty("text").GetString();
 
@@ -115,14 +111,19 @@ namespace PBL3_HealthCare.Services
 
                     SaveUIHistoryToCache(userMessage, text, userId, sessionId); // Hàm phụ lưu cho Giao diện
 
-                    return text;
+                    return text; // Lấy được câu trả lời thì return luôn, kết thúc hàm
                 }
                 catch (Exception ex)
                 {
-                    return $"⚠️ Lỗi trong code C#: {ex.Message}";
+                    // ✅ BẮT LUÔN LỖI CODE C# NÉM VÀO GIỎ, KHÔNG RETURN
+                    string safeKey = key != null && key.Length >= 8 ? key[..8] : "Unknown";
+                    errorLogs.Add($"⚠️ Lỗi Exception C# (Key: {safeKey}...): {ex.Message}");
+                    continue; // BẮT BUỘC DÙNG CONTINUE
                 }
             }
-            return "⚠️ Đã thử hết các Key nhưng không thành công.";
+
+            // ✅ NẾU RỚT XUỐNG ĐÂY NGHĨA LÀ CẢ MẢNG KEY ĐỀU CHẾT. IN TOÀN BỘ GIỎ LỖI RA MÀN HÌNH UI!
+            return "⚠️ Đã thử hết các Key nhưng không thành công. Chi tiết lỗi:\n\n" + string.Join("\n\n", errorLogs);
         }
 
         private void SaveUIHistoryToCache(string userMessage, string aiResponse, string userId, string sessionId)
