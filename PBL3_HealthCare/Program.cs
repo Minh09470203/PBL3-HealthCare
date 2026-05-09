@@ -60,13 +60,17 @@ builder.Services.AddScoped<GeminiService>();
 
 // 🔥 2. THÊM DÒNG NÀY: KHỞI ĐỘNG DỊCH VỤ SIGNALR LÊN SERVER
 builder.Services.AddSignalR();
-// ✅ THÊM: Fix Data Protection cho môi trường deploy
+
+// ✅ THÊM: Fix Data Protection cho môi trường deploy (Fix theo Claude cho Render)
+var isDevelopment = builder.Environment.IsDevelopment();
+var keysPath = isDevelopment
+    ? Path.Combine(builder.Environment.ContentRootPath, "DataProtection-Keys")
+    : "/tmp/DataProtection-Keys";
+
 builder.Services.AddDataProtection()
-    .PersistKeysToFileSystem(
-        new DirectoryInfo(
-            Path.Combine(builder.Environment.ContentRootPath,
-                         "DataProtection-Keys")))
+    .PersistKeysToFileSystem(new DirectoryInfo(keysPath))
     .SetApplicationName("PBL3_HealthCare");
+
 var app = builder.Build();
 
 
