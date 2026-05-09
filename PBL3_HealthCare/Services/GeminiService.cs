@@ -91,7 +91,11 @@ namespace PBL3_HealthCare.Services
                     if (httpResponse.StatusCode == System.Net.HttpStatusCode.TooManyRequests || (int)httpResponse.StatusCode >= 500) continue;
 
                     if (!httpResponse.IsSuccessStatusCode)
-                        return $"⚠️ Lỗi Google API ({httpResponse.StatusCode}): Hãy thử lại sau giây lát.";
+                    {
+                        // Đọc thẳng câu chửi gốc của Google trả về
+                        var errorDetail = await httpResponse.Content.ReadAsStringAsync();
+                        return $"⚠️ LỖI THẬT TỪ GOOGLE ({httpResponse.StatusCode}): {errorDetail}";
+                    }
 
                     using var doc = JsonDocument.Parse(responseJson);
                     var text = doc.RootElement.GetProperty("candidates")[0].GetProperty("content").GetProperty("parts")[0].GetProperty("text").GetString();
