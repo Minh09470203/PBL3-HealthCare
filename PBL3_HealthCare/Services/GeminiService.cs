@@ -88,11 +88,14 @@ namespace PBL3_HealthCare.Services
                     var httpResponse = await _httpClient.PostAsync(url, content, cts.Token);
                     var responseJson = await httpResponse.Content.ReadAsStringAsync();
 
-                    if (httpResponse.StatusCode == System.Net.HttpStatusCode.TooManyRequests
-    || (int)httpResponse.StatusCode >= 500)
+                    if (httpResponse.StatusCode == System.Net.HttpStatusCode.TooManyRequests || (int)httpResponse.StatusCode >= 500)
                     {
+                        // Bắn log ra màn hình Console của Render để sếp xem ngầm
                         var errBody = await httpResponse.Content.ReadAsStringAsync();
-                        return $"⚠️ [{httpResponse.StatusCode}] Key: {key[..8]}... | {errBody}";
+                        Console.WriteLine($"⚠️ BỎ QUA KEY [{key[..8]}...] DO LỖI {httpResponse.StatusCode}: {errBody}");
+
+                        // BẮT BUỘC PHẢI DÙNG CONTINUE ĐỂ NHẢY SANG KEY TIẾP THEO!
+                        continue;
                     }
 
                     if (!httpResponse.IsSuccessStatusCode)
