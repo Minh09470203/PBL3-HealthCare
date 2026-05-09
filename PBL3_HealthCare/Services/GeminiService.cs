@@ -88,7 +88,12 @@ namespace PBL3_HealthCare.Services
                     var httpResponse = await _httpClient.PostAsync(url, content, cts.Token);
                     var responseJson = await httpResponse.Content.ReadAsStringAsync();
 
-                    if (httpResponse.StatusCode == System.Net.HttpStatusCode.TooManyRequests || (int)httpResponse.StatusCode >= 500) continue;
+                    if (httpResponse.StatusCode == System.Net.HttpStatusCode.TooManyRequests
+    || (int)httpResponse.StatusCode >= 500)
+                    {
+                        var errBody = await httpResponse.Content.ReadAsStringAsync();
+                        return $"⚠️ [{httpResponse.StatusCode}] Key: {key[..8]}... | {errBody}";
+                    }
 
                     if (!httpResponse.IsSuccessStatusCode)
                     {
