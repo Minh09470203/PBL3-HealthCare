@@ -48,6 +48,16 @@ builder.Services.AddAuthentication(options =>
     options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.None;
     options.CorrelationCookie.SameSite = SameSiteMode.Lax;
     options.CorrelationCookie.HttpOnly = true;
+
+    // 🔥 THÊM ĐÚNG ĐOẠN NÀY ĐỂ ÉP GOOGLE LUÔN HIỆN BẢNG CHỌN TÀI KHOẢN
+    options.Events = new Microsoft.AspNetCore.Authentication.OAuth.OAuthEvents
+    {
+        OnRedirectToAuthorizationEndpoint = context =>
+        {
+            context.Response.Redirect(context.RedirectUri + "&prompt=select_account");
+            return Task.CompletedTask;
+        }
+    };
 });
 
 builder.Services.AddControllersWithViews();
