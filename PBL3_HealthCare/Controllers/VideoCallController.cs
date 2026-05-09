@@ -51,28 +51,30 @@ namespace PBL3_HealthCare.Controllers
 
             var currentUser = await _userManager.GetUserAsync(User);
 
-            // 🛑 CHẶN 1: BẢO MẬT CHÍNH CHỦ (Chỉ Bác sĩ hoặc Bệnh nhân của ca này mới được vào)
+            // 🛑 CHẶN 1: BẢO MẬT CHÍNH CHỦ
             bool isPatient = appointment.PatientId == currentUser.Id;
             bool isDoctor = appointment.Doctor.UserId == currentUser.Id;
 
             if (!isPatient && !isDoctor)
             {
-                return Forbid(); // Đuổi cổ người lạ
+                return Forbid();
             }
 
-            // 🛑 CHẶN 2: KIỂM TRA THỜI GIAN (Chỉ cho vào trước 10 phút)
+            // 🔥 FIX: ÉP MÚI GIỜ VIỆT NAM CHO SERVER QUỐC TẾ 🔥
+            var vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            DateTime vnNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnTimeZone);
+
+            // 🛑 CHẶN 2: KIỂM TRA THỜI GIAN (DÙNG GIỜ VN)
             DateTime appointmentTime = appointment.Date.Date.Add(appointment.TimeSlot);
-            if (DateTime.Now < appointmentTime.AddMinutes(-10))
+            if (vnNow < appointmentTime.AddMinutes(-10)) // Thay DateTime.Now bằng vnNow
             {
                 TempData["Error"] = $"Chưa đến giờ khám. Phòng sẽ mở vào lúc {appointmentTime.AddMinutes(-10):HH:mm}.";
-                // Trả về lại trang dashboard tương ứng
                 return isDoctor ? RedirectToAction("DoctorDashboard", "Home") : RedirectToAction("MyHistory", "Home");
             }
 
-            // ✅ CHẶN 3 (MỚI): PHÒNG ĐÃ ĐÓNG — Sau 45 phút kể từ giờ khám chính thức
-            // Ví dụ: Đặt lịch 9:00 → Phòng đóng lúc 9:45
+            // ✅ CHẶN 3: PHÒNG ĐÃ ĐÓNG (DÙNG GIỜ VN)
             DateTime closeTime = appointmentTime.AddMinutes(45);
-            if (DateTime.Now > closeTime)
+            if (vnNow > closeTime) // Thay DateTime.Now bằng vnNow
             {
                 TempData["Error"] = $"Phiên khám đã kết thúc lúc {closeTime:HH:mm}. " +
                                     $"Vui lòng đặt lịch mới nếu cần tư vấn thêm.";
@@ -81,28 +83,26 @@ namespace PBL3_HealthCare.Controllers
                     : RedirectToAction("MyHistory", "Home");
             }
 
-            // Đổi trạng thái sang InProgress nếu chưa đổi
+            // Đổi trạng thái sang InProgress
             if (appointment.CallStatus == CallStatus.Pending)
             {
                 appointment.CallStatus = CallStatus.InProgress;
                 await _context.SaveChangesAsync();
             }
 
-            // 🔑 SINH TOKEN BẢO MẬT BẰNG THUẬT TOÁN 3
+            // 🔑 SINH TOKEN BẢO MẬT
             string secureToken = _zegoTokenService.GenerateToken(currentUser.Id, roomId);
 
-            // CẤP DỮ LIỆU CHO FRONTEND (TUYỆT ĐỐI KHÔNG TRUYỀN SERVER SECRET)
-            ViewBag.AppId = _configuration.GetValue<uint>("ZegoCloud:AppId"); // Sửa thành uint cho đúng kiểu AppId
-            ViewBag.ZegoToken = secureToken; // 🔥 TRUYỀN TOKEN ĐÃ MÃ HÓA XUỐNG VIEW
+            ViewBag.AppId = _configuration.GetValue<uint>("ZegoCloud:AppId");
+            ViewBag.ZegoToken = secureToken;
 
-            // Phân vai trò rõ ràng
             ViewBag.Role = isDoctor ? "Host" : "Audience";
             ViewBag.UserId = currentUser.Id;
             ViewBag.UserName = currentUser.FullName;
             ViewBag.RoomId = roomId;
-            ViewBag.AppointmentId = appointment.Id; // Truyền ID này để lát gọi API FinishCall
+            ViewBag.AppointmentId = appointment.Id;
 
-            return View(); // Trả về Views/VideoCall/Room.cshtml cho Thái & Thịnh code
+            return View();
         }
 
         // =====================================

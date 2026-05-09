@@ -4,9 +4,11 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 
     var next5Days = ViewBag.Next3Days as List<DateTime>;
-    // Bắt buộc phải là biến này, xóa cái var timeSlots cũ đi:
     var timeSlotsByDate = ViewBag.TimeSlotsByDate as Dictionary<DateTime, List<string>>; 
     var bookedAppointments = ViewBag.BookedAppointments as List<PBL3_HealthCare.Models.Appointment>;
+    
+    // 🔥 THÊM DÒNG NÀY: Hứng giờ Việt Nam từ Controller truyền xuống
+    DateTime currentVnTime = ViewBag.CurrentVnTime ?? DateTime.Now;
 }
 
 @section Styles {
@@ -96,9 +98,7 @@
         var daySlots = timeSlotsByDate != null && timeSlotsByDate.ContainsKey(currentDate) 
                         ? timeSlotsByDate[currentDate] 
                         : new List<string>();
-        
-        // Khai báo thời gian hiện tại
-        var now = DateTime.Now;
+
     }
 
     @foreach (var slot in daySlots)
@@ -108,13 +108,12 @@
             a.Date.Date == currentDate && 
             a.TimeSlot == TimeSpan.Parse(slot));
 
-        // 🔥 LOGIC CHẶN GIỜ QUÁ KHỨ:
-        // Kiểm tra xem nếu đang xem lịch HÔM NAY và cái slot (giờ) đó đã trôi qua so với giờ hiện tại
+        // 🔥 LOGIC CHẶN GIỜ QUÁ KHỨ (SỬ DỤNG currentVnTime ĐÃ ÉP MÚI GIỜ) 🔥
         bool isPastSlot = false;
-        if (currentDate.Date == now.Date)
+        if (currentDate.Date == currentVnTime.Date) // Check nếu là ngày hôm nay theo giờ VN
         {
             var slotTime = TimeSpan.Parse(slot);
-            if (slotTime <= now.TimeOfDay)
+            if (slotTime <= currentVnTime.TimeOfDay) // Check xem slot đó đã qua chưa
             {
                 isPastSlot = true;
             }
@@ -122,7 +121,7 @@
 
         if (isBooked || isPastSlot)
         {
-            // Nếu đã có người đặt HOẶC đã quá giờ -> Gắn class "booked" (hoặc class mới "past" tùy sếp)
+            // Nếu đã có người đặt HOẶC đã quá giờ -> Gắn class "booked" (màu xám / chìm đi)
             <span class="slot-btn booked" title="@(isPastSlot ? "Đã qua giờ" : "Đã có người đặt")">@slot</span>
         }
         else

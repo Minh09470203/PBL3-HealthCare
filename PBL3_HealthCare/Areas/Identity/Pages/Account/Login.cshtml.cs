@@ -126,29 +126,30 @@ namespace PBL3_HealthCare.Areas.Identity.Pages.Account
                     var user = await _userManager.FindByEmailAsync(Input.Email);
                     var roles = await _userManager.GetRolesAsync(user);
 
-                    // 2. Chặn lỗi kẹt ReturnUrl (Nếu Bác sĩ mà bị hệ thống đẩy nhầm vào trang Admin thì bẻ lái ngay)
+                    // 2. Chặn lỗi kẹt ReturnUrl (ĐÃ SỬA THÀNH REDIRECT)
                     if (!string.IsNullOrEmpty(returnUrl) && returnUrl != "/" && returnUrl != "~/")
                     {
                         if (roles.Contains("Doctor") && returnUrl.Contains("Doctors", StringComparison.OrdinalIgnoreCase))
                         {
-                            return LocalRedirect("~/Appointments/Index"); // Bẻ lái Bác sĩ về đúng nhà
+                            return Redirect("~/Appointments/Index");
                         }
-                        return LocalRedirect(returnUrl);
+                        return Redirect(returnUrl); // Dùng Redirect để chấp nhận cả đường dẫn tuyệt đối và tương đối
                     }
 
                     // 3. Nếu đăng nhập bình thường (không có ReturnUrl), chia đường theo Role
                     if (roles.Contains("Admin"))
                     {
-                        return LocalRedirect("~/Admin/Index"); 
+                        return Redirect("~/Admin/Index");
                     }
                     else if (roles.Contains("Doctor"))
                     {
-                        return LocalRedirect("~/DoctorPortal/Index"); 
+                        return Redirect("~/DoctorPortal/Index");
                     }
                     else
                     {
-                        return LocalRedirect("~/Home/Index"); 
+                        return Redirect("~/Home/Index");
                     }
+                    // ==========================================
                     // ==========================================
                 }
                 if (result.RequiresTwoFactor)

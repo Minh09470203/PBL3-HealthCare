@@ -131,6 +131,11 @@ namespace PBL3_HealthCare.Areas.Identity.Pages.Account
                     _logger.LogInformation("Tài khoản {Email} đã được tạo ngầm và liên kết Google.", email);
                     return LocalRedirect(returnUrl); // Bỏ qua trang xác nhận, chui thẳng vào Web
                 }
+                else // 🔥 CHỈ THÊM ĐÚNG ĐOẠN NÀY ĐỂ BẮT LỖI
+                {
+                    ErrorMessage = "Lỗi thật nè: " + string.Join(", ", addLoginResult.Errors.Select(e => e.Description));
+                    return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
+                }
             }
 
             ErrorMessage = "Đăng nhập Google thất bại vì lý do bảo mật.";

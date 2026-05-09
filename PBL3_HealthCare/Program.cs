@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Authentication.Google;
-using Microsoft.AspNetCore.HttpOverrides; // 👉 THÊM DÒNG NÀY CHO NGROK (1)
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PBL3_HealthCare.Data;
@@ -24,13 +24,22 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
-builder.Services.AddAuthentication()
-    .AddGoogle(options =>
-    {
-        IConfigurationSection googleAuthNSection = builder.Configuration.GetSection("Authentication:Google");
-        options.ClientId = googleAuthNSection["ClientId"];
-        options.ClientSecret = googleAuthNSection["ClientSecret"];
-    });
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = IdentityConstants.ApplicationScheme;
+    options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+})
+.AddGoogle(options =>
+{
+    IConfigurationSection googleAuthNSection = builder.Configuration.GetSection("Authentication:Google");
+    options.ClientId = googleAuthNSection["ClientId"];
+    options.ClientSecret = googleAuthNSection["ClientSecret"];
+    // ✅ THÊM: Fix cookie trên môi trường HTTPS proxy
+    options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.None; // ← ĐỔI Always → None
+    options.CorrelationCookie.SameSite = SameSiteMode.Lax;        // ← ĐỔI None → Lax
+    options.CorrelationCookie.HttpOnly = true;
+});
+
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<EmailService>();
@@ -51,26 +60,20 @@ builder.Services.AddScoped<GeminiService>();
 
 // 🔥 2. THÊM DÒNG NÀY: KHỞI ĐỘNG DỊCH VỤ SIGNALR LÊN SERVER
 builder.Services.AddSignalR();
-
+// ✅ THÊM: Fix Data Protection cho môi trường deploy
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(
+        new DirectoryInfo(
+            Path.Combine(builder.Environment.ContentRootPath,
+                         "DataProtection-Keys")))
+    .SetApplicationName("PBL3_HealthCare");
 var app = builder.Build();
-
-// 👉 THÊM NGUYÊN KHỐI NÀY ĐỂ FIX TẬN GỐC LỖI NGROK + GOOGLE LOGIN (2)
-var forwardedHeadersOptions = new ForwardedHeadersOptions
-{
-    ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost
-};
-forwardedHeadersOptions.KnownNetworks.Clear();
-forwardedHeadersOptions.KnownProxies.Clear();
-app.UseForwardedHeaders(forwardedHeadersOptions);
 
 
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    var context = services.GetRequiredService<ApplicationDbContext>();
 
-    // 3. Bây giờ mới chạy lệnh Migrate được
-    context.Database.Migrate();
     try
     {
         await DbSeeder.SeedDataAsync(services);
@@ -92,11 +95,15 @@ else
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+
+//app.UseHttpsRedirection();
+
+
 app.UseRouting();
 
 app.UseSession();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();

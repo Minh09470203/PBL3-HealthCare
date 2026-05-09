@@ -138,8 +138,14 @@ namespace PBL3_HealthCare.Controllers
 
             if (doctor == null) return NotFound();
 
+            // 🔥 ÉP GIỜ VIỆT NAM (UTC+7) 🔥
+            var vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            DateTime vnNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnTimeZone);
+            DateTime vnToday = vnNow.Date;
+
+            // Dùng vnToday để lọc lịch từ hôm nay
             var availableSchedules = await _context.Schedules
-                .Where(s => s.DoctorId == id && s.Date >= DateTime.Today && s.IsAvailable)
+                .Where(s => s.DoctorId == id && s.Date >= vnToday && s.IsAvailable)
                 .OrderBy(s => s.Date)
                 .ToListAsync();
 
@@ -163,12 +169,13 @@ namespace PBL3_HealthCare.Controllers
                         slotsForToday.AddRange(new[] { "18:00", "19:00", "20:00", "21:00", "22:00", "23:00" });
                 }
 
+                // Giữ nguyên toàn bộ slot, không dùng .Where() để xóa nữa
                 timeSlotsByDate[date] = slotsForToday.Distinct().OrderBy(t => t).ToList();
             }
 
             var bookedAppointments = await _context.Appointments
                 .Where(a => a.DoctorId == id &&
-                            a.Date >= DateTime.Today &&
+                            a.Date >= vnToday &&
                             a.Status != AppointmentStatus.Cancelled)
                 .ToListAsync();
 
@@ -176,6 +183,9 @@ namespace PBL3_HealthCare.Controllers
             ViewBag.TimeSlotsByDate = timeSlotsByDate;
             ViewBag.BookedAppointments = bookedAppointments;
             ViewBag.IsVideoCall = isVideoCall;
+
+            // 🔥 TRUYỀN GIỜ VN XUỐNG VIEW ĐỂ GIAO DIỆN TỰ KHÓA SLOT 🔥
+            ViewBag.CurrentVnTime = vnNow;
 
             return View(doctor);
         }
@@ -225,7 +235,11 @@ namespace PBL3_HealthCare.Controllers
 
             if (ModelState.IsValid)
             {
-                if (model.Date.Date < DateTime.Now.Date)
+                // 🔥 ÉP GIỜ VN Ở ĐÂY ĐỂ TRÁNH BUG VƯỢT RÀO 🔥
+                var vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+                DateTime vnNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnTimeZone);
+
+                if (model.Date.Date < vnNow.Date)
                 {
                     ModelState.AddModelError("Date", "Lỗi: Không thể đặt lịch cho ngày trong quá khứ!");
                     return await ReloadViewOnError(model);
@@ -258,7 +272,7 @@ namespace PBL3_HealthCare.Controllers
 
                 model.PatientId = user.Id;
                 model.Status = AppointmentStatus.Pending;
-                model.CreatedAt = DateTime.Now;
+                model.CreatedAt = vnNow; // Ghi giờ VN vào DB
 
                 if (model.IsVideoCall)
                 {
@@ -269,16 +283,12 @@ namespace PBL3_HealthCare.Controllers
                 _context.Appointments.Add(model);
                 await _context.SaveChangesAsync();
 
-                // Bắn thông báo nội bộ cho bác sĩ
                 var doctorInfo = await _context.Doctors.FindAsync(model.DoctorId);
                 if (doctorInfo != null)
                 {
                     string msg = $"Có bệnh nhân vừa đặt lịch khám với bạn vào lúc {model.TimeSlot} ngày {model.Date:dd/MM/yyyy}.";
 
-                    // Lưu Database
                     await _notificationService.CreateNotification(doctorInfo.UserId, msg);
-
-                    // 🔥 6. BẮN SÓNG REAL-TIME CHO BÁC SĨ NGAY LẬP TỨC 🔥
                     await _hubContext.Clients.All.SendAsync("ReceiveNotification", doctorInfo.UserId, msg);
                 }
 
