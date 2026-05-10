@@ -79,17 +79,41 @@
             var eventsList = [];
 
             // 1. CA TRỰC
-            var shifts = @Html.Raw(Json.Serialize(Model.WorkShifts.Select(s => new {
+            var rawShifts = @Html.Raw(Json.Serialize(Model.WorkShifts.Select(s => new {
                 title = "🕒 Trực: " + s.Shift,
                 startDay = s.Date.ToString("yyyy-MM-dd"),
                 shiftType = s.Shift
             })));
 
-            shifts.forEach(function (s) {
+            // ✅ LỌC DỮ LIỆU: Ưu tiên ca "Cả ngày", xóa các ca lẻ nếu trùng ngày
+            var shiftsByDate = {};
+            rawShifts.forEach(function (s) {
+                if (!shiftsByDate[s.startDay]) {
+                    shiftsByDate[s.startDay] = [];
+                }
+                shiftsByDate[s.startDay].push(s);
+            });
+
+            var finalShifts = [];
+            for (var date in shiftsByDate) {
+                var dayShifts = shiftsByDate[date];
+                // Kiểm tra xem ngày này có tồn tại ca "Cả ngày" không
+                var fullDayShift = dayShifts.find(x => x.shiftType.includes("Cả ngày"));
+
+                if (fullDayShift) {
+                    finalShifts.push(fullDayShift); // Có cả ngày thì ưu tiên chỉ lấy 1 mình nó
+                } else {
+                    finalShifts = finalShifts.concat(dayShifts); // Không có thì lấy bình thường (Sáng, Chiều...)
+                }
+            }
+
+            // Đổ dữ liệu đã lọc vào eventsList để vẽ lên lịch
+            finalShifts.forEach(function (s) {
                 var start = "07:30", end = "17:00";
                 if (s.shiftType.includes("Sáng"))  { start = "07:30"; end = "11:30"; }
                 else if (s.shiftType.includes("Chiều")) { start = "13:30"; end = "17:00"; }
                 else if (s.shiftType.includes("Tối"))   { start = "17:30"; end = "23:30"; }
+                
                 eventsList.push({
                     title: s.title,
                     start: s.startDay + 'T' + start,
