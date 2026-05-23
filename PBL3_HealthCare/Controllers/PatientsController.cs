@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -33,7 +33,6 @@ namespace PBL3_HealthCare.Controllers
             // 2. LỌC: Chỉ lấy những người đã bấm xác nhận Email (EmailConfirmed == true)
             // Sau đó mới sắp xếp người mới lên đầu
             var confirmedPatients = patients
-                .Where(p => p.EmailConfirmed)
                 .OrderByDescending(p => p.CreatedAt)
                 .ToList();
 

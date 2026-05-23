@@ -1,4 +1,4 @@
-﻿@model PBL3_HealthCare.Models.ApplicationUser
+@model PBL3_HealthCare.Models.ApplicationUser
 @{
     ViewData["Title"] = "Hồ sơ 360: " + Model.FullName;
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
@@ -68,7 +68,7 @@
                         <i class="fas fa-phone-alt text-primary mr-2 w-10"></i> <strong>SĐT:</strong> @(Model.PhoneNumber ?? "Chưa cập nhật")
                     </li>
                     <li class="list-group-item px-0">
-                        <i class="fas fa-envelope text-info mr-2 w-10"></i> <strong>Email:</strong> @Model.Email
+                        <i class="fas fa-id-badge text-info mr-2 w-10"></i> <strong>Tên đăng nhập:</strong> @Model.UserName
                     </li>
                     <li class="list-group-item px-0">
                         <i class="fas fa-birthday-cake text-warning mr-2 w-10"></i> <strong>Ngày sinh:</strong> @(Model.DateOfBirth?.ToString("dd/MM/yyyy") ?? "Chưa cập nhật")
