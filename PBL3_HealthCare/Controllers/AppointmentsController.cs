@@ -359,6 +359,58 @@ namespace PBL3_HealthCare.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // ==========================================
+        // LẤY LỊCH KHÁM CỦA BÁC SĨ BẰNG AJAX
+        // ==========================================
+        [HttpGet]
+        public async Task<IActionResult> GetDoctorSchedule(int doctorId)
+        {
+            var vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            DateTime vnNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnTimeZone);
+            DateTime vnToday = vnNow.Date;
+
+            var availableSchedules = await _context.Schedules
+                .Where(s => s.DoctorId == doctorId && s.Date >= vnToday && s.IsAvailable)
+                .OrderBy(s => s.Date)
+                .ToListAsync();
+
+            var availableDates = availableSchedules.Select(s => s.Date.Date).Distinct().Take(5).ToList();
+            var timeSlotsByDate = new Dictionary<DateTime, List<string>>();
+
+            foreach (var date in availableDates)
+            {
+                var slotsForToday = new List<string>();
+                var schedulesForToday = availableSchedules.Where(s => s.Date.Date == date).ToList();
+
+                foreach (var schedule in schedulesForToday)
+                {
+                    if (schedule.Shift.Contains("Sáng") || schedule.Shift.Contains("Cả ngày"))
+                        slotsForToday.AddRange(new[] { "08:00", "09:00", "10:00", "11:00" });
+
+                    if (schedule.Shift.Contains("Chiều") || schedule.Shift.Contains("Cả ngày"))
+                        slotsForToday.AddRange(new[] { "14:00", "15:00", "16:00" });
+
+                    if (schedule.Shift.Contains("Tối"))
+                        slotsForToday.AddRange(new[] { "18:00", "19:00", "20:00", "21:00", "22:00", "23:00" });
+                }
+
+                timeSlotsByDate[date] = slotsForToday.Distinct().OrderBy(t => t).ToList();
+            }
+
+            var bookedAppointments = await _context.Appointments
+                .Where(a => a.DoctorId == doctorId &&
+                            a.Date >= vnToday &&
+                            a.Status != AppointmentStatus.Cancelled)
+                .ToListAsync();
+
+            ViewBag.Next5Days = availableDates;
+            ViewBag.TimeSlotsByDate = timeSlotsByDate;
+            ViewBag.BookedAppointments = bookedAppointments;
+            ViewBag.CurrentVnTime = vnNow;
+
+            return PartialView("_DoctorSchedulePartial");
+        }
+
         private bool AppointmentExists(int id)
         {
             return _context.Appointments.Any(e => e.Id == id);

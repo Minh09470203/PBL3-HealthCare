@@ -1,0 +1,188 @@
+@{
+    var next5Days = ViewBag.Next5Days as List<DateTime>;
+    var timeSlotsByDate = ViewBag.TimeSlotsByDate as Dictionary<DateTime, List<string>>; 
+    var bookedAppointments = ViewBag.BookedAppointments as List<PBL3_HealthCare.Models.Appointment>;
+    DateTime currentVnTime = ViewBag.CurrentVnTime ?? DateTime.Now;
+}
+
+<style>
+    /* Add basic grid styling */
+    .schedule-panel {
+        background: #fff;
+        border-radius: 8px;
+        padding: 15px;
+        border: 1px solid #e3e6f0;
+    }
+    .schedule-heading {
+        font-weight: bold;
+        color: #4e73df;
+        margin-bottom: 15px;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+    }
+    .day-tabs {
+        display: flex;
+        border-bottom: 2px solid #eaecf4;
+        margin-bottom: 20px;
+        overflow-x: auto;
+    }
+    .day-tab {
+        padding: 10px 15px;
+        text-decoration: none;
+        color: #858796;
+        font-weight: 600;
+        text-align: center;
+        border-bottom: 3px solid transparent;
+        margin-bottom: -2px;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+    .day-tab.active {
+        color: #4e73df;
+        border-bottom-color: #4e73df;
+    }
+    .day-tab .tab-date {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: normal;
+        margin-top: 5px;
+    }
+    .slots-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        gap: 10px;
+    }
+    .slot-btn {
+        display: block;
+        text-align: center;
+        padding: 8px 5px;
+        background: #f8f9fc;
+        border: 1px solid #d1d3e2;
+        border-radius: 5px;
+        color: #5a5c69;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .slot-btn:hover:not(.booked) {
+        background: #eaecf4;
+        color: #4e73df;
+        text-decoration: none;
+    }
+    .slot-btn.booked {
+        background: #eaecf4;
+        color: #b7b9cc;
+        border-style: dashed;
+        cursor: not-allowed;
+    }
+    .slot-btn.selected {
+        background: #4e73df !important;
+        color: white !important;
+        border-color: #4e73df !important;
+    }
+</style>
+
+@if (next5Days == null || next5Days.Count == 0)
+{
+    <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle mr-1"></i> Bác sĩ này hiện chưa có lịch làm việc trong những ngày tới.
+    </div>
+}
+else
+{
+    <div class="schedule-panel">
+        <p class="schedule-heading"><i class="fas fa-calendar-alt mr-2"></i>Lịch rảnh của Bác sĩ</p>
+        
+        <div class="day-tabs">
+            @for (int i = 0; i < next5Days.Count; i++)
+            {
+                <a class="day-tab @(i == 0 ? "active" : "")"
+                   onclick="switchDay(@i, this); return false;">
+                    @(next5Days[i].Date == DateTime.Today ? "Hôm nay" : next5Days[i].DayOfWeek switch {
+                        DayOfWeek.Monday    => "Thứ Hai",
+                        DayOfWeek.Tuesday   => "Thứ Ba",
+                        DayOfWeek.Wednesday => "Thứ Tư",
+                        DayOfWeek.Thursday  => "Thứ Năm",
+                        DayOfWeek.Friday    => "Thứ Sáu",
+                        DayOfWeek.Saturday  => "Thứ Bảy",
+                        _                   => "Chủ Nhật"
+                    })
+                    <span class="tab-date">@next5Days[i].ToString("dd/MM/yyyy")</span>
+                </a>
+            }
+        </div>
+
+        @for (int i = 0; i < next5Days.Count; i++)
+        {
+            <div class="day-panel @(i == 0 ? "" : "d-none")" id="panel-@i">
+                <div class="slots-grid">
+                    @{
+                        var currentDate = next5Days[i].Date;
+                        var daySlots = timeSlotsByDate != null && timeSlotsByDate.ContainsKey(currentDate) 
+                                        ? timeSlotsByDate[currentDate] 
+                                        : new List<string>();
+                    }
+
+                    @if (daySlots.Count == 0)
+                    {
+                        <div class="col-12 text-muted small">Không có ca làm việc nào.</div>
+                    }
+
+                    @foreach (var slot in daySlots)
+                    {
+                        bool isBooked = bookedAppointments.Any(a =>
+                            a.Date.Date == currentDate && 
+                            a.TimeSlot == TimeSpan.Parse(slot));
+
+                        bool isPastSlot = false;
+                        if (currentDate.Date == currentVnTime.Date) 
+                        {
+                            var slotTime = TimeSpan.Parse(slot);
+                            if (slotTime <= currentVnTime.TimeOfDay) 
+                            {
+                                isPastSlot = true;
+                            }
+                        }
+
+                        if (isBooked || isPastSlot)
+                        {
+                            <span class="slot-btn booked" title="@(isPastSlot ? "Đã qua giờ" : "Đã có người đặt")">@slot</span>
+                        }
+                        else
+                        {
+                            <a class="slot-btn available-slot" 
+                               data-date="@currentDate.ToString("yyyy-MM-dd")"
+                               data-time="@slot"
+                               onclick="selectSlot(this); return false;">@slot</a>
+                        }
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<script>
+    function switchDay(index, el) {
+        document.querySelectorAll('.day-panel').forEach(p => p.classList.add('d-none'));
+        document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('panel-' + index).classList.remove('d-none');
+        el.classList.add('active');
+    }
+
+    function selectSlot(el) {
+        // Remove selection from all others
+        document.querySelectorAll('.available-slot').forEach(s => s.classList.remove('selected'));
+        // Select this one
+        el.classList.add('selected');
+
+        // Fill hidden inputs in WalkInBooking form
+        var dateVal = el.getAttribute('data-date');
+        var timeVal = el.getAttribute('data-time');
+
+        document.getElementById('Date').value = dateVal;
+        document.getElementById('TimeSlot').value = timeVal + ':00'; // Format HH:mm:ss for TimeSpan binder
+    }
+</script>

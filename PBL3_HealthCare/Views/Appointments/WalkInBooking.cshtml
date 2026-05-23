@@ -54,16 +54,14 @@
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6 form-group">
-                            <label asp-for="Date" class="font-weight-bold text-dark"></label>
-                            <input asp-for="Date" type="date" class="form-control" />
-                            <span asp-validation-for="Date" class="text-danger small mt-1"></span>
-                        </div>
-                        <div class="col-md-6 form-group">
-                            <label asp-for="TimeSlot" class="font-weight-bold text-dark"></label>
-                            <input asp-for="TimeSlot" type="time" class="form-control" />
-                            <span asp-validation-for="TimeSlot" class="text-danger small mt-1"></span>
+                    <input type="hidden" asp-for="Date" id="Date" />
+                    <input type="hidden" asp-for="TimeSlot" id="TimeSlot" />
+                    <span asp-validation-for="Date" class="text-danger small mt-1 d-block"></span>
+                    <span asp-validation-for="TimeSlot" class="text-danger small mt-1 d-block"></span>
+
+                    <div id="schedule-container" class="mb-4">
+                        <div class="alert alert-info small">
+                            <i class="fas fa-info-circle mr-1"></i> Vui lòng chọn Bác sĩ để xem lịch rảnh.
                         </div>
                     </div>
 
@@ -105,4 +103,42 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        $(document).ready(function () {
+            // Khi chọn bác sĩ
+            $('#DoctorId').change(function () {
+                var doctorId = $(this).val();
+                if (doctorId) {
+                    $('#schedule-container').html('<div class="text-center py-3"><i class="fas fa-spinner fa-spin fa-2x text-primary"></i><p class="mt-2 text-muted">Đang tải lịch rảnh...</p></div>');
+                    
+                    $.ajax({
+                        url: '@Url.Action("GetDoctorSchedule", "Appointments")',
+                        type: 'GET',
+                        data: { doctorId: doctorId },
+                        success: function (res) {
+                            $('#schedule-container').html(res);
+                            // Xóa giá trị cũ
+                            $('#Date').val('');
+                            $('#TimeSlot').val('');
+                        },
+                        error: function () {
+                            $('#schedule-container').html('<div class="alert alert-danger">Lỗi khi tải lịch khám!</div>');
+                        }
+                    });
+                } else {
+                    $('#schedule-container').html('<div class="alert alert-info small"><i class="fas fa-info-circle mr-1"></i> Vui lòng chọn Bác sĩ để xem lịch rảnh.</div>');
+                    $('#Date').val('');
+                    $('#TimeSlot').val('');
+                }
+            });
+
+            // Validate form trước khi submit
+            $('form').submit(function (e) {
+                if (!$('#Date').val() || !$('#TimeSlot').val()) {
+                    e.preventDefault();
+                    alert('Vui lòng chọn Bác sĩ và click chọn một khung giờ từ lịch khám!');
+                }
+            });
+        });
+    </script>
 }
