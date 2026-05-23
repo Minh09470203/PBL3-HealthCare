@@ -71,7 +71,9 @@ namespace PBL3_HealthCare.Controllers
         public IActionResult Create()
         {
             ViewData["SpecialtyId"] = new SelectList(_context.Specialties, "Id", "Name");
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "FullName");
+            var existingDoctorUserIds = _context.Doctors.Select(d => d.UserId).ToList();
+            var availableUsers = _context.Users.Where(u => !existingDoctorUserIds.Contains(u.Id)).ToList();
+            ViewData["UserId"] = new SelectList(availableUsers, "Id", "FullName");
             return View();
         }
 
@@ -122,8 +124,10 @@ namespace PBL3_HealthCare.Controllers
                 TempData["Success"] = "Thêm bác sĩ thành công!";
                 return RedirectToAction(nameof(Index));
             }
+            var existingDoctorUserIds = _context.Doctors.Select(d => d.UserId).ToList();
+            var availableUsers = _context.Users.Where(u => !existingDoctorUserIds.Contains(u.Id) || u.Id == doctor.UserId).ToList();
             ViewData["SpecialtyId"] = new SelectList(_context.Specialties, "Id", "Name", doctor.SpecialtyId);
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "FullName", doctor.UserId);
+            ViewData["UserId"] = new SelectList(availableUsers, "Id", "FullName", doctor.UserId);
             return View(doctor);
         }
 
@@ -135,8 +139,10 @@ namespace PBL3_HealthCare.Controllers
             var doctor = await _context.Doctors.FindAsync(id);
             if (doctor == null) return NotFound();
 
+            var existingDoctorUserIds = _context.Doctors.Select(d => d.UserId).ToList();
+            var availableUsers = _context.Users.Where(u => !existingDoctorUserIds.Contains(u.Id) || u.Id == doctor.UserId).ToList();
             ViewData["SpecialtyId"] = new SelectList(_context.Specialties, "Id", "Name", doctor.SpecialtyId);
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "FullName", doctor.UserId);
+            ViewData["UserId"] = new SelectList(availableUsers, "Id", "FullName", doctor.UserId);
             return View(doctor);
         }
 
@@ -185,8 +191,10 @@ namespace PBL3_HealthCare.Controllers
                 TempData["Success"] = "Cập nhật bác sĩ thành công!";
                 return RedirectToAction(nameof(Index));
             }
+            var existingDoctorUserIds = _context.Doctors.Select(d => d.UserId).ToList();
+            var availableUsers = _context.Users.Where(u => !existingDoctorUserIds.Contains(u.Id) || u.Id == doctor.UserId).ToList();
             ViewData["SpecialtyId"] = new SelectList(_context.Specialties, "Id", "Name", doctor.SpecialtyId);
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "FullName", doctor.UserId);
+            ViewData["UserId"] = new SelectList(availableUsers, "Id", "FullName", doctor.UserId);
             return View(doctor);
         }
 
