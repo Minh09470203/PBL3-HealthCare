@@ -62,6 +62,7 @@ namespace PBL3_HealthCare.Controllers
         public async Task<IActionResult> Index()
         {
             var currentUser = await _userManager.GetUserAsync(User);
+            var isAdmin = await _userManager.IsInRoleAsync(currentUser, "Admin");
             var isDoctor = await _userManager.IsInRoleAsync(currentUser, "Doctor");
 
             var query = _context.Appointments
@@ -71,7 +72,7 @@ namespace PBL3_HealthCare.Controllers
                 .Include(a => a.MedicalRecord).ThenInclude(m => m.Prescriptions)
                 .AsQueryable();
 
-            if (isDoctor)
+            if (isDoctor && !isAdmin)
             {
                 var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == currentUser.Id);
                 if (doctor != null)

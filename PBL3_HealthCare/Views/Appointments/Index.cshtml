@@ -2,7 +2,7 @@
 @model IEnumerable<PBL3_HealthCare.Models.Appointment>
 
 @{
-    bool isDoctor = User.IsInRole("Doctor");
+    bool isDoctor = User.IsInRole("Doctor") && !User.IsInRole("Admin");
     ViewData["Title"] = isDoctor ? "Lịch khám của tôi" : "Quản lý Lịch khám";
 
     if (User.IsInRole("Admin"))
