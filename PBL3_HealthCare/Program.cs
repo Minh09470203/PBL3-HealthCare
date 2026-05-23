@@ -21,7 +21,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
@@ -101,6 +101,8 @@ using (var scope = app.Services.CreateScope())
 
     try
     {
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        await context.Database.MigrateAsync(); // Tự động chạy Migration khi Deploy
         await DbSeeder.SeedDataAsync(services);
     }
     catch (Exception ex)

@@ -1,4 +1,4 @@
-﻿@model IEnumerable<PBL3_HealthCare.Models.PackageBooking>
+@model IEnumerable<PBL3_HealthCare.Models.PackageBooking>
 
 @{
     ViewData["Title"] = "Danh Sách Gói Khám Chờ Duyệt";
@@ -19,6 +19,7 @@
                         <th>Bệnh nhân</th>
                         <th>Gói khám đăng ký</th>
                         <th>Thời gian muốn khám</th>
+                        <th>Yêu cầu chi tiết</th>
                         <th>Trạng thái</th>
                         <th class="text-center">Hành động</th>
                     </tr>
@@ -31,6 +32,7 @@
                             <td class="font-weight-bold text-dark">@item.Patient?.FullName</td>
                             <td class="text-primary font-weight-bold">@item.HealthPackage?.Name</td>
                             <td><span class="badge badge-warning text-dark p-2">@item.BookingDate.ToString("dd/MM - HH:mm")</span></td>
+                            <td>@item.SelectedOptions</td>
                             <td><span class="badge badge-secondary p-2">Đang chờ</span></td>
                             <td class="text-center">
                                 <a asp-controller="Admin" asp-action="ApproveAndAssignDoctor" asp-route-id="@item.Id" class="btn btn-primary btn-sm shadow-sm">

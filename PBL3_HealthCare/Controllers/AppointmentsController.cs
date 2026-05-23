@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -67,6 +67,7 @@ namespace PBL3_HealthCare.Controllers
             var query = _context.Appointments
                 .Include(a => a.Patient)
                 .Include(a => a.Doctor).ThenInclude(d => d.User)
+                .Include(a => a.Doctor).ThenInclude(d => d.Specialty)
                 .Include(a => a.MedicalRecord).ThenInclude(m => m.Prescriptions)
                 .AsQueryable();
 
@@ -145,6 +146,85 @@ namespace PBL3_HealthCare.Controllers
 
             PopulateNames(appointment);
             return View(appointment);
+        }
+
+        // ==========================================
+        // WALK-IN BOOKING (Khách vãng lai)
+        // ==========================================
+        [HttpGet]
+        public IActionResult WalkInBooking()
+        {
+            var doctors = _context.Doctors
+                .Include(d => d.User)
+                .Include(d => d.Specialty)
+                .Select(d => new { Id = d.Id, Name = "BS. " + d.User.FullName + " - " + d.Specialty.Name })
+                .ToList();
+            ViewData["DoctorId"] = new SelectList(doctors, "Id", "Name");
+            return View(new WalkInViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> WalkInBooking(WalkInViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                // Kiểm tra xem SĐT này đã có tài khoản chưa
+                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.PhoneNumber == model.PhoneNumber || u.UserName == model.PhoneNumber);
+                
+                if (user == null)
+                {
+                    // Tạo tài khoản ngầm định cho bệnh nhân vãng lai
+                    user = new ApplicationUser
+                    {
+                        UserName = model.PhoneNumber,
+                        PhoneNumber = model.PhoneNumber,
+                        FullName = model.PatientName,
+                        Address = model.Address
+                    };
+                    
+                    // Giả định email để không bị lỗi
+                    await _userManager.SetEmailAsync(user, model.PhoneNumber + "@system.local");
+
+                    // Tạo password ngầm định: SĐT + @123Aa
+                    var result = await _userManager.CreateAsync(user, model.PhoneNumber + "@123Aa");
+                    if (result.Succeeded)
+                    {
+                        await _userManager.AddToRoleAsync(user, "Patient");
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, "Không thể tạo tài khoản ngầm định cho bệnh nhân này.");
+                        var doctorsList = _context.Doctors.Include(d => d.User).Include(d => d.Specialty)
+                            .Select(d => new { Id = d.Id, Name = "BS. " + d.User.FullName + " - " + d.Specialty.Name }).ToList();
+                        ViewData["DoctorId"] = new SelectList(doctorsList, "Id", "Name", model.DoctorId);
+                        return View(model);
+                    }
+                }
+
+                // Tạo lịch khám luôn được Confirmed
+                var appointment = new Appointment
+                {
+                    PatientId = user.Id,
+                    DoctorId = model.DoctorId,
+                    Date = model.Date.Date,
+                    TimeSlot = model.TimeSlot,
+                    Reason = string.IsNullOrEmpty(model.Reason) ? "Khám trực tiếp tại quầy" : model.Reason,
+                    Status = AppointmentStatus.Confirmed,
+                    CreatedAt = DateTime.Now
+                };
+
+                _context.Appointments.Add(appointment);
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = $"Tạo lịch khám thành công cho {model.PatientName}. Tài khoản đăng nhập đã được tạo (Tên: {model.PhoneNumber}, MK: {model.PhoneNumber}@123Aa).";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var doctors = _context.Doctors.Include(d => d.User).Include(d => d.Specialty)
+                .Select(d => new { Id = d.Id, Name = "BS. " + d.User.FullName + " - " + d.Specialty.Name }).ToList();
+            ViewData["DoctorId"] = new SelectList(doctors, "Id", "Name", model.DoctorId);
+            return View(model);
         }
 
         // ==========================================

@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
@@ -92,9 +92,8 @@ namespace PBL3_HealthCare.Areas.Identity.Pages.Account
             [Display(Name = "Giới tính")]
             public string Gender { get; set; }
             [Required]
-            [EmailAddress]
-            [Display(Name = "Email")]
-            public string Email { get; set; }
+            [Display(Name = "Tên đăng nhập")]
+            public string UserName { get; set; }
 
 
             [Required]
@@ -132,8 +131,9 @@ namespace PBL3_HealthCare.Areas.Identity.Pages.Account
                 user.DateOfBirth = Input.DateOfBirth;
                 user.Gender = Input.Gender;
 
-                await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
-                await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+                await _userStore.SetUserNameAsync(user, Input.UserName, CancellationToken.None);
+                // Giả lập Email bằng UserName để không break default behavior của Identity
+                await _emailStore.SetEmailAsync(user, Input.UserName + "@system.local", CancellationToken.None);
                 var result = await _userManager.CreateAsync(user, Input.Password);
 
                 if (result.Succeeded)
@@ -141,38 +141,8 @@ namespace PBL3_HealthCare.Areas.Identity.Pages.Account
                     await _userManager.AddToRoleAsync(user, "Patient");
                     _logger.LogInformation("Tài khoản mới đã được tạo.");
 
-                    // 1. TẠO MÃ XÁC THỰC (MÃ HÓA BẢO MẬT)
-                    var userId = await _userManager.GetUserIdAsync(user);
-                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                    code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-
-                    // 2. TẠO ĐƯỜNG LINK XÁC NHẬN TỰ ĐỘNG
-                    var callbackUrl = Url.Page(
-                        "/Account/ConfirmEmail",
-                        pageHandler: null,
-                        values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
-                        protocol: Request.Scheme);
-
-                    // 3. SOẠN EMAIL ĐẸP LUNG LINH GỬI CHO KHÁCH
-                    string mailBody = $@"
-                        <div style='font-family: Arial, sans-serif; padding: 20px; background-color: #f4f7f6;'>
-                            <div style='max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);'>
-                                <h2 style='color: #3B5BDB; text-align: center;'>XÁC NHẬN TÀI KHOẢN</h2>
-                                <p>Chào <strong>{user.FullName}</strong>,</p>
-                                <p>Cảm ơn bạn đã đăng ký tài khoản tại Phòng Khám SuperStar. Để bảo vệ tài khoản của bạn, vui lòng xác thực địa chỉ email bằng cách bấm vào nút bên dưới:</p>
-                                <div style='text-align: center; margin: 30px 0;'>
-                                    <a href='{HtmlEncoder.Default.Encode(callbackUrl)}' style='background-color: #3B5BDB; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; display: inline-block;'>XÁC THỰC EMAIL NGAY</a>
-                                </div>
-                                <p style='color: #777; font-size: 12px; text-align: center;'>Nếu bạn không tạo tài khoản này, vui lòng bỏ qua email.</p>
-                            </div>
-                        </div>";
-
-                    // 4. BẮN EMAIL ĐI
-                    await _emailService.SendEmailAsync(Input.Email, "Xác thực tài khoản SuperStar", mailBody);
-
-                    // 5. KHÓA MÕM: Dù thế nào cũng đuổi ra màn hình Login bắt check mail, KHÔNG CHO ĐĂNG NHẬP!
-                    TempData["SuccessMessage"] = "Vui lòng kiểm tra hộp thư Gmail (cả mục Thư rác) để xác thực tài khoản trước khi đăng nhập.";
-                    return RedirectToPage("./Login");
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    return LocalRedirect(returnUrl);
                 }
                 foreach (var error in result.Errors)
                 {

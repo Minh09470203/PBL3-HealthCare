@@ -1,4 +1,4 @@
-﻿@page
+@page
 @model RegisterModel
 @{
     ViewBag.Title = "Đăng ký tài khoản";
@@ -60,8 +60,8 @@
             <span asp-validation-for="Input.FullName" class="text-danger small px-3"></span>
         </div>
         <div class="col-md-6 mb-3">
-            <input asp-for="Input.Email" class="form-control form-control-pill" placeholder="Email của bạn" />
-            <span asp-validation-for="Input.Email" class="text-danger small px-3"></span>
+            <input asp-for="Input.UserName" class="form-control form-control-pill" placeholder="Tên đăng nhập" />
+            <span asp-validation-for="Input.UserName" class="text-danger small px-3"></span>
         </div>
     </div>
 

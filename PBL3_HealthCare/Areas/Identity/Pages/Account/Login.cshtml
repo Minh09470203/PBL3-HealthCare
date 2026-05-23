@@ -1,4 +1,4 @@
-﻿@page
+@page
 @model LoginModel
 @{
     ViewBag.Title = "Đăng nhập";
@@ -85,9 +85,9 @@
 <form method="post">
     <div asp-validation-summary="ModelOnly" class="text-danger fw-bold mb-3 text-center" style="font-size: 0.9rem;" role="alert"></div>
 
-    <div class="mb-4">
-        <input asp-for="Input.Email" class="form-control form-control-pill" placeholder="Email hoặc Số điện thoại" />
-        <span asp-validation-for="Input.Email" class="text-danger small ms-3 mt-1 d-block"></span>
+    <div class="mb-3">
+        <input asp-for="Input.UserName" class="form-control form-control-pill" placeholder="Tên đăng nhập" />
+        <span asp-validation-for="Input.UserName" class="text-danger small px-3"></span>
     </div>
 
     <div class="mb-4">

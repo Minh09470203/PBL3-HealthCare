@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.IO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Hosting;
+using ClosedXML.Excel;
 
 namespace PBL3_HealthCare.Controllers
 {
@@ -456,6 +457,117 @@ namespace PBL3_HealthCare.Controllers
 
             TempData["Success"] = "Cập nhật hồ sơ thành công!";
             return RedirectToAction(nameof(Profile));
+        }
+
+        // ========================================================
+        // 4. XUẤT EXCEL
+        // ========================================================
+        [HttpGet]
+        public async Task<IActionResult> ExportDoctorsToExcel()
+        {
+            var doctors = await _context.Doctors
+                .Include(d => d.User)
+                .Include(d => d.Specialty)
+                .ToListAsync();
+
+            var today = DateTime.Today;
+
+            var appointments = await _context.Appointments
+                .Where(a => a.Date.Date == today && a.Status != AppointmentStatus.Cancelled)
+                .ToListAsync();
+
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("DanhSachBacSi");
+                var currentRow = 1;
+
+                worksheet.Cell(currentRow, 1).Value = "ID";
+                worksheet.Cell(currentRow, 2).Value = "Tên Bác sĩ";
+                worksheet.Cell(currentRow, 3).Value = "Khoa";
+                worksheet.Cell(currentRow, 4).Value = "Số điện thoại";
+                worksheet.Cell(currentRow, 5).Value = "Số ca khám hôm nay";
+
+                foreach (var doc in doctors)
+                {
+                    currentRow++;
+                    var todayCount = appointments.Count(a => a.DoctorId == doc.Id);
+
+                    worksheet.Cell(currentRow, 1).Value = doc.Id;
+                    worksheet.Cell(currentRow, 2).Value = doc.User?.FullName;
+                    worksheet.Cell(currentRow, 3).Value = doc.Specialty?.Name;
+                    worksheet.Cell(currentRow, 4).Value = doc.User?.PhoneNumber;
+                    worksheet.Cell(currentRow, 5).Value = todayCount;
+                }
+
+                worksheet.Columns().AdjustToContents();
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    var content = stream.ToArray();
+                    return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"DanhSachBacSi_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx");
+                }
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExportTodayPatientsToExcel()
+        {
+            var today = DateTime.Today;
+
+            var appointments = await _context.Appointments
+                .Include(a => a.Patient)
+                .Include(a => a.Doctor)
+                    .ThenInclude(d => d.User)
+                .Include(a => a.Doctor.Specialty)
+                .Where(a => a.Date.Date == today)
+                .OrderBy(a => a.TimeSlot)
+                .ToListAsync();
+
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("BenhNhanHomNay");
+                var currentRow = 1;
+
+                worksheet.Cell(currentRow, 1).Value = "Mã Lịch";
+                worksheet.Cell(currentRow, 2).Value = "Thời gian";
+                worksheet.Cell(currentRow, 3).Value = "Bệnh nhân";
+                worksheet.Cell(currentRow, 4).Value = "SĐT Bệnh nhân";
+                worksheet.Cell(currentRow, 5).Value = "Bác sĩ phụ trách";
+                worksheet.Cell(currentRow, 6).Value = "Khoa";
+                worksheet.Cell(currentRow, 7).Value = "Lý do / Yêu cầu";
+                worksheet.Cell(currentRow, 8).Value = "Trạng thái";
+
+                foreach (var app in appointments)
+                {
+                    currentRow++;
+                    worksheet.Cell(currentRow, 1).Value = app.Id;
+                    worksheet.Cell(currentRow, 2).Value = app.TimeSlot.ToString(@"hh\:mm");
+                    worksheet.Cell(currentRow, 3).Value = app.Patient?.FullName;
+                    worksheet.Cell(currentRow, 4).Value = app.Patient?.PhoneNumber;
+                    worksheet.Cell(currentRow, 5).Value = app.Doctor?.User?.FullName;
+                    worksheet.Cell(currentRow, 6).Value = app.Doctor?.Specialty?.Name;
+                    worksheet.Cell(currentRow, 7).Value = app.Reason;
+                    
+                    string statusStr = app.Status switch {
+                        AppointmentStatus.Pending => "Chờ khám",
+                        AppointmentStatus.Confirmed => "Đã xác nhận",
+                        AppointmentStatus.Completed => "Hoàn thành",
+                        AppointmentStatus.Cancelled => "Đã hủy",
+                        _ => app.Status.ToString()
+                    };
+                    worksheet.Cell(currentRow, 8).Value = statusStr;
+                }
+
+                worksheet.Columns().AdjustToContents();
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    var content = stream.ToArray();
+                    return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"BenhNhanHomNay_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx");
+                }
+            }
         }
     }
 }

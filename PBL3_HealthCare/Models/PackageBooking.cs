@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace PBL3_HealthCare.Models
@@ -22,5 +22,8 @@ namespace PBL3_HealthCare.Models
         // Status và CreatedAt nên gán giá trị mặc định để DB luôn có dữ liệu
         public string Status { get; set; } = "Pending";
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+        [Display(Name = "Yêu cầu chi tiết (nếu có)")]
+        public string? SelectedOptions { get; set; }
     }
 }

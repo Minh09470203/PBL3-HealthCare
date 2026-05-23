@@ -1,0 +1,108 @@
+@model PBL3_HealthCare.Models.WalkInViewModel
+
+@{
+    ViewData["Title"] = "Tạo lịch khám trực tiếp (Walk-in)";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800"><i class="fas fa-calendar-plus text-primary mr-2"></i>Tạo Lịch Khám Trực Tiếp</h1>
+    <a asp-action="Index" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+        <i class="fas fa-arrow-left fa-sm text-white-50 mr-1"></i> Quay lại
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-xl-8 col-lg-7">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Thông tin bệnh nhân vãng lai</h6>
+            </div>
+            <div class="card-body">
+                <form asp-action="WalkInBooking" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label asp-for="PatientName" class="font-weight-bold text-dark"></label>
+                            <input asp-for="PatientName" class="form-control" placeholder="Ví dụ: Nguyễn Văn A" />
+                            <span asp-validation-for="PatientName" class="text-danger small mt-1"></span>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label asp-for="PhoneNumber" class="font-weight-bold text-dark"></label>
+                            <input asp-for="PhoneNumber" class="form-control" placeholder="Ví dụ: 0987654321" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger small mt-1"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label asp-for="Address" class="font-weight-bold text-dark"></label>
+                        <input asp-for="Address" class="form-control" placeholder="Địa chỉ thường trú" />
+                        <span asp-validation-for="Address" class="text-danger small mt-1"></span>
+                    </div>
+
+                    <hr />
+                    <h6 class="font-weight-bold text-primary mt-4 mb-3">Thông tin Lịch hẹn</h6>
+
+                    <div class="row">
+                        <div class="col-md-12 form-group">
+                            <label asp-for="DoctorId" class="font-weight-bold text-dark"></label>
+                            <select asp-for="DoctorId" class="form-control select2" asp-items="ViewBag.DoctorId">
+                                <option value="">-- Chọn Bác sĩ --</option>
+                            </select>
+                            <span asp-validation-for="DoctorId" class="text-danger small mt-1"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label asp-for="Date" class="font-weight-bold text-dark"></label>
+                            <input asp-for="Date" type="date" class="form-control" />
+                            <span asp-validation-for="Date" class="text-danger small mt-1"></span>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label asp-for="TimeSlot" class="font-weight-bold text-dark"></label>
+                            <input asp-for="TimeSlot" type="time" class="form-control" />
+                            <span asp-validation-for="TimeSlot" class="text-danger small mt-1"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label asp-for="Reason" class="font-weight-bold text-dark"></label>
+                        <textarea asp-for="Reason" class="form-control" rows="2" placeholder="Lý do đến khám (Mặc định: Khám trực tiếp tại quầy)"></textarea>
+                        <span asp-validation-for="Reason" class="text-danger small mt-1"></span>
+                    </div>
+
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <button type="submit" class="btn btn-primary px-5 shadow-sm">
+                            <i class="fas fa-check-circle mr-1"></i> Tạo lịch ngay
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4 col-lg-5">
+        <div class="card shadow mb-4 border-left-success">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-success"><i class="fas fa-info-circle mr-2"></i>Hướng dẫn</h6>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-3">
+                    Tính năng này giúp Lễ tân hoặc Admin tạo nhanh một lịch khám cho bệnh nhân đến trực tiếp tại phòng khám mà chưa đặt lịch trước trên web.
+                </p>
+                <ul class="small text-muted pl-3">
+                    <li class="mb-2">Hệ thống sẽ dựa vào số điện thoại để kiểm tra tài khoản.</li>
+                    <li class="mb-2">Nếu chưa có tài khoản, hệ thống sẽ tự động tạo một tài khoản mới để bệnh nhân có thể đăng nhập xem bệnh án sau này.</li>
+                    <li class="mb-2">Tên đăng nhập: <strong>Số điện thoại</strong></li>
+                    <li class="mb-2">Mật khẩu mặc định: <strong>[Số điện thoại]@@123Aa</strong></li>
+                    <li class="mb-0">Lịch khám được tạo bằng form này sẽ tự động chuyển sang trạng thái <strong class="text-success">Đã xác nhận (Confirmed)</strong>.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

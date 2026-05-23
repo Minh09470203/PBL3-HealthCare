@@ -34,7 +34,21 @@ namespace PBL3_HealthCare.Controllers
         public async Task<IActionResult> Index()
         {
             var applicationDbContext = _context.Doctors.Include(d => d.Specialty).Include(d => d.User);
-            return View(await applicationDbContext.ToListAsync());
+            var doctors = await applicationDbContext.ToListAsync();
+            
+            var today = DateTime.Today;
+            var appointmentsToday = await _context.Appointments
+                .Where(a => a.Date.Date == today && a.Status != AppointmentStatus.Cancelled)
+                .ToListAsync();
+
+            var todayCounts = new Dictionary<int, int>();
+            foreach(var doc in doctors)
+            {
+                todayCounts[doc.Id] = appointmentsToday.Count(a => a.DoctorId == doc.Id);
+            }
+            ViewBag.TodayCounts = todayCounts;
+
+            return View(doctors);
         }
 
         // GET: Doctors/Details/5

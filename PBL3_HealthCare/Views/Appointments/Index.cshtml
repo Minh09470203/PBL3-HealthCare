@@ -1,4 +1,4 @@
-﻿@using PBL3_HealthCare.Models
+@using PBL3_HealthCare.Models
 @model IEnumerable<PBL3_HealthCare.Models.Appointment>
 
 @{
@@ -172,7 +172,11 @@
     </div>
     @if (!isDoctor)
     {
-        <a asp-action="Create" class="btn btn-add"><i class="fas fa-plus"></i> Tạo lịch khám</a>
+        <div>
+            <a asp-action="WalkInBooking" class="btn btn-warning mr-2"><i class="fas fa-walking"></i> Tiếp nhận Bệnh nhân trực tiếp</a>
+            <a asp-action="Create" class="btn btn-add mr-2"><i class="fas fa-plus"></i> Tạo lịch khám (Cũ)</a>
+            <a asp-controller="Admin" asp-action="ExportTodayPatientsToExcel" class="btn btn-success"><i class="fas fa-file-excel"></i> Xuất Excel (Hôm nay)</a>
+        </div>
     }
 </div>
 
@@ -185,6 +189,7 @@
                     @if (!isDoctor)
                     {
                         <th>Bác sĩ</th>
+                        <th>Khoa</th>
                     }
                     <th>Ngày khám</th>
                     <th>Khung giờ</th>
@@ -207,6 +212,7 @@
                         @if (!isDoctor)
                         {
                             <td>BS. @(item.Doctor?.User?.FullName ?? "Bác sĩ")</td>
+                            <td><span class="badge badge-info p-2">@(item.Doctor?.Specialty?.Name ?? "---")</span></td>
                         }
                         <td><span class="date-text">@item.Date.ToString("dd/MM/yyyy")</span></td>
                         <td><span class="timeslot-text"><i class="fas fa-clock mr-1"></i>@Html.DisplayFor(m => item.TimeSlot)</span></td>

@@ -1,4 +1,4 @@
-﻿@model PBL3_HealthCare.Models.PackageBooking
+@model PBL3_HealthCare.Models.PackageBooking
 
 @{
     ViewData["Title"] = "Phân Công Bác Sĩ";
@@ -24,6 +24,10 @@
                     <tr>
                         <th>Gói Khám:</th>
                         <td class="text-primary font-weight-bold">@Model.HealthPackage?.Name</td>
+                    </tr>
+                    <tr>
+                        <th>Yêu cầu chi tiết:</th>
+                        <td class="text-danger font-weight-bold">@(string.IsNullOrEmpty(Model.SelectedOptions) ? "Không có" : Model.SelectedOptions)</td>
                     </tr>
                     <tr>
                         <th>Thời gian muốn khám:</th>
