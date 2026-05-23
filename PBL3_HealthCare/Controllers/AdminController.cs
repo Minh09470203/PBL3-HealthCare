@@ -420,14 +420,13 @@ namespace PBL3_HealthCare.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Profile(string FullName, string Email, string PhoneNumber, string Address, IFormFile AvatarFile)
+        public async Task<IActionResult> Profile(string FullName, string PhoneNumber, string Address, IFormFile AvatarFile)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return NotFound();
 
             // 1. Cập nhật thông tin cơ bản
             user.FullName = FullName;
-            user.Email = Email;
             user.PhoneNumber = PhoneNumber;
             user.Address = Address;
 

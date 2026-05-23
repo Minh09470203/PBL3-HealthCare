@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -81,7 +81,7 @@ namespace PBL3_HealthCare.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Profile(
-            string FullName, string Email, string PhoneNumber, string Address,
+            string FullName, string PhoneNumber, string Address,
             string Degree, decimal Price, string Bio,
             IFormFile AvatarFile)
         {
@@ -94,7 +94,6 @@ namespace PBL3_HealthCare.Controllers
 
             // Cập nhật thông tin tài khoản
             user.FullName = FullName;
-            user.Email = Email;
             user.PhoneNumber = PhoneNumber;
             user.Address = Address;
             await _userManager.UpdateAsync(user);

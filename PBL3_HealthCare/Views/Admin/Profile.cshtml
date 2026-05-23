@@ -1,4 +1,4 @@
-﻿@model PBL3_HealthCare.Models.ApplicationUser
+@model PBL3_HealthCare.Models.ApplicationUser
 
 @{
     ViewData["Title"] = "Hồ sơ Quản trị viên";
@@ -92,9 +92,12 @@
                         </div>
                         <div class="col-md-6">
                             <div class="field-group">
-                                <label class="field-label">Email <span class="req">*</span></label>
-                                <input type="email" name="Email" class="form-control-custom"
-                                       value="@Model.Email" required />
+                                <label class="field-label">Tên đăng nhập</label>
+                                <input type="text" class="form-control-custom"
+                                       value="@Model.UserName"
+                                       readonly
+                                       style="background:#f8f9fa;color:#6c757d;cursor:not-allowed;"
+                                       title="Không thể thay đổi tên đăng nhập" />
                             </div>
                         </div>
                         <div class="col-md-6">
