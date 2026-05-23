@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -368,7 +368,7 @@ namespace PBL3_HealthCare.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Profile(string FullName, string PhoneNumber, DateTime? DOB, string Gender, string Address, string Email, IFormFile AvatarFile)
+        public async Task<IActionResult> Profile(string FullName, string PhoneNumber, DateTime? DOB, string Gender, string Address, IFormFile AvatarFile)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
@@ -381,7 +381,6 @@ namespace PBL3_HealthCare.Controllers
             user.Gender = Gender;
             user.Address = Address;
             user.DateOfBirth = DOB;
-            user.Email = Email;
 
             if (AvatarFile != null && AvatarFile.Length > 0)
             {
