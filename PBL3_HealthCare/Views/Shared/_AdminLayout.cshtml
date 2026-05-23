@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
@@ -217,6 +217,28 @@
             if (errorMsg) {
                 Toast.fire({ icon: 'error', title: errorMsg });
             }
+        });
+    </script>
+    <script>
+        $(document).ready(function () {
+            $('form').on('submit', function() {
+                var $form = $(this);
+                // Nếu form có validation mà không hợp lệ thì không làm gì
+                if ($form.data('validator') && !$form.valid()) return true;
+                
+                // Nếu đã submit rồi thì block các lần click tiếp theo
+                if ($form.data('submitted') === true) {
+                    return false;
+                } else {
+                    $form.data('submitted', true);
+                    var $btn = $form.find('button[type=submit]');
+                    if ($btn.length > 0) {
+                        setTimeout(function() {
+                            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Đang xử lý...');
+                        }, 10);
+                    }
+                }
+            });
         });
     </script>
     @await RenderSectionAsync("Scripts", required: false)

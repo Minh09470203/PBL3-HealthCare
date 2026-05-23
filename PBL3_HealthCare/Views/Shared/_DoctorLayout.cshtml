@@ -149,6 +149,26 @@
             }
         });
     </script>
+    <script>
+        $(document).ready(function () {
+            $('form').on('submit', function() {
+                var $form = $(this);
+                if ($form.data('validator') && !$form.valid()) return true;
+                
+                if ($form.data('submitted') === true) {
+                    return false;
+                } else {
+                    $form.data('submitted', true);
+                    var $btn = $form.find('button[type=submit]');
+                    if ($btn.length > 0) {
+                        setTimeout(function() {
+                            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Đang xử lý...');
+                        }, 10);
+                    }
+                }
+            });
+        });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
