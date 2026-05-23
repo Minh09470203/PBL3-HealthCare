@@ -1,4 +1,4 @@
-﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Identity
 @using PBL3_HealthCare.Models
 @using PBL3_HealthCare.Data
 @inject UserManager<ApplicationUser> UserManager
@@ -91,10 +91,10 @@
                                     // Chui vào bảng Doctor tìm đúng ông bác sĩ đó
                                     var doctor = Context.Doctors.FirstOrDefault(d => d.UserId == userId);
                                     // Lấy tên file ảnh (nếu chưa có ảnh thì dùng ảnh mặc định)
-                                    var imageName = (doctor != null && !string.IsNullOrEmpty(doctor.Image)) ? doctor.Image : "undraw_profile.svg";
+                                    var imageName = (doctor != null && !string.IsNullOrEmpty(doctor.Image)) ? "/img/doctors/" + doctor.Image : "/img/undraw_profile.svg";
                                 }
 
-                                <img class="img-profile rounded-circle" style="object-fit: cover;" src="~/img/doctors/@imageName">
+                                <img class="img-profile rounded-circle" style="object-fit: cover;" src="@imageName" onerror="this.src='/img/undraw_profile.svg'">
                             </a>
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
                                 <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/" method="post">

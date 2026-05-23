@@ -38,14 +38,14 @@
                 <div class="card-body">
                     @{
                         var avatarSrc = string.IsNullOrEmpty(Model.Image)
-                            ? "/img/doctors/default.jpg"
+                            ? "/img/undraw_profile.svg"
                             : "/img/doctors/" + Model.Image;
                     }
 
                     <div class="avatar-wrap" onclick="document.getElementById('avatarInput').click()">
                         <img src="@avatarSrc" id="avatarPreview"
                              alt="@Model.User?.FullName"
-                             onerror="this.src='/img/doctors/default.jpg'" />
+                             onerror="this.src='/img/undraw_profile.svg'" />
                         <div class="avatar-overlay">
                             <i class="fas fa-camera"></i>
                             <span>Đổi ảnh</span>
