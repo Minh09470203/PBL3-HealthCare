@@ -31,6 +31,9 @@ namespace PBL3_HealthCare.Services
             {
                 File = new FileDescription(file.FileName, stream),
                 Folder = "PBL3-HealthCare",
+                UseFilename = true,
+                UniqueFilename = false,
+                Overwrite = true
                 // Optional: we can apply transformations here
                 // Transformation = new Transformation().Width(500).Height(500).Crop("fill")
             };
