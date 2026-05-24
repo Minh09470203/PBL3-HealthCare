@@ -23,17 +23,20 @@ namespace PBL3_HealthCare.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly NotificationService _notificationService;
+        private readonly EmailService _emailService;
 
         public DoctorPortalController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
             IWebHostEnvironment webHostEnvironment,
-            NotificationService notificationService)
+            NotificationService notificationService,
+            EmailService emailService)
         {
             _context = context;
             _userManager = userManager;
             _webHostEnvironment = webHostEnvironment;
             _notificationService = notificationService;
+            _emailService = emailService;
         }
 
         // ==========================================
