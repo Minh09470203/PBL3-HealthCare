@@ -458,44 +458,63 @@ namespace PBL3_HealthCare.Controllers
 
             // Xử lý Email
             bool emailChanged = false;
-            if (!string.IsNullOrEmpty(Email) && user.Email != Email)
+            bool sendEmailVerification = false;
+            
+            if (!string.IsNullOrEmpty(Email))
             {
-                var existingUser = await _userManager.FindByEmailAsync(Email);
-                if (existingUser != null && existingUser.Id != user.Id)
+                if (user.Email != Email)
                 {
-                    TempData["Error"] = "Email này đã được sử dụng bởi một tài khoản khác!";
-                    return RedirectToAction(nameof(Profile));
+                    var existingUser = await _userManager.FindByEmailAsync(Email);
+                    if (existingUser != null && existingUser.Id != user.Id)
+                    {
+                        TempData["Error"] = "Email này đã được sử dụng bởi một tài khoản khác!";
+                        return RedirectToAction(nameof(Profile));
+                    }
+                    user.Email = Email;
+                    user.EmailConfirmed = false;
+                    emailChanged = true;
+                    sendEmailVerification = true;
                 }
-                
-                var code = await _userManager.GenerateChangeEmailTokenAsync(user, Email);
+                else if (!user.EmailConfirmed && user.Email != $"{user.UserName}@system.local")
+                {
+                    sendEmailVerification = true;
+                }
+            }
+
+            await _userManager.UpdateAsync(user);
+
+            if (sendEmailVerification)
+            {
+                var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                 code = Microsoft.AspNetCore.WebUtilities.WebEncoders.Base64UrlEncode(System.Text.Encoding.UTF8.GetBytes(code));
                 var callbackUrl = Url.Page(
-                    "/Account/ConfirmEmailChange",
+                    "/Account/ConfirmEmail",
                     pageHandler: null,
-                    values: new { area = "Identity", userId = user.Id, email = Email, code = code },
+                    values: new { area = "Identity", userId = user.Id, code = code },
                     protocol: Request.Scheme);
 
                 string mailBody = $@"
                 <div style='font-family: Arial, sans-serif; padding: 20px; background-color: #f4f7f6;'>
                     <div style='max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; border-top: 5px solid #3d5ee1;'>
-                        <h2 style='color: #3d5ee1; text-align: center;'>XÁC THỰC EMAIL MỚI</h2>
+                        <h2 style='color: #3d5ee1; text-align: center;'>XÁC THỰC EMAIL</h2>
                         <p>Chào <strong>{user.FullName ?? "Admin"}</strong>,</p>
-                        <p>Vui lòng bấm vào nút bên dưới để xác nhận đổi email của bạn:</p>
+                        <p>Vui lòng bấm vào nút bên dưới để xác nhận email của bạn:</p>
                         <div style='text-align: center; margin: 30px 0;'>
                             <a href='{System.Text.Encodings.Web.HtmlEncoder.Default.Encode(callbackUrl)}' style='background-color: #3d5ee1; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold;'>XÁC THỰC EMAIL</a>
                         </div>
                     </div>
                 </div>";
 
-                await _emailService.SendEmailAsync(Email, "Xác nhận thay đổi email - SuperStar", mailBody);
-                emailChanged = true;
+                await _emailService.SendEmailAsync(user.Email, "Xác nhận email - SuperStar", mailBody);
             }
-
-            await _userManager.UpdateAsync(user);
 
             if (emailChanged)
             {
                 TempData["Success"] = "Cập nhật hồ sơ thành công! Vui lòng kiểm tra hộp thư email để xác thực email mới.";
+            }
+            else if (sendEmailVerification)
+            {
+                TempData["Success"] = "Đã gửi lại mã xác thực. Vui lòng kiểm tra hộp thư email!";
             }
             else
             {
