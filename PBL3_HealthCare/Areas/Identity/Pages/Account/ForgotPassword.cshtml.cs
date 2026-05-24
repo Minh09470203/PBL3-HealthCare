@@ -84,7 +84,13 @@ namespace PBL3_HealthCare.Areas.Identity.Pages.Account
                     </div>";
 
                 // 3. GIAO CHO SHIPPER BẮN QUA GMAIL
-                await _emailService.SendEmailAsync(user.Email, "Thiết lập lại mật khẩu SuperStar", mailBody);
+                bool emailSent = await _emailService.SendEmailAsync(user.Email, "Thiết lập lại mật khẩu SuperStar", mailBody);
+
+                if (!emailSent)
+                {
+                    ModelState.AddModelError(string.Empty, "Lỗi: Tính năng gửi Email đang bị chặn trên máy chủ này (Render Free Tier). Vui lòng thử lại trên máy local hoặc liên hệ Admin.");
+                    return Page();
+                }
 
                 return RedirectToPage("./ForgotPasswordConfirmation");
             }

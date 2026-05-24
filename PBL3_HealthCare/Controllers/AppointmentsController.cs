@@ -322,7 +322,8 @@ namespace PBL3_HealthCare.Controllers
                             <p style='margin-top: 25px; font-size: 11px; color: #888; border-top: 1px solid #eee; padding-top: 10px;'>Mã phòng dự phòng: {appointment.MeetingRoomId}. Nếu không thể nhấn nút, hãy copy link sau dán vào trình duyệt: {roomUrl}</p>
                         </div>";
 
-                    await _emailService.SendEmailAsync(appointment.Patient.Email, emailSubject, emailBody);
+                    // Gửi email không cần await hoặc bỏ qua lỗi timeout
+                    _ = _emailService.SendEmailAsync(appointment.Patient.Email, emailSubject, emailBody);
                 }
                 catch (Exception ex)
                 {

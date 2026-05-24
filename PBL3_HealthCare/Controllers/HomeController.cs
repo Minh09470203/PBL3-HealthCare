@@ -447,7 +447,12 @@ namespace PBL3_HealthCare.Controllers
                         </div>
                     </div>";
 
-                    await _emailService.SendEmailAsync(user.Email, "Xác nhận email - SuperStar", mailBody);
+                    bool emailSent = await _emailService.SendEmailAsync(user.Email, "Xác nhận email - SuperStar", mailBody);
+                    if (!emailSent)
+                    {
+                        TempData["Error"] = "Cập nhật thành công, nhưng tính năng gửi Email đang bị chặn trên máy chủ này (Render). Không thể gửi mã xác thực.";
+                        return RedirectToAction(nameof(Profile));
+                    }
                 }
 
                 if (emailChanged)

@@ -179,7 +179,12 @@ namespace PBL3_HealthCare.Areas.Identity.Pages.Account
                             </div>
                         </div>";
 
-                        await _emailService.SendEmailAsync(Input.Email, "Xác thực email - SuperStar", mailBody);
+                        bool emailSent = await _emailService.SendEmailAsync(Input.Email, "Xác thực email - SuperStar", mailBody);
+                        if (!emailSent)
+                        {
+                            // Nếu gửi email bị chặn, vẫn redirect nhưng thông báo lỗi
+                            ModelState.AddModelError(string.Empty, "Tạo tài khoản thành công nhưng tính năng gửi Email đang bị chặn trên máy chủ này (Render). Mã xác thực không được gửi.");
+                        }
                         TempData["Success"] = "Đăng ký thành công! Vui lòng kiểm tra hộp thư email để xác thực tài khoản.";
                     }
                     else
