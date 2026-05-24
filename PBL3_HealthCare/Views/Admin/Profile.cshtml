@@ -23,6 +23,16 @@
     </div>
 }
 
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert" style="margin: 0 2rem 1rem 2rem;">
+        <i class="fas fa-exclamation-circle mr-1"></i> @TempData["Error"]
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+}
+
 <form asp-action="Profile" method="post" enctype="multipart/form-data">
     @Html.AntiForgeryToken()
 
