@@ -44,19 +44,11 @@ namespace PBL3_HealthCare.Services
                     Timeout = 10000 // Timeout 10 giây (dùng cho Send đồng bộ)
                 };
 
-                // Render Free Tier chặn port 587, dẫn đến SendMailAsync bị treo vô hạn.
-                // Ta dùng Task.WhenAny để ép timeout sau 10 giây.
-                var sendTask = smtpClient.SendMailAsync(message);
-                var timeoutTask = Task.Delay(10000); // 10 giây timeout
-
-                var completedTask = await Task.WhenAny(sendTask, timeoutTask);
-                if (completedTask == timeoutTask)
-                {
-                    // Quá thời gian 10s (chắc chắn là do Render chặn Port)
-                    return false;
-                }
-
-                await sendTask; // Ném lỗi nếu có (sai pass, vv)
+                // LƯU Ý QUAN TRỌNG: SmtpClient.SendMailAsync bỏ qua thuộc tính Timeout.
+                // Do đó nếu cổng 587 bị block (như trên Render), nó sẽ treo vĩnh viễn và Dispose() cũng treo.
+                // Cách sửa đúng nhất ở đây là bọc hàm Send() đồng bộ vào Task.Run, vì Send() có tôn trọng Timeout.
+                await Task.Run(() => smtpClient.Send(message));
+                
                 return true;
             }
             catch (System.Exception)

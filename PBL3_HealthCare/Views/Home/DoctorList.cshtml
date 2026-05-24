@@ -30,11 +30,7 @@
                         <div class="specialty-hero-img-wrap">
                             @{
                                 string specImage = ViewBag.SpecialtyImage as string;
-                                string imgSrc = "/img/specialties/default-specialty.jpg";
-                                if (!string.IsNullOrWhiteSpace(specImage))
-                                {
-                                    imgSrc = specImage.StartsWith("/") ? specImage : "/img/specialties/" + specImage;
-                                }
+                                string imgSrc = ImageHelper.GetImageUrl(specImage, "/img/specialties/default-specialty.jpg");
                             }
                             <img src="@imgSrc"
                                  alt="Khoa @ViewBag.SpecialtyName"

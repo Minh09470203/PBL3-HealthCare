@@ -1,4 +1,4 @@
-﻿@{
+@{
     bool isAuth = User.Identity?.IsAuthenticated ?? false;
     string uid = User.FindFirst(
         System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
@@ -254,7 +254,11 @@
                 /\[BOOKING:(\d+)\|([^\|\]]+)(?:\|([^\]]+))?\]/g,
                 (_, id, name, img) => {
                     const def = 'https://cdn-icons-png.flaticon.com/512/3774/3774299.png';
-                    let src = (img && img !== 'null') ? '/img/doctors/' + img.trim().split('/').pop() : def;
+                    let src = def;
+                    if (img && img !== 'null') {
+                        img = img.trim();
+                        src = img.startsWith('http') ? img : 'https://res.cloudinary.com/ddvrj9vdi/image/upload/PBL3-HealthCare/' + img.split('/').pop();
+                    }
                     let cleanName = name.replace(/(BS\.?|Bác sĩ)\s*/gi,'').trim();
 
                     return `<div class="doctor-suggestion-card mt-2 mb-2" style="background:#fff;border-radius:10px;border:1px solid #dee2e6;display:flex;align-items:center;gap:12px;padding:10px;box-shadow:0 2px 8px rgba(0,0,0,.04);">
