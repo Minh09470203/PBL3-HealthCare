@@ -81,6 +81,11 @@
         <span asp-validation-for="Input.Address" class="text-danger small px-3"></span>
     </div>
 
+    <div class="mb-3">
+        <input asp-for="Input.Email" type="email" class="form-control form-control-pill" placeholder="Email (Không bắt buộc, dùng để lấy lại mật khẩu)" />
+        <span asp-validation-for="Input.Email" class="text-danger small px-3"></span>
+    </div>
+
     <div class="row mb-4">
         <div class="col-6">
             <select asp-for="Input.Gender" class="form-select form-control-pill" style="height: 50px;">

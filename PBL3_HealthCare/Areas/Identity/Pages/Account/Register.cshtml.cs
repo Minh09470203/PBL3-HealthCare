@@ -95,6 +95,9 @@ namespace PBL3_HealthCare.Areas.Identity.Pages.Account
             [Display(Name = "Tên đăng nhập")]
             public string UserName { get; set; }
 
+            [EmailAddress]
+            [Display(Name = "Email (Tùy chọn)")]
+            public string Email { get; set; }
 
             [Required]
             [StringLength(100, ErrorMessage = "Mật khẩu phải từ {2} đến {1} ký tự.", MinimumLength = 6)]
@@ -124,6 +127,17 @@ namespace PBL3_HealthCare.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
+                // Kiểm tra trùng Email nếu có nhập Email
+                if (!string.IsNullOrEmpty(Input.Email))
+                {
+                    var existingUser = await _userManager.FindByEmailAsync(Input.Email);
+                    if (existingUser != null)
+                    {
+                        ModelState.AddModelError(string.Empty, "Email này đã được sử dụng bởi một tài khoản khác.");
+                        return Page();
+                    }
+                }
+
                 var user = CreateUser();
 
                 user.FullName = Input.FullName;
@@ -132,14 +146,46 @@ namespace PBL3_HealthCare.Areas.Identity.Pages.Account
                 user.Gender = Input.Gender;
 
                 await _userStore.SetUserNameAsync(user, Input.UserName, CancellationToken.None);
-                // Giả lập Email bằng UserName để không break default behavior của Identity
-                await _emailStore.SetEmailAsync(user, Input.UserName + "@system.local", CancellationToken.None);
+                
+                string emailToSet = string.IsNullOrEmpty(Input.Email) ? Input.UserName + "@system.local" : Input.Email;
+                await _emailStore.SetEmailAsync(user, emailToSet, CancellationToken.None);
+                
                 var result = await _userManager.CreateAsync(user, Input.Password);
 
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(user, "Patient");
                     _logger.LogInformation("Tài khoản mới đã được tạo.");
+
+                    if (!string.IsNullOrEmpty(Input.Email))
+                    {
+                        var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+                        var callbackUrl = Url.Page(
+                            "/Account/ConfirmEmail",
+                            pageHandler: null,
+                            values: new { area = "Identity", userId = user.Id, code = code, returnUrl = returnUrl },
+                            protocol: Request.Scheme);
+
+                        string mailBody = $@"
+                        <div style='font-family: Arial, sans-serif; padding: 20px; background-color: #f4f7f6;'>
+                            <div style='max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-top: 5px solid #3d5ee1;'>
+                                <h2 style='color: #3d5ee1; text-align: center;'>XÁC THỰC EMAIL</h2>
+                                <p>Chào <strong>{user.FullName ?? "bạn"}</strong>,</p>
+                                <p>Cảm ơn bạn đã đăng ký tài khoản tại Phòng Khám SuperStar. Vui lòng bấm vào nút bên dưới để xác thực địa chỉ email của bạn:</p>
+                                <div style='text-align: center; margin: 30px 0;'>
+                                    <a href='{HtmlEncoder.Default.Encode(callbackUrl)}' style='background-color: #3d5ee1; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; display: inline-block;'>XÁC THỰC EMAIL</a>
+                                </div>
+                            </div>
+                        </div>";
+
+                        await _emailService.SendEmailAsync(Input.Email, "Xác thực email - SuperStar", mailBody);
+                        TempData["Success"] = "Đăng ký thành công! Vui lòng kiểm tra hộp thư email để xác thực tài khoản.";
+                    }
+                    else
+                    {
+                        TempData["Success"] = "Đăng ký thành công! (Chưa liên kết Email)";
+                    }
 
                     await _signInManager.SignInAsync(user, isPersistent: false);
                     return LocalRedirect(returnUrl);

@@ -1,0 +1,37 @@
+@page
+@model ConfirmEmailChangeModel
+@{
+    ViewData["Title"] = "Xác nhận đổi email";
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+}
+
+<div class="d-flex flex-column justify-content-center h-100" style="max-width: 420px; margin: 0 auto; width: 100%;">
+    <div class="text-center mb-4">
+        @if (Model.StatusMessage == "Cảm ơn bạn đã xác nhận thay đổi email.")
+        {
+            <div class="mb-4">
+                <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+            </div>
+            <h2 class="fw-bold text-success" style="text-transform: uppercase;">XÁC NHẬN THÀNH CÔNG</h2>
+            <p class="text-muted mt-3" style="font-size: 1rem;">
+                Email của bạn đã được cập nhật thành công. Bây giờ bạn có thể sử dụng email này để khôi phục mật khẩu.
+            </p>
+        }
+        else
+        {
+            <div class="mb-4">
+                <i class="fas fa-times-circle text-danger" style="font-size: 4rem;"></i>
+            </div>
+            <h2 class="fw-bold text-danger" style="text-transform: uppercase;">LỖI XÁC NHẬN</h2>
+            <p class="text-muted mt-3" style="font-size: 1rem;">
+                Liên kết không hợp lệ hoặc đã hết hạn. Vui lòng thử lại quá trình đổi email trong phần Hồ sơ.
+            </p>
+        }
+    </div>
+
+    <div class="text-center mt-3">
+        <a asp-page="./Login" class="btn btn-primary btn-pill px-5 shadow-sm" style="border-radius: 50px;">
+            <i class="fas fa-sign-in-alt me-1"></i> Về trang đăng nhập
+        </a>
+    </div>
+</div>

@@ -118,6 +118,27 @@
                         </div>
                     </div>
 
+                    <div class="form-row">
+                        <div class="form-group col-md-12 mb-4">
+                            <label class="small font-weight-bold text-dark">Email liên kết (Dùng để lấy lại mật khẩu)</label>
+                            @{
+                                var displayEmail = (Model.Email != null && Model.Email.EndsWith("@system.local")) ? "" : Model.Email;
+                            }
+                            <input type="email" name="Email" class="form-control" value="@displayEmail" placeholder="Nhập email của bạn...">
+                            @if (!string.IsNullOrEmpty(displayEmail))
+                            {
+                                if (Model.EmailConfirmed)
+                                {
+                                    <small class="text-success mt-1 d-block"><i class="fas fa-check-circle"></i> Đã xác thực</small>
+                                }
+                                else
+                                {
+                                    <small class="text-danger mt-1 d-block"><i class="fas fa-exclamation-triangle"></i> Chưa xác thực. Vui lòng kiểm tra hộp thư.</small>
+                                }
+                            }
+                        </div>
+                    </div>
+
                     <hr class="mt-2 mb-4">
                     <button type="submit" class="btn btn-primary px-4 shadow-sm">
                         <i class="fas fa-save mr-1"></i> Cập nhật hồ sơ

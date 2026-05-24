@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -31,22 +31,33 @@ namespace PBL3_HealthCare.Areas.Identity.Pages.Account
 
         public class InputModel
         {
-            [Required]
-            [EmailAddress]
-            public string Email { get; set; }
+            [Required(ErrorMessage = "Vui lòng nhập tên đăng nhập")]
+            [Display(Name = "Tên đăng nhập")]
+            public string UserName { get; set; }
         }
 
         public async Task<IActionResult> OnPostAsync()
         {
             if (ModelState.IsValid)
             {
-                var user = await _userManager.FindByEmailAsync(Input.Email);
+                var user = await _userManager.FindByNameAsync(Input.UserName);
 
-                // 🛡️ LÁ CHẮN BẢO MẬT: Bắt buộc email phải được xác thực lúc đăng ký mới cho đổi Pass
-                if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
+                if (user == null)
                 {
-                    // Chuyển hướng âm thầm, không cho Hacker biết email này có thật hay không
-                    return RedirectToPage("./ForgotPasswordConfirmation");
+                    ModelState.AddModelError(string.Empty, "Tài khoản không tồn tại trong hệ thống.");
+                    return Page();
+                }
+
+                if (user.Email == null || user.Email.EndsWith("@system.local"))
+                {
+                    ModelState.AddModelError(string.Empty, "Tài khoản của bạn chưa được liên kết với địa chỉ Email thực tế. Vui lòng đăng nhập và cập nhật Email trong Hồ sơ cá nhân, hoặc liên hệ Admin.");
+                    return Page();
+                }
+
+                if (!(await _userManager.IsEmailConfirmedAsync(user)))
+                {
+                    ModelState.AddModelError(string.Empty, "Email liên kết của bạn chưa được xác thực. Không thể khôi phục mật khẩu lúc này. Vui lòng đăng nhập vào tài khoản và yêu cầu gửi lại link xác thực Email, hoặc liên hệ Admin.");
+                    return Page();
                 }
 
                 // 1. TẠO LINK ĐẶT LẠI MẬT KHẨU
@@ -73,7 +84,7 @@ namespace PBL3_HealthCare.Areas.Identity.Pages.Account
                     </div>";
 
                 // 3. GIAO CHO SHIPPER BẮN QUA GMAIL
-                await _emailService.SendEmailAsync(Input.Email, "Thiết lập lại mật khẩu SuperStar", mailBody);
+                await _emailService.SendEmailAsync(user.Email, "Thiết lập lại mật khẩu SuperStar", mailBody);
 
                 return RedirectToPage("./ForgotPasswordConfirmation");
             }

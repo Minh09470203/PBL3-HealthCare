@@ -110,10 +110,40 @@
                         </div>
                         <div class="col-md-6">
                             <div class="field-group">
+                                <label class="field-label">Số điện thoại</label>
+                                <input type="tel" name="PhoneNumber" class="form-control-custom"
+                                       value="@Model.User?.PhoneNumber"
+                                       placeholder="Nhập số điện thoại" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="field-group">
                                 <label class="field-label">Địa chỉ</label>
                                 <input type="text" name="Address" class="form-control-custom"
                                        value="@Model.User?.Address"
                                        placeholder="Số nhà, đường, phường/xã..." />
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="field-group">
+                                <label class="field-label">Email liên kết (Dùng để lấy lại mật khẩu)</label>
+                                @{
+                                    var displayEmail = (Model.User?.Email != null && Model.User.Email.EndsWith("@system.local")) ? "" : Model.User?.Email;
+                                }
+                                <input type="email" name="Email" class="form-control-custom"
+                                       value="@displayEmail"
+                                       placeholder="Nhập email của bạn..." />
+                                @if (!string.IsNullOrEmpty(displayEmail))
+                                {
+                                    if (Model.User.EmailConfirmed)
+                                    {
+                                        <small class="text-success mt-1 d-block"><i class="fas fa-check-circle"></i> Đã xác thực</small>
+                                    }
+                                    else
+                                    {
+                                        <small class="text-danger mt-1 d-block"><i class="fas fa-exclamation-triangle"></i> Chưa xác thực. Vui lòng kiểm tra hộp thư.</small>
+                                    }
+                                }
                             </div>
                         </div>
                     </div>

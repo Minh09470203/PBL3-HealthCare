@@ -29,6 +29,8 @@ namespace PBL3_HealthCare.Controllers
         private readonly NotificationService _notificationService;
         private readonly IHubContext<NotificationHub> _hubContext;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly EmailService _emailService;
+
         // 🔥 2. TIÊM VÀO CONSTRUCTOR
         public AdminController(
             ApplicationDbContext context, 
@@ -36,7 +38,8 @@ namespace PBL3_HealthCare.Controllers
             InvoiceService invoiceService,
             NotificationService notificationService,
             IHubContext<NotificationHub> hubContext,
-            IWebHostEnvironment webHostEnvironment)
+            IWebHostEnvironment webHostEnvironment,
+            EmailService emailService)
         {
             _context = context;
             _userManager = userManager;
@@ -44,6 +47,7 @@ namespace PBL3_HealthCare.Controllers
             _notificationService = notificationService;
             _hubContext = hubContext;
             _webHostEnvironment = webHostEnvironment;
+            _emailService = emailService;
         }
 
         // ========================================================
@@ -420,7 +424,7 @@ namespace PBL3_HealthCare.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Profile(string FullName, string PhoneNumber, string Address, IFormFile AvatarFile)
+        public async Task<IActionResult> Profile(string FullName, string PhoneNumber, string Address, string Email, IFormFile AvatarFile)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return NotFound();
@@ -452,9 +456,51 @@ namespace PBL3_HealthCare.Controllers
             }
             
 
+            // Xử lý Email
+            bool emailChanged = false;
+            if (!string.IsNullOrEmpty(Email) && user.Email != Email)
+            {
+                var existingUser = await _userManager.FindByEmailAsync(Email);
+                if (existingUser != null && existingUser.Id != user.Id)
+                {
+                    TempData["Error"] = "Email này đã được sử dụng bởi một tài khoản khác!";
+                    return RedirectToAction(nameof(Profile));
+                }
+                
+                var code = await _userManager.GenerateChangeEmailTokenAsync(user, Email);
+                code = Microsoft.AspNetCore.WebUtilities.WebEncoders.Base64UrlEncode(System.Text.Encoding.UTF8.GetBytes(code));
+                var callbackUrl = Url.Page(
+                    "/Account/ConfirmEmailChange",
+                    pageHandler: null,
+                    values: new { area = "Identity", userId = user.Id, email = Email, code = code },
+                    protocol: Request.Scheme);
+
+                string mailBody = $@"
+                <div style='font-family: Arial, sans-serif; padding: 20px; background-color: #f4f7f6;'>
+                    <div style='max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; border-top: 5px solid #3d5ee1;'>
+                        <h2 style='color: #3d5ee1; text-align: center;'>XÁC THỰC EMAIL MỚI</h2>
+                        <p>Chào <strong>{user.FullName ?? "Admin"}</strong>,</p>
+                        <p>Vui lòng bấm vào nút bên dưới để xác nhận đổi email của bạn:</p>
+                        <div style='text-align: center; margin: 30px 0;'>
+                            <a href='{System.Text.Encodings.Web.HtmlEncoder.Default.Encode(callbackUrl)}' style='background-color: #3d5ee1; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold;'>XÁC THỰC EMAIL</a>
+                        </div>
+                    </div>
+                </div>";
+
+                await _emailService.SendEmailAsync(Email, "Xác nhận thay đổi email - SuperStar", mailBody);
+                emailChanged = true;
+            }
+
             await _userManager.UpdateAsync(user);
 
-            TempData["Success"] = "Cập nhật hồ sơ thành công!";
+            if (emailChanged)
+            {
+                TempData["Success"] = "Cập nhật hồ sơ thành công! Vui lòng kiểm tra hộp thư email để xác thực email mới.";
+            }
+            else
+            {
+                TempData["Success"] = "Cập nhật hồ sơ thành công!";
+            }
             return RedirectToAction(nameof(Profile));
         }
 
