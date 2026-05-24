@@ -1,4 +1,4 @@
-﻿@model PBL3_HealthCare.Models.Doctor
+@model PBL3_HealthCare.Models.Doctor
 @{
     ViewData["Title"] = "Hồ sơ Bác sĩ";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -22,7 +22,7 @@
             @* LEFT: Doctor profile *@
             <div class="col-md-4 mb-4 mb-md-0">
                 <div class="profile-left">
-                    <img src="/img/doctors/@(Model.Image ?? "default.jpg")"
+                    <img src="@ImageHelper.GetImageUrl(Model.Image, "/img/doctors/default.jpg")"
                          alt="@Model.User?.FullName"
                          class="profile-avatar"
                          onerror="this.src='/img/doctors/default.jpg'" />

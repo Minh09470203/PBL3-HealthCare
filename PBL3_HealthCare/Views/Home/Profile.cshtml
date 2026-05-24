@@ -41,7 +41,7 @@
                 <div class="card-body text-center">
 
                     @{
-                        var avatarUrl = string.IsNullOrEmpty(Model.Avatar) ? "/img/undraw_profile.svg" : "/img/" + Model.Avatar;
+                        var avatarUrl = ImageHelper.GetImageUrl(Model.Avatar);
                     }
                     <img class="img-profile rounded-circle mb-3 shadow-sm" src="@avatarUrl" style="width: 150px; height: 150px; object-fit: cover; border: 4px solid #eaecf4;">
 

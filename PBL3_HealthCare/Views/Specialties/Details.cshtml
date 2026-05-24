@@ -1,4 +1,4 @@
-﻿@model PBL3_HealthCare.Models.Specialty
+@model PBL3_HealthCare.Models.Specialty
 
 @{
     ViewData["Title"] = "Chi tiết Chuyên khoa";
@@ -22,7 +22,7 @@
         @if (!string.IsNullOrEmpty(Model?.Image))
         {
             <div class="specialty-image-preview">
-                <img src="@Model.Image" alt="@Model.Name" onerror="this.parentElement.style.display='none'" />
+                <img src="@ImageHelper.GetImageUrl(Model.Image)" alt="@Model.Name" onerror="this.parentElement.style.display='none'" />
             </div>
         }
 

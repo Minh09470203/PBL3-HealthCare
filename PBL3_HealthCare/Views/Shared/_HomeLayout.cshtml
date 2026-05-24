@@ -53,9 +53,7 @@
                         .ToListAsync();
 
                         // 2. LOGIC AVATAR (Có chống kẹt cache)
-                        var avatarUrl = (user != null && !string.IsNullOrEmpty(user.Avatar))
-                        ? "/img/" + user.Avatar + "?v=" + DateTime.Now.Ticks
-                        : "/img/undraw_profile.svg";
+                        var avatarUrl = ImageHelper.GetImageUrl(user?.Avatar);
 
                         <div class="dropdown mr-4" style="display:inline-block;">
                             <a href="#" class="dropdown-toggle d-flex align-items-center" id="patientAlertsDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="color: rgba(255,255,255,0.8); text-decoration: none;">

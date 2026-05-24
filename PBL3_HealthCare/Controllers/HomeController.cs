@@ -29,6 +29,7 @@ namespace PBL3_HealthCare.Controllers
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly NotificationService _notificationService;
         private readonly EmailService _emailService;
+        private readonly CloudinaryService _cloudinaryService;
         private readonly IHubContext<NotificationHub> _hubContext; // 🔥 3. Khai báo biến đường ống
 
         public HomeController(
@@ -38,6 +39,7 @@ namespace PBL3_HealthCare.Controllers
             IWebHostEnvironment webHostEnvironment,
             NotificationService notificationService,
             EmailService emailService,
+            CloudinaryService cloudinaryService,
             IHubContext<NotificationHub> hubContext) // 🔥 4. Tiêm nó vào hàm tạo
         {
             _logger = logger;
@@ -46,6 +48,7 @@ namespace PBL3_HealthCare.Controllers
             _webHostEnvironment = webHostEnvironment;
             _notificationService = notificationService;
             _emailService = emailService;
+            _cloudinaryService = cloudinaryService;
             _hubContext = hubContext; // 🔥 5. Gán giá trị
         }
 
@@ -384,16 +387,19 @@ namespace PBL3_HealthCare.Controllers
 
             if (AvatarFile != null && AvatarFile.Length > 0)
             {
-                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "img");
-                string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(AvatarFile.FileName);
-                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                try
                 {
-                    await AvatarFile.CopyToAsync(fileStream);
+                    string imageUrl = await _cloudinaryService.UploadImageAsync(AvatarFile);
+                    if (!string.IsNullOrEmpty(imageUrl))
+                    {
+                        user.Avatar = imageUrl;
+                    }
                 }
-
-                user.Avatar = uniqueFileName;
+                catch (System.Exception ex)
+                {
+                    TempData["Error"] = "Lỗi khi upload ảnh: " + ex.Message;
+                    return RedirectToAction(nameof(Profile));
+                }
             }
 
             // Xử lý Email

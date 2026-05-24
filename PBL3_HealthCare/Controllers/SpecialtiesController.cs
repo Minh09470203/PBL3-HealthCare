@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using PBL3_HealthCare.Services;
 
 namespace PBL3_HealthCare.Controllers
 {
@@ -19,11 +20,13 @@ namespace PBL3_HealthCare.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment; // Thêm
+        private readonly CloudinaryService _cloudinaryService;
 
-        public SpecialtiesController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
+        public SpecialtiesController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment, CloudinaryService cloudinaryService)
         {
             _context = context;
             _webHostEnvironment = webHostEnvironment; // Tiêm vào
+            _cloudinaryService = cloudinaryService;
         }
 
         // GET: Specialties
@@ -66,27 +69,11 @@ namespace PBL3_HealthCare.Controllers
                 // Xử lý upload ảnh nếu có chọn file
                 if (SpecialtyImage != null && SpecialtyImage.Length > 0)
                 {
-                    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "img", "specialties");
-                    if (!Directory.Exists(uploadsFolder))
-                        Directory.CreateDirectory(uploadsFolder);
-
-                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(SpecialtyImage.FileName);
-                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    string imageUrl = await _cloudinaryService.UploadImageAsync(SpecialtyImage);
+                    if (!string.IsNullOrEmpty(imageUrl))
                     {
-                        await SpecialtyImage.CopyToAsync(fileStream);
+                        specialty.Image = imageUrl;
                     }
-
-                    if (!string.IsNullOrEmpty(specialty.Image))
-                    {
-                        string oldPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "specialties", specialty.Image);
-                        if (System.IO.File.Exists(oldPath))
-                            System.IO.File.Delete(oldPath);
-
-                    }
-
-                    specialty.Image = uniqueFileName;
                 }
 
                 _context.Add(specialty);
@@ -140,27 +127,11 @@ namespace PBL3_HealthCare.Controllers
             // ✅ Nếu có ảnh mới thì upload
             if (SpecialtyImage != null && SpecialtyImage.Length > 0)
             {
-                string folder = Path.Combine(_webHostEnvironment.WebRootPath, "img", "specialties");
-                if (!Directory.Exists(folder))
-                    Directory.CreateDirectory(folder);
-
-                string fileName = Guid.NewGuid() + "_" + Path.GetFileName(SpecialtyImage.FileName);
-                string path = Path.Combine(folder, fileName);
-
-                using (var stream = new FileStream(path, FileMode.Create))
+                string imageUrl = await _cloudinaryService.UploadImageAsync(SpecialtyImage);
+                if (!string.IsNullOrEmpty(imageUrl))
                 {
-                    await SpecialtyImage.CopyToAsync(stream);
+                    existing.Image = imageUrl;
                 }
-
-                // ❗ xóa ảnh cũ nếu có
-                if (!string.IsNullOrEmpty(existing.Image))
-                {
-                    string oldPath = Path.Combine(folder, existing.Image);
-                    if (System.IO.File.Exists(oldPath))
-                        System.IO.File.Delete(oldPath);
-                }
-
-                existing.Image = fileName;
             }
 
             await _context.SaveChangesAsync();
@@ -195,14 +166,8 @@ namespace PBL3_HealthCare.Controllers
             var specialty = await _context.Specialties.FindAsync(id);
             if (specialty != null)
             {
-                // Xóa file ảnh khỏi wwwroot nếu có
-                if (!string.IsNullOrEmpty(specialty.Image))
-                {
-                    string imagePath = Path.Combine(_webHostEnvironment.WebRootPath, "img", specialty.Image);
-                    if (System.IO.File.Exists(imagePath))
-                        System.IO.File.Delete(imagePath);
-                }
-
+                // Xóa file ảnh khỏi wwwroot nếu có (Đã chuyển sang Cloudinary nên không cần xóa local file nữa, 
+                // hoặc nếu muốn tiết kiệm dung lượng mây thì gọi API Cloudinary để xóa, tạm thời bỏ qua)
                 _context.Specialties.Remove(specialty);
             }
 

@@ -30,6 +30,7 @@ namespace PBL3_HealthCare.Controllers
         private readonly IHubContext<NotificationHub> _hubContext;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly EmailService _emailService;
+        private readonly CloudinaryService _cloudinaryService;
 
         // 🔥 2. TIÊM VÀO CONSTRUCTOR
         public AdminController(
@@ -39,7 +40,8 @@ namespace PBL3_HealthCare.Controllers
             NotificationService notificationService,
             IHubContext<NotificationHub> hubContext,
             IWebHostEnvironment webHostEnvironment,
-            EmailService emailService)
+            EmailService emailService,
+            CloudinaryService cloudinaryService)
         {
             _context = context;
             _userManager = userManager;
@@ -48,6 +50,7 @@ namespace PBL3_HealthCare.Controllers
             _hubContext = hubContext;
             _webHostEnvironment = webHostEnvironment;
             _emailService = emailService;
+            _cloudinaryService = cloudinaryService;
         }
 
         // ========================================================
@@ -439,20 +442,19 @@ namespace PBL3_HealthCare.Controllers
             
             if (AvatarFile != null && AvatarFile.Length > 0)
             {
-                // Thay vì _webHostEnvironment, sếp có thể tiêm IWebHostEnvironment vào constructor của AdminController
-                // hoặc dùng cách lưu trữ tương tự.
-                string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "img", "admins");
-                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-
-                string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(AvatarFile.FileName);
-                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                try
                 {
-                    await AvatarFile.CopyToAsync(fileStream);
+                    string imageUrl = await _cloudinaryService.UploadImageAsync(AvatarFile);
+                    if (!string.IsNullOrEmpty(imageUrl))
+                    {
+                        user.Avatar = imageUrl; // Gán URL Cloudinary vào thuộc tính của user
+                    }
                 }
-
-                user.Avatar = uniqueFileName; // Gán tên file vào thuộc tính của user
+                catch (System.Exception ex)
+                {
+                    TempData["Error"] = "Lỗi khi upload ảnh: " + ex.Message;
+                    return RedirectToAction(nameof(Profile));
+                }
             }
             
 

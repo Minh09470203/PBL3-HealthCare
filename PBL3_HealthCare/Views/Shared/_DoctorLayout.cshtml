@@ -91,7 +91,7 @@
                                     // Chui vào bảng Doctor tìm đúng ông bác sĩ đó
                                     var doctor = Context.Doctors.FirstOrDefault(d => d.UserId == userId);
                                     // Lấy tên file ảnh (nếu chưa có ảnh thì dùng ảnh mặc định)
-                                    var imageName = (doctor != null && !string.IsNullOrEmpty(doctor.Image)) ? "/img/doctors/" + doctor.Image : "/img/undraw_profile.svg";
+                                    var imageName = ImageHelper.GetImageUrl(doctor?.Image);
                                 }
 
                                 <img class="img-profile rounded-circle" style="object-fit: cover;" src="@imageName" onerror="this.src='/img/undraw_profile.svg'">

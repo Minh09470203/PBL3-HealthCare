@@ -65,6 +65,7 @@ builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<PBL3_HealthCare.Services.NotificationService>();
 builder.Services.AddScoped<PBL3_HealthCare.Services.InvoiceService>();
 builder.Services.AddScoped<ZegoTokenService>();
+builder.Services.AddScoped<CloudinaryService>();
 
 // ✅ Chatbot services
 builder.Services.AddMemoryCache();

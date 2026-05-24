@@ -56,8 +56,8 @@
     <div class="col-xl-4 col-lg-5">
         <div class="card profile-card mb-4 text-center">
             <div class="card-body pt-5 pb-4">
-                <img src="/img/@(string.IsNullOrEmpty(Model.Avatar) ? "default-avatar.png" : Model.Avatar)"
-                     class="rounded-circle img-fluid shadow-sm mb-3"
+                <img src="@ImageHelper.GetImageUrl(Model.Avatar)"
+                     class="img-fluid rounded-circle shadow profile-avatar"
                      style="width: 120px; height: 120px; object-fit: cover;"
                      alt="Avatar của @Model.FullName">
                 <h5 class="font-weight-bold text-dark mb-1">@Model.FullName</h5>

@@ -140,9 +140,7 @@
 
                                     @{
                                         // Kiểm tra xem user có ảnh trong DB không
-                                        var avatarUrl = !string.IsNullOrEmpty(user?.Avatar)
-                                        ? $"/img/admins/{user.Avatar}"
-                                        : "/img/admins/default-admin.jpg"; // Ảnh mặc định nếu chưa đổi
+                                        var avatarUrl = ImageHelper.GetImageUrl(user?.Avatar);
                                     }
 
                                     <img class="img-profile rounded-circle" src="@avatarUrl" style="object-fit: cover;">

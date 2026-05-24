@@ -47,9 +47,7 @@
                 </div>
                 <div class="card-body">
                     @{
-                        var avatarSrc = string.IsNullOrEmpty(Model.Image)
-                            ? "/img/undraw_profile.svg"
-                            : "/img/doctors/" + Model.Image;
+                        var avatarSrc = ImageHelper.GetImageUrl(Model.Image);
                     }
 
                     <div class="avatar-wrap" onclick="document.getElementById('avatarInput').click()">

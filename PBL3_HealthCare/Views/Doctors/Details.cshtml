@@ -1,4 +1,4 @@
-﻿@model PBL3_HealthCare.Models.Doctor
+@model PBL3_HealthCare.Models.Doctor
 
 @{
     ViewData["Title"] = "Chi tiết Bác sĩ";
@@ -23,7 +23,7 @@
         <div class="d-flex align-items-center">
             @if (!string.IsNullOrEmpty(Model?.Image))
             {
-                <img src="@Model.Image" alt="@Model.User?.FullName" class="doctor-avatar mr-3"
+                <img src="@ImageHelper.GetImageUrl(Model.Image)" alt="@Model.User?.FullName" class="doctor-avatar mr-3"
                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
                 <div class="doctor-avatar-placeholder mr-3" style="display:none;"><i class="fas fa-user-md"></i></div>
             }

@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "SS Medical Center";
     Layout = "~/Views/Shared/_HomeLayout.cshtml";
 }
@@ -318,7 +318,7 @@
                     string delay = docIdx == 0 ? "" : docIdx == 1 ? "delay-1" : docIdx == 2 ? "delay-2" : "delay-3";
                     <div class="col-md-6 col-lg-3 mb-4 fade-up @delay">
                         <div class="doctor-card-home">
-                            <div class="photo" style="background-image:url('/img/doctors/@(doctor.Image ?? "default.jpg")');">
+                            <div class="photo" style="background-image:url('@ImageHelper.GetImageUrl(doctor.Image, "/img/doctors/default.jpg")');">
                                 <div class="photo-overlay">
                                     <div class="social-links">
                                         <a href="#"><span class="icon-facebook"></span></a>

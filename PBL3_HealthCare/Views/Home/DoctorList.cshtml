@@ -1,4 +1,4 @@
-﻿@model IEnumerable<PBL3_HealthCare.Models.Doctor>
+@model IEnumerable<PBL3_HealthCare.Models.Doctor>
 @{
     ViewData["Title"] = ViewBag.SpecialtyName != null ? "Khoa " + ViewBag.SpecialtyName : "Danh sách Bác sĩ";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -109,7 +109,7 @@
 
                             @* Ảnh bên trái *@
                             <div class="photo-wrap">
-                                <img src="/img/doctors/@(item.Image ?? "default.jpg")"
+                                <img src="@ImageHelper.GetImageUrl(item.Image, "/img/doctors/default.jpg")"
                                      alt="@item.User?.FullName"
                                      onerror="this.src='/img/doctors/default.jpg'" />
                                 <span class="specialty-tag">@(item.Specialty?.Name ?? "Chuyên khoa")</span>

@@ -24,19 +24,22 @@ namespace PBL3_HealthCare.Controllers
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly NotificationService _notificationService;
         private readonly EmailService _emailService;
+        private readonly CloudinaryService _cloudinaryService;
 
         public DoctorPortalController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
             IWebHostEnvironment webHostEnvironment,
             NotificationService notificationService,
-            EmailService emailService)
+            EmailService emailService,
+            CloudinaryService cloudinaryService)
         {
             _context = context;
             _userManager = userManager;
             _webHostEnvironment = webHostEnvironment;
             _notificationService = notificationService;
             _emailService = emailService;
+            _cloudinaryService = cloudinaryService;
         }
 
         // ==========================================
@@ -108,25 +111,20 @@ namespace PBL3_HealthCare.Controllers
 
             if (AvatarFile != null && AvatarFile.Length > 0)
             {
-                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "img", "doctors");
-                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-
-                string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(AvatarFile.FileName);
-                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                try
                 {
-                    await AvatarFile.CopyToAsync(fileStream);
+                    string imageUrl = await _cloudinaryService.UploadImageAsync(AvatarFile);
+                    if (!string.IsNullOrEmpty(imageUrl))
+                    {
+                        doctor.Image = imageUrl;
+                        user.Avatar = imageUrl;
+                    }
                 }
-
-                // Xóa ảnh cũ
-                if (!string.IsNullOrEmpty(doctor.Image))
+                catch (System.Exception ex)
                 {
-                    string oldPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "doctors", doctor.Image);
-                    if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
+                    TempData["Error"] = "Lỗi khi upload ảnh: " + ex.Message;
+                    return RedirectToAction(nameof(Profile));
                 }
-
-                doctor.Image = uniqueFileName;
             }
 
             // Xử lý Email

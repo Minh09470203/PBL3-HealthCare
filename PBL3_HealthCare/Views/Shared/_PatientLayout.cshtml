@@ -18,9 +18,7 @@
 <body id="page-top">
     @{
         var currentUser = await UserManager.GetUserAsync(User);
-        var topAvatarUrl = (currentUser != null && !string.IsNullOrEmpty(currentUser.Avatar))
-        ? "/img/" + currentUser.Avatar
-        : "/img/undraw_profile.svg";
+        var topAvatarUrl = ImageHelper.GetImageUrl(currentUser?.Avatar);
     }
     <div id="wrapper">
         <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">

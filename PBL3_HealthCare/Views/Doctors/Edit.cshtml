@@ -1,4 +1,4 @@
-﻿@model PBL3_HealthCare.Models.Doctor
+@model PBL3_HealthCare.Models.Doctor
 
 @{
     ViewData["Title"] = "Chỉnh sửa thông tin Bác sĩ";
@@ -93,7 +93,7 @@
                     <div class="mt-3 text-center p-2 bg-light" style="border-radius: 8px;">
                         <span class="d-block small text-muted mb-2">Ảnh hiện tại</span>
                         @{
-                            var imgUrl = string.IsNullOrEmpty(Model?.Image) ? "/img/undraw_profile.svg" : $"/img/{Model.Image}";
+                            var imgUrl = ImageHelper.GetImageUrl(Model?.Image);
                         }
                         <img src="@imgUrl" alt="Ảnh bác sĩ" style="max-width:100px; height:100px; object-fit:cover; border-radius:50%; border:3px solid #ffe566; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
                     </div>

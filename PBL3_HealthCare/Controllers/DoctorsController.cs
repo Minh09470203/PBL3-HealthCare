@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting; // Thêm để xài IWebHostEnvironment
 using Microsoft.AspNetCore.Http;    // Thêm để xài IFormFile
 using System.IO;                    // Thêm để xài Path, FileStream
+using PBL3_HealthCare.Services;
 
 namespace PBL3_HealthCare.Controllers
 {
@@ -22,12 +23,14 @@ namespace PBL3_HealthCare.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IWebHostEnvironment _webHostEnvironment; // Khai báo
+        private readonly CloudinaryService _cloudinaryService;
 
-        public DoctorsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IWebHostEnvironment webHostEnvironment)
+        public DoctorsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IWebHostEnvironment webHostEnvironment, CloudinaryService cloudinaryService)
         {
             _context = context;
             _userManager = userManager;
             _webHostEnvironment = webHostEnvironment; // Tiêm vào
+            _cloudinaryService = cloudinaryService;
         }
 
         // GET: Doctors
@@ -88,22 +91,11 @@ namespace PBL3_HealthCare.Controllers
                 // XỬ LÝ UPLOAD ẢNH (NẾU CÓ CHỌN)
                 if (AvatarFile != null && AvatarFile.Length > 0)
                 {
-                    // Tạo thư mục wwwroot/img/doctors nếu chưa có
-                    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "img", "doctors");
-                    if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-
-                    // Đổi tên file để chống trùng lặp
-                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(AvatarFile.FileName);
-                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                    // Copy file vào ổ cứng
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    string imageUrl = await _cloudinaryService.UploadImageAsync(AvatarFile);
+                    if (!string.IsNullOrEmpty(imageUrl))
                     {
-                        await AvatarFile.CopyToAsync(fileStream);
+                        doctor.Image = imageUrl;
                     }
-
-                    // Lưu đường dẫn vào Model (Ví dụ: "doctors/xyz.jpg")
-                    doctor.Image = uniqueFileName;
                 }
 
                 // Lưu Bác sĩ vào Database
@@ -164,19 +156,11 @@ namespace PBL3_HealthCare.Controllers
                     // XỬ LÝ ĐỔI ẢNH MỚI (NẾU CÓ CHỌN FILE)
                     if (AvatarFile != null && AvatarFile.Length > 0)
                     {
-                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "img", "doctors");
-                        if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-
-                        string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(AvatarFile.FileName);
-                        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        string imageUrl = await _cloudinaryService.UploadImageAsync(AvatarFile);
+                        if (!string.IsNullOrEmpty(imageUrl))
                         {
-                            await AvatarFile.CopyToAsync(fileStream);
+                            doctor.Image = imageUrl;
                         }
-
-                        // Đè tên file mới vào (tên file cũ được View giữ nguyên nếu không chọn ảnh mới)
-                        doctor.Image = uniqueFileName;
                     }
 
                     _context.Update(doctor);

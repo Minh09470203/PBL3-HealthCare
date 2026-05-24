@@ -1,4 +1,4 @@
-﻿@model IEnumerable<PBL3_HealthCare.Models.Specialty>
+@model IEnumerable<PBL3_HealthCare.Models.Specialty>
 @{
     ViewData["Title"] = "Danh sách Chuyên khoa";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -23,14 +23,9 @@
                     <div class="col-lg-4 col-md-6 mb-4">
                         <div class="specialty-card">
                             @{
-                                string specImage = item.Image;
-                                string imgSrc = "/img/specialties/default-specialty.jpg";
-                                if (!string.IsNullOrWhiteSpace(specImage))
-                                {
-                                    imgSrc = specImage.StartsWith("/") ? specImage : "/img/specialties/" + specImage;
-                                }
+                                string specImage = ImageHelper.GetImageUrl(item.Image, "/img/specialties/default-specialty.jpg");
                             }
-                            <img src="@imgSrc" alt="Khoa @item.Name" class="specialty-card-img"
+                            <img src="@specImage" alt="Khoa @item.Name" class="specialty-card-img"
                                  onerror="this.onerror=null; this.src='/img/specialties/default-specialty.jpg';" />
 
                             <div class="specialty-card-body">

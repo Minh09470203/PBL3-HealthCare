@@ -47,9 +47,7 @@
                 <div class="card-body">
                     @{
                         // Kiểm tra xem Model có ảnh chưa, có thì lấy, chưa có thì dùng ảnh mặc định
-                        var avatarSrc = !string.IsNullOrEmpty(Model.Avatar)
-                        ? $"/img/admins/{Model.Avatar}"
-                        : "/img/admins/default-admin.jpg";
+                        var avatarSrc = ImageHelper.GetImageUrl(Model.Avatar);
                     }
 
                     <div class="avatar-wrap" onclick="document.getElementById('avatarInput').click()">
