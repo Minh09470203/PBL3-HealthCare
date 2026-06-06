@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using PBL3_HealthCare.Data;
 using PBL3_HealthCare.Models;
+using PBL3_HealthCare.ViewModels;
 using PBL3_HealthCare.Services;
 using PBL3_HealthCare.Hubs;
 using Microsoft.AspNetCore.SignalR; 
@@ -129,6 +130,20 @@ namespace PBL3_HealthCare.Controllers
 
             if (ModelState.IsValid)
             {
+                // Kiểm tra xem khung giờ này đã bị ai đó đặt mất trong lúc Admin/Doctor đang thao tác form không
+                bool isConflict = await _context.Appointments.AnyAsync(a =>
+                    a.DoctorId == appointment.DoctorId &&
+                    a.Date == appointment.Date.Date &&
+                    a.TimeSlot == appointment.TimeSlot &&
+                    a.Status != AppointmentStatus.Cancelled);
+
+                if (isConflict)
+                {
+                    ModelState.AddModelError("", "Rất tiếc! Bác sĩ đã có lịch hẹn vào thời gian này. Vui lòng chọn khung giờ khác.");
+                    PopulateNames(appointment);
+                    return View(appointment);
+                }
+
                 appointment.CreatedAt = DateTime.Now;
 
                 // Nếu là Online mà Admin quên sinh mã phòng
@@ -201,6 +216,22 @@ namespace PBL3_HealthCare.Controllers
                         ViewData["DoctorId"] = new SelectList(doctorsList, "Id", "Name", model.DoctorId);
                         return View(model);
                     }
+                }
+
+                // Kiểm tra xem khung giờ này đã bị ai đó đặt mất trong lúc Admin đang thao tác form không
+                bool isConflict = await _context.Appointments.AnyAsync(a =>
+                    a.DoctorId == model.DoctorId &&
+                    a.Date == model.Date.Date &&
+                    a.TimeSlot == model.TimeSlot &&
+                    a.Status != AppointmentStatus.Cancelled);
+
+                if (isConflict)
+                {
+                    ModelState.AddModelError("", "Rất tiếc! Bác sĩ đã có lịch hẹn vào thời gian này. Vui lòng chọn khung giờ khác.");
+                    var doctorsList = _context.Doctors.Include(d => d.User).Include(d => d.Specialty)
+                        .Select(d => new { Id = d.Id, Name = "BS. " + d.User.FullName + " - " + d.Specialty.Name }).ToList();
+                    ViewData["DoctorId"] = new SelectList(doctorsList, "Id", "Name", model.DoctorId);
+                    return View(model);
                 }
 
                 // Tạo lịch khám luôn được Confirmed
@@ -306,21 +337,18 @@ namespace PBL3_HealthCare.Controllers
                     string roomUrl = $"{domain}/VideoCall/Room?roomId={appointment.MeetingRoomId}";
 
                     string emailSubject = "Xác nhận Lịch Khám Online - PBL3 HealthCare";
-                    string emailBody = $@"
-                        <div style='font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 10px; max-width: 600px;'>
-                            <h2 style='color: #0d6efd;'>PBL3 HealthCare Clinic</h2>
-                            <p>Chào <strong>{appointment.Patient.FullName}</strong>,</p>
-                            <p>Lịch khám Online của bạn đã được <strong>XÁC NHẬN THÀNH CÔNG</strong> sau khi kiểm tra thông tin.</p>
-                            <div style='background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;'>
-                                <p style='margin: 5px 0;'><strong>Bác sĩ:</strong> BS. {appointment.Doctor.User.FullName}</p>
-                                <p style='margin: 5px 0;'><strong>Ngày khám:</strong> {appointment.Date:dd/MM/yyyy}</p>
-                                <p style='margin: 5px 0;'><strong>Giờ khám:</strong> {appointment.TimeSlot}</p>
-                            </div>
-                            <p style='color: #d63384; font-weight: bold;'>Hướng dẫn vào phòng:</p>
-                            <p>Vui lòng chuẩn bị Camera, Micro và nhấn vào nút bên dưới để vào phòng khám <strong>trước giờ hẹn 10 phút</strong>.</p>
-                            <a href='{roomUrl}' style='display: inline-block; padding: 12px 25px; background-color: #0d6efd; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;'>BẤM VÀO ĐÂY ĐỂ VÀO PHÒNG KHÁM</a>
-                            <p style='margin-top: 25px; font-size: 11px; color: #888; border-top: 1px solid #eee; padding-top: 10px;'>Mã phòng dự phòng: {appointment.MeetingRoomId}. Nếu không thể nhấn nút, hãy copy link sau dán vào trình duyệt: {roomUrl}</p>
-                        </div>";
+                    
+                    // Đọc từ file HTML Template
+                    string templatePath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "EmailTemplates", "ConfirmOnlineAppointment.html");
+                    string emailBody = System.IO.File.ReadAllText(templatePath);
+                    
+                    // Điền dữ liệu thật vào các biến giả {{...}}
+                    emailBody = emailBody.Replace("{{PatientName}}", appointment.Patient.FullName)
+                                         .Replace("{{DoctorName}}", appointment.Doctor.User.FullName)
+                                         .Replace("{{Date}}", appointment.Date.ToString("dd/MM/yyyy"))
+                                         .Replace("{{TimeSlot}}", appointment.TimeSlot)
+                                         .Replace("{{RoomUrl}}", roomUrl)
+                                         .Replace("{{MeetingRoomId}}", appointment.MeetingRoomId);
 
                     // Gửi email không cần await hoặc bỏ qua lỗi timeout
                     _ = _emailService.SendEmailAsync(appointment.Patient.Email, emailSubject, emailBody);

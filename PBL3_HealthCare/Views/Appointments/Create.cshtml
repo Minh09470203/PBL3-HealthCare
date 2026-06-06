@@ -1,4 +1,4 @@
-﻿@model PBL3_HealthCare.Models.Appointment
+@model PBL3_HealthCare.Models.Appointment
 
 @{
     ViewData["Title"] = "Tạo Lịch khám mới";
@@ -67,31 +67,10 @@
                 <i class="fas fa-clock mr-1"></i>Thời gian & Trạng thái
             </p>
 
+            <input type="hidden" asp-for="Date" id="Date" />
+            <input type="hidden" asp-for="TimeSlot" id="TimeSlot" />
+
             <div class="row">
-                <!-- Date -->
-                <div class="col-md-4">
-                    <div class="form-floating-custom">
-                        <label>Ngày khám</label>
-                        <div class="input-icon-wrap">
-                            <i class="input-icon fas fa-calendar"></i>
-                            <input asp-for="Date" class="form-control" type="date" />
-                        </div>
-                        <span asp-validation-for="Date" class="text-danger"></span>
-                    </div>
-                </div>
-
-                <!-- TimeSlot -->
-                <div class="col-md-4">
-                    <div class="form-floating-custom">
-                        <label>Khung giờ</label>
-                        <div class="input-icon-wrap">
-                            <i class="input-icon fas fa-hourglass-half"></i>
-                            <input asp-for="TimeSlot" class="form-control" placeholder="VD: 08:00 - 08:30" />
-                        </div>
-                        <span asp-validation-for="TimeSlot" class="text-danger"></span>
-                    </div>
-                </div>
-
                 <!-- Status -->
                 @if (User.IsInRole("Admin"))
                 {
@@ -112,6 +91,15 @@
                     <!-- Doctor không chọn status -->
                     <input type="hidden" asp-for="Status" />
                 }
+            </div>
+
+            <span asp-validation-for="Date" class="text-danger small mt-1 d-block"></span>
+            <span asp-validation-for="TimeSlot" class="text-danger small mt-1 d-block"></span>
+
+            <div id="schedule-container" class="mb-4 mt-3">
+                <div class="alert alert-info small" style="border-radius:8px;">
+                    <i class="fas fa-info-circle mr-1"></i> Vui lòng chọn Bác sĩ để xem lịch rảnh.
+                </div>
             </div>
 
             <p class="form-section-title green">
@@ -179,4 +167,52 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        $(document).ready(function () {
+            function loadSchedule(doctorId) {
+                if (doctorId) {
+                    $('#schedule-container').html('<div class="text-center py-3"><i class="fas fa-spinner fa-spin fa-2x text-primary"></i><p class="mt-2 text-muted">Đang tải lịch rảnh...</p></div>');
+                    
+                    $.ajax({
+                        url: '@Url.Action("GetDoctorSchedule", "Appointments")',
+                        type: 'GET',
+                        data: { doctorId: doctorId },
+                        success: function (res) {
+                            $('#schedule-container').html(res);
+                            // Xóa giá trị cũ
+                            $('#Date').val('');
+                            $('#TimeSlot').val('');
+                        },
+                        error: function () {
+                            $('#schedule-container').html('<div class="alert alert-danger">Lỗi khi tải lịch khám!</div>');
+                        }
+                    });
+                } else {
+                    $('#schedule-container').html('<div class="alert alert-info small" style="border-radius:8px;"><i class="fas fa-info-circle mr-1"></i> Vui lòng chọn Bác sĩ để xem lịch rảnh.</div>');
+                    $('#Date').val('');
+                    $('#TimeSlot').val('');
+                }
+            }
+
+            // Khi chọn bác sĩ
+            $('#DoctorId').change(function () {
+                var doctorId = $(this).val();
+                loadSchedule(doctorId);
+            });
+
+            // Nếu bác sĩ đã được chọn (hoặc khi Doctor tự tạo lịch)
+            var initialDoctorId = $('#DoctorId').val();
+            if (initialDoctorId) {
+                loadSchedule(initialDoctorId);
+            }
+
+            // Validate form trước khi submit
+            $('form').submit(function (e) {
+                if (!$('#Date').val() || !$('#TimeSlot').val()) {
+                    e.preventDefault();
+                    alert('Vui lòng chọn Bác sĩ và click chọn một khung giờ từ lịch khám!');
+                }
+            });
+        });
+    </script>
 }

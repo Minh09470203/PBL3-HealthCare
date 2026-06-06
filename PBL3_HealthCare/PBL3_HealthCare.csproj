@@ -24,4 +24,6 @@
     <PackageReference Include="Mscc.GenerativeAI" Version="3.1.0" />
   </ItemGroup>
 
+  <ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JsonSchema="https://www.schemastore.org/azure-deviceupdate-update-manifest-5.json" /></VisualStudio></ProjectExtensions>
+
 </Project>

@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.HttpOverrides; // ✅ 1. THÊM THƯ VIỆN NÀY
+using Microsoft.AspNetCore.HttpOverrides;
 using PBL3_HealthCare.Data;
 using PBL3_HealthCare.Hubs;
 using PBL3_HealthCare.Models;

@@ -1,0 +1,14 @@
+<div style='font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 10px; max-width: 600px;'>
+    <h2 style='color: #0d6efd;'>PBL3 HealthCare Clinic</h2>
+    <p>Chào <strong>{{PatientName}}</strong>,</p>
+    <p>Lịch khám Online của bạn đã được <strong>XÁC NHẬN THÀNH CÔNG</strong> sau khi kiểm tra thông tin.</p>
+    <div style='background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;'>
+        <p style='margin: 5px 0;'><strong>Bác sĩ:</strong> BS. {{DoctorName}}</p>
+        <p style='margin: 5px 0;'><strong>Ngày khám:</strong> {{Date}}</p>
+        <p style='margin: 5px 0;'><strong>Giờ khám:</strong> {{TimeSlot}}</p>
+    </div>
+    <p style='color: #d63384; font-weight: bold;'>Hướng dẫn vào phòng:</p>
+    <p>Vui lòng chuẩn bị Camera, Micro và nhấn vào nút bên dưới để vào phòng khám <strong>trước giờ hẹn 10 phút</strong>.</p>
+    <a href='{{RoomUrl}}' style='display: inline-block; padding: 12px 25px; background-color: #0d6efd; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;'>BẤM VÀO ĐÂY ĐỂ VÀO PHÒNG KHÁM</a>
+    <p style='margin-top: 25px; font-size: 11px; color: #888; border-top: 1px solid #eee; padding-top: 10px;'>Mã phòng dự phòng: {{MeetingRoomId}}. Nếu không thể nhấn nút, hãy copy link sau dán vào trình duyệt: {{RoomUrl}}</p>
+</div>

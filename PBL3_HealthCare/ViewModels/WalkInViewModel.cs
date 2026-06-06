@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace PBL3_HealthCare.Models
+namespace PBL3_HealthCare.ViewModels
 {
     public class WalkInViewModel
     {
